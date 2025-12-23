@@ -1,0 +1,1 @@
+web: gunicorn catzoteam_project.wsgi --log-file -
