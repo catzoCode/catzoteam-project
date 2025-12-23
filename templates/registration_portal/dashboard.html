@@ -1,0 +1,180 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Dashboard - Registration Portal{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white mb-3">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </h2>
+    </div>
+</div>
+
+<!-- Today's Statistics -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="bi bi-people text-primary"></i>
+            <h3>{{ today_customers }}</h3>
+            <p>Total Customers</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="bi bi-heart-fill text-danger"></i>
+            <h3>{{ today_cats }}</h3>
+            <p>Total Cats</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <i class="bi bi-clipboard-check text-success"></i>
+            <h3>{{ today_requests }}</h3>
+            <p>Pending Packages</p>
+        </div>
+    </div>
+</div>
+
+<!-- Session Statistics -->
+{% if session %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock-history"></i> Your Session Statistics
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <h4 class="text-primary mb-0">{{ session.customers_registered }}</h4>
+                        <small class="text-muted">Customers Registered</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-danger mb-0">{{ session.cats_registered }}</h4>
+                        <small class="text-muted">Cats Registered</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-success mb-0">{{ session.service_requests_created }}</h4>
+                        <small class="text-muted">Packages Created</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h4 class="text-info mb-0">{{ session.login_time|timesince }}</h4>
+                        <small class="text-muted">Session Duration</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-lightning-fill"></i> Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{% url 'registration_portal:customer_search' %}" class="btn btn-outline-primary w-100 py-3">
+                            <i class="bi bi-search" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2 mb-0">Search Customer</h5>
+                            <small class="text-muted">Find existing customer</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'registration_portal:register_customer' %}" class="btn btn-outline-success w-100 py-3">
+                            <i class="bi bi-person-plus" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2 mb-0">New Customer</h5>
+                            <small class="text-muted">Register new customer</small>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{% url 'registration_portal:customer_search' %}" class="btn btn-outline-info w-100 py-3">
+                            <i class="bi bi-clipboard-data" style="font-size: 2rem;"></i>
+                            <h5 class="mt-2 mb-0">View Records</h5>
+                            <small class="text-muted">Browse all customers</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <!-- Recent Customers -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clock"></i> Recent Customers
+            </div>
+            <div class="card-body">
+                {% if recent_customers %}
+                <div class="list-group list-group-flush">
+                    {% for customer in recent_customers %}
+                    <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" 
+                       class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ customer.name }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-telephone"></i> {{ customer.phone }} | 
+                                    <i class="bi bi-tag"></i> {{ customer.customer_id }}
+                                </small>
+                            </div>
+                            <span class="badge bg-primary">{{ customer.cats.count }} cats</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">No customers yet</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending Task Packages -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-hourglass-split"></i> Pending Task Packages
+            </div>
+            <div class="card-body">
+                {% if recent_requests %}
+                <div class="list-group list-group-flush">
+                    {% for package in recent_requests %}
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ package.package_id }}</h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-person"></i> {{ package.cat.owner.name }} | 
+                                    <i class="bi bi-heart-fill text-danger"></i> {{ package.cat.name }}
+                                </small>
+                                <div class="mt-1">
+                                    <span class="badge bg-success">{{ package.total_points }} pts</span>
+                                    <span class="badge bg-info">{{ package.tasks.count }} tasks</span>
+                                </div>
+                            </div>
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            By {{ package.created_by.username }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center mb-0">No pending packages</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

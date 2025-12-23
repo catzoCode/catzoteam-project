@@ -1,0 +1,390 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Service Request - CatzoTeam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin: 30px auto;
+            max-width: 1200px;
+        }
+        .task-group {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #f8f9fa;
+        }
+        .task-group h5 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+        .task-checkbox {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .task-checkbox:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .task-checkbox input[type="checkbox"] {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        .task-checkbox.selected {
+            border-color: #667eea;
+            background: #e8ebff;
+        }
+        .points-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        .total-points-display {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            min-width: 200px;
+        }
+        .total-points-display h4 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        .total-points-display .points {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .cat-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin: 5px;
+        }
+        .task-description {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark" style="background: rgba(0,0,0,0.2);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'registration_portal:dashboard' %}">
+                <i class="bi bi-clipboard-check"></i> Registration Portal
+            </a>
+            <div class="text-white">
+                <span class="me-3">{{ request.user.role|title }}</span>
+                <span class="badge bg-light text-dark">{{ request.user.employee_id }}</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container">
+            <h2 class="mb-4">
+                <i class="bi bi-plus-circle"></i> Create Service Request
+            </h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if not customer %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    No customer selected. Please <a href="{% url 'registration_portal:customer_search' %}">search for a customer</a> first.
+                </div>
+            {% else %}
+                <!-- Customer Info -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5><i class="bi bi-person-circle"></i> Customer: {{ customer.full_name }}</h5>
+                        <p class="mb-0">
+                            <strong>Phone:</strong> {{ customer.phone_number }} | 
+                            <strong>Email:</strong> {{ customer.email }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Cats -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5><i class="bi bi-heart-fill text-danger"></i> Cats</h5>
+                        {% if cats %}
+                            {% for cat in cats %}
+                                <span class="cat-badge">
+                                    <i class="bi bi-circle-fill" style="color: {{ cat.color }};"></i>
+                                    {{ cat.name }} ({{ cat.breed }})
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No cats registered for this customer.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Service Request Form -->
+                <form method="POST" id="serviceRequestForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="customer_id" value="{{ customer.customer_id }}">
+                    
+                   <!-- Select Cats -->
+                    <div class="mb-4">
+                        <h5><i class="bi bi-check2-square"></i> Select Cats for Service</h5>
+                        {% if cats %}
+                            {% for cat in cats %}
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                        type="checkbox" 
+                                        name="cat_ids" 
+                                        value="{{ cat.cat_id }}" 
+                                        id="cat_{{ cat.cat_id }}" 
+                                        checked>
+                                    <label class="form-check-label" for="cat_{{ cat.cat_id }}">
+                                        <strong>{{ cat.name }}</strong> - {{ cat.breed }} ({{ cat.age }} years old)
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted">No cats available for this customer.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Task Selection -->
+                    <h4 class="mb-3"><i class="bi bi-list-check"></i> Select Services/Tasks</h4>
+
+                    <!-- Grooming Services -->
+                    {% if grooming_groups %}
+                        <div class="accordion mb-4" id="groomingAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#groomingServices">
+                                        <i class="bi bi-scissors"></i> &nbsp; Grooming Services
+                                    </button>
+                                </h2>
+                                <div id="groomingServices" class="accordion-collapse collapse show" data-bs-parent="#groomingAccordion">
+                                    <div class="accordion-body">
+                                        {% for group in grooming_groups %}
+                                            <div class="task-group">
+                                                <h5><i class="bi bi-tag-fill"></i> {{ group.name }}</h5>
+                                                {% for task in group.task_types.all %}
+                                                    <div class="task-checkbox" onclick="toggleTask(this)">
+                                                        <input type="checkbox" name="selected_tasks" value="{{ task.id }}" data-points="{{ task.points }}" data-category="{{ task.category }}">
+                                                        <strong>{{ task.name }}</strong>
+                                                        <span class="points-badge">{{ task.points }} pts</span>
+                                                        {% if task.description %}
+                                                            <div class="task-description">{{ task.description }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Sales & Booking -->
+                    {% if sales_groups %}
+                        <div class="accordion mb-4" id="salesAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#salesServices">
+                                        <i class="bi bi-cart-check"></i> &nbsp; Sales & Booking
+                                    </button>
+                                </h2>
+                                <div id="salesServices" class="accordion-collapse collapse" data-bs-parent="#salesAccordion">
+                                    <div class="accordion-body">
+                                        {% for group in sales_groups %}
+                                            <div class="task-group">
+                                                <h5><i class="bi bi-tag-fill"></i> {{ group.name }}</h5>
+                                                {% for task in group.task_types.all %}
+                                                    <div class="task-checkbox" onclick="toggleTask(this)">
+                                                        <input type="checkbox" name="selected_tasks" value="{{ task.id }}" data-points="{{ task.points }}" data-category="{{ task.category }}">
+                                                        <strong>{{ task.name }}</strong>
+                                                        <span class="points-badge">{{ task.points }} pts</span>
+                                                        {% if task.description %}
+                                                            <div class="task-description">{{ task.description }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Products -->
+                    {% if product_groups %}
+                        <div class="accordion mb-4" id="productsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#productServices">
+                                        <i class="bi bi-box-seam"></i> &nbsp; Products
+                                    </button>
+                                </h2>
+                                <div id="productServices" class="accordion-collapse collapse" data-bs-parent="#productsAccordion">
+                                    <div class="accordion-body">
+                                        {% for group in product_groups %}
+                                            <div class="task-group">
+                                                <h5><i class="bi bi-tag-fill"></i> {{ group.name }}</h5>
+                                                {% for task in group.task_types.all %}
+                                                    <div class="task-checkbox" onclick="toggleTask(this)">
+                                                        <input type="checkbox" name="selected_tasks" value="{{ task.id }}" data-points="{{ task.points }}" data-category="{{ task.category }}">
+                                                        <strong>{{ task.name }}</strong>
+                                                        <span class="points-badge">{{ task.points }} pts</span>
+                                                        {% if task.description %}
+                                                            <div class="task-description">{{ task.description }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Scheduling -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Preferred Date</label>
+                            <input type="date" class="form-control" name="preferred_date" min="{{ today }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Preferred Time</label>
+                            <input type="time" class="form-control" name="preferred_time">
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-4">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="3" placeholder="Any special requests or notes..."></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-check-circle"></i> Create Service Request
+                        </button>
+                        <a href="{% url 'registration_portal:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Total Points Display -->
+    <div class="total-points-display" id="totalPointsDisplay" style="display: none;">
+        <h4><i class="bi bi-trophy-fill"></i> Total Points</h4>
+        <div class="points" id="totalPoints">0</div>
+        <small><span id="taskCount">0</span> tasks selected</small>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleTask(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+            
+            updateTotalPoints();
+        }
+
+        function updateTotalPoints() {
+            const checkboxes = document.querySelectorAll('input[name="selected_tasks"]:checked');
+            const catCount = document.querySelectorAll('input[name="cat_ids"]:checked').length;
+            
+            let totalPoints = 0;
+            let taskCount = 0;
+            
+            checkboxes.forEach(checkbox => {
+                const points = parseInt(checkbox.dataset.points);
+                const category = checkbox.dataset.category;
+                
+                // Multiply by cat count for grooming tasks
+                if (category === 'grooming') {
+                    totalPoints += points * catCount;
+                } else {
+                    totalPoints += points;
+                }
+                taskCount++;
+            });
+            
+            document.getElementById('totalPoints').textContent = totalPoints;
+            document.getElementById('taskCount').textContent = taskCount;
+            
+            const display = document.getElementById('totalPointsDisplay');
+            if (taskCount > 0) {
+                display.style.display = 'block';
+            } else {
+                display.style.display = 'none';
+            }
+        }
+
+        // Update points when cats are selected/deselected
+        document.querySelectorAll('input[name="cat_ids"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateTotalPoints);
+        });
+
+        // Prevent checkbox toggle when clicking the checkbox itself
+        document.querySelectorAll('.task-checkbox input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('click', (e) => {
+                e.stopPropagation();
+                updateTotalPoints();
+            });
+        });
+    </script>
+</body>
+</html>

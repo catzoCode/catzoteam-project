@@ -1,0 +1,236 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Select Cats - Step 2{% endblock %}
+
+{% block page_title %}Select Cats{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:register_step1' %}">Register Service</a></li>
+<li class="breadcrumb-item active">Step 2: Select Cats</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Progress Steps -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-success text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                        <div class="mt-2 text-success fw-bold">Customer</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #28a745; margin: 0 10px;"></div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                            2
+                        </div>
+                        <div class="mt-2 text-primary fw-bold">Select Cat</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 10px;"></div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold; opacity: 0.5;">
+                            3
+                        </div>
+                        <div class="mt-2 text-muted">Select Tasks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="card mb-4 border-primary">
+            <div class="card-body">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle text-primary"></i>
+                    {{ customer.name }}
+                </h5>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-telephone"></i> {{ customer.phone }} | 
+                    <i class="bi bi-credit-card"></i> {{ customer.ic_number|default:"N/A" }} |
+                    <i class="bi bi-tag"></i> {{ customer.customer_id }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Select Cats Form -->
+        <div class="card shadow-lg">
+            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h4 class="text-white mb-0">
+                    <i class="bi bi-heart-fill"></i> Select Cat(s) for Service
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                {% if cats %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Select one or more cats.</strong> You can select multiple cats - a separate package will be created for each.
+                </div>
+
+                <form method="post" action="{% url 'task_management:register_step2' customer.customer_id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="select_cats">
+
+                    <div class="row">
+                        {% for cat in cats %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card cat-card h-100" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input cat-checkbox" 
+                                               type="checkbox" 
+                                               name="selected_cats" 
+                                               value="{{ cat.cat_id }}" 
+                                               id="cat{{ forloop.counter }}">
+                                        <label class="form-check-label w-100" for="cat{{ forloop.counter }}" style="cursor: pointer;">
+                                            <div class="d-flex align-items-start">
+                                                <div class="flex-shrink-0">
+                                                    <i class="bi bi-heart-fill text-danger" style="font-size: 2rem;"></i>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h5 class="mb-1">{{ cat.name }}</h5>
+                                                    <div class="mb-2">
+                                                        <span class="badge bg-light text-dark border">{{ cat.breed }}</span>
+                                                        <span class="badge bg-light text-dark border">{{ cat.age }} years</span>
+                                                        <span class="badge bg-light text-dark border">{{ cat.get_gender_display }}</span>
+                                                    </div>
+                                                    <p class="mb-1 small">
+                                                        <i class="bi bi-palette"></i> <strong>Color:</strong> {{ cat.color|default:"Not specified" }}
+                                                    </p>
+                                                    <p class="mb-1 small">
+                                                        <i class="bi bi-shield-check"></i> 
+                                                        <strong>Vaccination:</strong> 
+                                                        <span class="badge {% if cat.vaccination_status == 'up_to_date' %}bg-success{% elif cat.vaccination_status == 'overdue' %}bg-danger{% else %}bg-warning{% endif %}">
+                                                            {{ cat.get_vaccination_status_display }}
+                                                        </span>
+                                                    </p>
+                                                    {% if cat.medical_notes %}
+                                                    <div class="alert alert-warning py-1 px-2 mt-2 mb-0 small">
+                                                        <i class="bi bi-exclamation-triangle"></i> {{ cat.medical_notes }}
+                                                    </div>
+                                                    {% endif %}
+                                                    {% if cat.special_requirements %}
+                                                    <div class="alert alert-info py-1 px-2 mt-2 mb-0 small">
+                                                        <i class="bi bi-star"></i> {{ cat.special_requirements }}
+                                                    </div>
+                                                    {% endif %}
+                                                    <p class="mb-0 small text-muted mt-2">
+                                                        <i class="bi bi-tag"></i> {{ cat.cat_id }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="alert alert-success mt-3" id="selectedCount" style="display: none;">
+                        <i class="bi bi-check-circle"></i>
+                        <strong><span id="count">0</span> cat(s) selected</strong> - A separate package will be created for each cat.
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <a href="{% url 'task_management:register_step1' %}" 
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="{% url 'task_management:register_step2_add_cat' customer.customer_id %}" 
+                               class="btn btn-outline-primary btn-lg w-100">
+                                <i class="bi bi-plus-circle"></i> Add New Cat
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="continueBtn" disabled>
+                                <i class="bi bi-arrow-right-circle"></i> Continue
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                {% else %}
+                <div class="alert alert-warning text-center">
+                    <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Cats Registered</h5>
+                    <p>This customer doesn't have any cats registered yet.</p>
+                    <a href="{% url 'task_management:register_step2_add_cat' customer.customer_id %}" 
+                       class="btn btn-primary btn-lg mt-2">
+                        <i class="bi bi-plus-circle"></i> Add First Cat
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cat-card {
+    transition: all 0.3s ease;
+    border: 2px solid #e0e0e0;
+}
+.cat-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+.cat-card:has(.cat-checkbox:checked) {
+    border-color: #28a745;
+    background: #f0fff4;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+.form-check-input:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+.form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.5rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.cat-checkbox');
+    const continueBtn = document.getElementById('continueBtn');
+    const selectedCount = document.getElementById('selectedCount');
+    const countSpan = document.getElementById('count');
+
+    function updateSelection() {
+        const checked = document.querySelectorAll('.cat-checkbox:checked').length;
+        countSpan.textContent = checked;
+        
+        if (checked > 0) {
+            continueBtn.disabled = false;
+            selectedCount.style.display = 'block';
+        } else {
+            continueBtn.disabled = true;
+            selectedCount.style.display = 'none';
+        }
+    }
+
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelection);
+        
+        const card = checkbox.closest('.cat-card');
+        card.addEventListener('click', function(e) {
+            if (e.target !== checkbox && !e.target.closest('.alert')) {
+                checkbox.checked = !checkbox.checked;
+                updateSelection();
+            }
+        });
+    });
+
+    updateSelection();
+});
+</script>
+{% endblock %}

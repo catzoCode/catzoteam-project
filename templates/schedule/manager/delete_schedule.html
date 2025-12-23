@@ -1,0 +1,616 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Delete Schedule - Confirmation{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-container {
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    .header-section {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 16px rgba(239,68,68,0.3);
+    }
+    
+    .warning-icon {
+        font-size: 4rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .branch-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+    
+    .schedule-preview {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .preview-header {
+        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        padding: 1.5rem;
+        border-bottom: 3px solid #fecaca;
+    }
+    
+    .preview-header h5 {
+        color: #991b1b;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .preview-body {
+        padding: 2rem;
+    }
+    
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-card {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s;
+    }
+    
+    .detail-card:hover {
+        border-color: #ef4444;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239,68,68,0.1);
+    }
+    
+    .detail-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .detail-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .shift-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .shift-badge.morning { background: #dbeafe; color: #1e40af; }
+    .shift-badge.afternoon { background: #fef3c7; color: #92400e; }
+    .shift-badge.evening { background: #ede9fe; color: #5b21b6; }
+    .shift-badge.night { background: #e5e7eb; color: #1f2937; }
+    .shift-badge.full_day { background: #d1fae5; color: #065f46; }
+    .shift-badge.off { background: #f3f4f6; color: #6b7280; }
+    
+    .staff-info {
+        background: white;
+        border: 2px solid #fecaca;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .staff-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .staff-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.5rem;
+        box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+    
+    .staff-details h4 {
+        margin: 0;
+        color: #1f2937;
+    }
+    
+    .staff-meta {
+        color: #6b7280;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .notes-section {
+        background: #fffbeb;
+        border: 2px solid #fbbf24;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .notes-section h6 {
+        color: #92400e;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .warning-box {
+        background: white;
+        border: 3px solid #fbbf24;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .warning-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: repeating-linear-gradient(
+            45deg,
+            #fbbf24,
+            #fbbf24 10px,
+            #f59e0b 10px,
+            #f59e0b 20px
+        );
+    }
+    
+    .warning-content {
+        display: flex;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    
+    .warning-icon-large {
+        font-size: 3rem;
+        color: #f59e0b;
+        flex-shrink: 0;
+    }
+    
+    .warning-text h5 {
+        color: #92400e;
+        margin-bottom: 0.75rem;
+    }
+    
+    .warning-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .warning-list li {
+        padding: 0.5rem 0;
+        color: #78350f;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .warning-list li::before {
+        content: '⚠';
+        font-size: 1.25rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn {
+        padding: 0.875rem 2.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-danger {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    }
+    
+    .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239,68,68,0.4);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+        color: white;
+        box-shadow: 0 4px 12px rgba(107,114,128,0.2);
+    }
+    
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(107,114,128,0.3);
+        background: #4b5563;
+    }
+    
+    .impact-notice {
+        background: #fef2f2;
+        border-left: 4px solid #ef4444;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .impact-notice h6 {
+        color: #991b1b;
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .impact-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0;
+        color: #7f1d1d;
+    }
+    
+    .impact-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fee2e2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ef4444;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+    }
+    
+    .manager-notice {
+        background: #ecfdf5;
+        border: 2px solid #10b981;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .manager-notice h6 {
+        color: #065f46;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .warning-content {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="header-section">
+        <div class="warning-icon">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <h2 class="mb-2 mt-3">Delete Schedule Confirmation</h2>
+        <p class="mb-0 opacity-90">Manager: {{ request.user.get_full_name|default:request.user.username }}</p>
+        <div class="branch-badge">
+            <i class="bi bi-building"></i>
+            Branch: {{ request.user.branch }}
+        </div>
+    </div>
+
+    <div class="delete-container">
+        
+        <!-- Manager Notice -->
+        <div class="manager-notice">
+            <h6>
+                <i class="bi bi-shield-check"></i>
+                Manager Permissions
+            </h6>
+            <p class="mb-0">
+                As a manager, you can only delete schedules for staff members in your branch ({{ request.user.branch }}).
+                This helps maintain proper schedule management and accountability.
+            </p>
+        </div>
+        
+        <!-- Schedule Preview -->
+        <div class="schedule-preview">
+            <div class="preview-header">
+                <h5>
+                    <i class="bi bi-calendar-x"></i>
+                    Schedule to be Deleted
+                </h5>
+            </div>
+            
+            <div class="preview-body">
+                <!-- Staff Info -->
+                <div class="staff-info">
+                    <div class="staff-header">
+                        <div class="staff-avatar">
+                            {{ schedule.staff.username|slice:":1"|upper }}
+                        </div>
+                        <div class="staff-details">
+                            <h4>{{ schedule.staff.get_full_name|default:schedule.staff.username }}</h4>
+                            <div class="staff-meta">
+                                <span>
+                                    <i class="bi bi-person-badge"></i>
+                                    {{ schedule.staff.username }}
+                                </span>
+                                <span>
+                                    <i class="bi bi-building"></i>
+                                    {{ schedule.branch }}
+                                </span>
+                                <span>
+                                    <i class="bi bi-shield"></i>
+                                    {{ schedule.staff.get_role_display }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Schedule Details Grid -->
+                <div class="detail-grid">
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-calendar-event"></i> Date
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.date|date:"l" }},
+                            {{ schedule.date|date:"F d, Y" }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-clock"></i> Shift Type
+                        </div>
+                        <div class="detail-value">
+                            <span class="shift-badge {{ schedule.shift_type }}">
+                                {{ schedule.get_shift_type_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {% if schedule.shift_type != 'off' %}
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-clock-history"></i> Start Time
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.start_time|time:"g:i A" }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-clock-history"></i> End Time
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.end_time|time:"g:i A" }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-hourglass"></i> Duration
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.get_duration_hours|floatformat:1 }} hours
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-person-check"></i> Created By
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.created_by.username|default:"System" }}
+                        </div>
+                    </div>
+                    
+                    <div class="detail-card">
+                        <div class="detail-label">
+                            <i class="bi bi-calendar-plus"></i> Created Date
+                        </div>
+                        <div class="detail-value">
+                            {{ schedule.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes if any -->
+                {% if schedule.notes %}
+                <div class="notes-section">
+                    <h6>
+                        <i class="bi bi-sticky-fill"></i>
+                        Schedule Notes
+                    </h6>
+                    <p class="mb-0">{{ schedule.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Impact Notice -->
+        <div class="impact-notice">
+            <h6>
+                <i class="bi bi-exclamation-circle-fill"></i>
+                Impact of Deletion
+            </h6>
+            <div class="impact-item">
+                <div class="impact-icon">
+                    <i class="bi bi-x"></i>
+                </div>
+                <div>
+                    <strong>{{ schedule.staff.get_full_name|default:schedule.staff.username }}</strong> will have 
+                    <strong>NO SCHEDULE</strong> for {{ schedule.date|date:"l, F d, Y" }}
+                </div>
+            </div>
+            <div class="impact-item">
+                <div class="impact-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    Your branch <strong>{{ schedule.branch }}</strong> coverage will be reduced for this date
+                </div>
+            </div>
+            {% if schedule.shift_type != 'off' %}
+            <div class="impact-item">
+                <div class="impact-icon">
+                    <i class="bi bi-clock"></i>
+                </div>
+                <div>
+                    <strong>{{ schedule.get_duration_hours|floatformat:1 }} hours</strong> of scheduled work time will be removed
+                </div>
+            </div>
+            {% endif %}
+            <div class="impact-item">
+                <div class="impact-icon">
+                    <i class="bi bi-bell"></i>
+                </div>
+                <div>
+                    You may need to notify the staff member about this change
+                </div>
+            </div>
+        </div>
+        
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <div class="warning-content">
+                <div class="warning-icon-large">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="warning-text">
+                    <h5>⚠️ Please Confirm Before Proceeding</h5>
+                    <ul class="warning-list">
+                        <li>This will permanently delete this schedule from the system</li>
+                        <li>The staff member will NOT be scheduled for this date</li>
+                        <li>This action CANNOT be reversed or undone</li>
+                        <li>Consider editing instead of deleting if rescheduling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="action-buttons">
+                <a href="{% url 'schedule:manager_calendar' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i>
+                    Cancel - Keep Schedule
+                </a>
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Are you absolutely sure? This cannot be undone!');">
+                    <i class="bi bi-trash-fill"></i>
+                    Yes, Delete This Schedule
+                </button>
+            </div>
+        </form>
+        
+        <div class="text-center mt-4">
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i>
+                Tip: If you want to reschedule instead of delete, use the 
+                <a href="{% url 'schedule:manager_edit_schedule' schedule.id %}">Edit Schedule</a> option
+            </small>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForm = document.querySelector('form');
+    deleteForm.addEventListener('submit', function(e) {
+        const confirmed = confirm(
+            '⚠️ MANAGER CONFIRMATION\n\n' +
+            'You are about to DELETE the schedule for:\n' +
+            '{{ schedule.staff.get_full_name|default:schedule.staff.username }}\n' +
+            'Date: {{ schedule.date|date:"l, F d, Y" }}\n' +
+            'Branch: {{ schedule.branch }}\n\n' +
+            'This action is PERMANENT and CANNOT be undone.\n\n' +
+            'Click OK to proceed with deletion.'
+        );
+        
+        if (!confirmed) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

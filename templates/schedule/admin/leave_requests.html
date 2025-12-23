@@ -1,0 +1,354 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Leave Requests{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-section {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .requests-section {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .request-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .request-card:hover {
+        border-color: #8b5cf6;
+        box-shadow: 0 4px 12px rgba(139,92,246,0.2);
+    }
+    
+    .request-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+    
+    .staff-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .staff-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+    
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .badge-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    
+    .badge-manager {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+    
+    .leave-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .detail-icon {
+        color: #8b5cf6;
+    }
+    
+    .reason-box {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.5rem 1.5rem;
+        border-radius: 6px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: #9ca3af;
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="header-section">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-0">
+                    <i class="bi bi-clipboard-check"></i>
+                    Leave Requests Management
+                </h2>
+                <p class="mb-0 mt-2 opacity-75">Review and approve leave requests</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-number" style="color: #f59e0b;">{{ pending_requests.count }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: #10b981;">
+                {% with approved=history|dictsort:"status"|slice:":10" %}
+                    {{ approved|length }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Approved (Recent)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" style="color: #ef4444;">
+                {% with rejected=history|dictsort:"status"|slice:"10:" %}
+                    {{ rejected|length }}
+                {% endwith %}
+            </div>
+            <div class="stat-label">Rejected (Recent)</div>
+        </div>
+    </div>
+
+    <!-- Pending Requests -->
+    <div class="requests-section">
+        <h4 class="mb-4">
+            <i class="bi bi-hourglass-split"></i>
+            Pending Requests
+        </h4>
+        
+        {% if pending_requests %}
+            {% for leave in pending_requests %}
+            <div class="request-card">
+                <div class="request-header">
+                    <div class="staff-info">
+                        <div class="staff-avatar">
+                            {{ leave.staff.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ leave.staff.get_full_name|default:leave.staff.username }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-building"></i> {{ leave.staff.branch }}
+                                {% if leave.staff.role == 'manager' %}
+                                    <span class="badge badge-manager ms-2">
+                                        <i class="bi bi-star"></i> Manager
+                                    </span>
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    <span class="badge badge-pending">{{ leave.get_status_display }}</span>
+                </div>
+                
+                <div class="leave-details">
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-event detail-icon"></i>
+                        <span>{{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-clock detail-icon"></i>
+                        <span>{{ leave.total_days }} day{{ leave.total_days|pluralize }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-tag detail-icon"></i>
+                        <span>{{ leave.get_leave_type_display }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-plus detail-icon"></i>
+                        <span>Submitted {{ leave.created_at|date:"M d, Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="reason-box">
+                    <strong>Reason:</strong>
+                    <p class="mb-0 mt-1">{{ leave.reason }}</p>
+                </div>
+                
+                {% if leave.medical_proof %}
+                <div class="mb-3">
+                    <a href="{{ leave.medical_proof.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-file-medical"></i> View Medical Certificate
+                    </a>
+                </div>
+                {% endif %}
+                
+                {% if leave.manager_notes %}
+                <div class="alert alert-info mb-3">
+                    <strong>Manager Notes:</strong>
+                    <p class="mb-0">{{ leave.manager_notes }}</p>
+                    <small class="text-muted">
+                        Approved by {{ leave.manager_approved_by.username }} on {{ leave.manager_approved_at|date:"M d, Y g:i A" }}
+                    </small>
+                </div>
+                {% endif %}
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'schedule:admin_approve_leave' leave.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-check-circle"></i> Review & Approve
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <h5>No Pending Requests</h5>
+                <p class="text-muted">All leave requests have been processed</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- History -->
+    <div class="requests-section">
+        <h4 class="mb-4">
+            <i class="bi bi-clock-history"></i>
+            Recent History
+        </h4>
+        
+        {% if history %}
+            {% for leave in history %}
+            <div class="request-card">
+                <div class="request-header">
+                    <div class="staff-info">
+                        <div class="staff-avatar">
+                            {{ leave.staff.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="mb-0">{{ leave.staff.get_full_name|default:leave.staff.username }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-building"></i> {{ leave.staff.branch }}
+                            </small>
+                        </div>
+                    </div>
+                    {% if leave.status == 'approved' %}
+                        <span class="badge badge-approved">Approved</span>
+                    {% else %}
+                        <span class="badge badge-rejected">Rejected</span>
+                    {% endif %}
+                </div>
+                
+                <div class="leave-details">
+                    <div class="detail-item">
+                        <i class="bi bi-calendar-event detail-icon"></i>
+                        <span>{{ leave.start_date|date:"M d" }} - {{ leave.end_date|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-clock detail-icon"></i>
+                        <span>{{ leave.total_days }} day{{ leave.total_days|pluralize }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <i class="bi bi-tag detail-icon"></i>
+                        <span>{{ leave.get_leave_type_display }}</span>
+                    </div>
+                </div>
+                
+                {% if leave.admin_notes %}
+                <div class="alert {% if leave.status == 'approved' %}alert-success{% else %}alert-danger{% endif %} mb-0 mt-2">
+                    <strong>Admin Notes:</strong>
+                    <p class="mb-0">{{ leave.admin_notes }}</p>
+                    <small class="text-muted">
+                        By {{ leave.admin_approved_by.username }} on {{ leave.admin_approved_at|date:"M d, Y g:i A" }}
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <h5>No History</h5>
+                <p class="text-muted">No processed requests yet</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

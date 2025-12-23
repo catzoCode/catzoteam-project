@@ -1,0 +1,214 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Complete Task - CatzoTeam{% endblock %}
+{% block page_title %}Complete Task{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:my_tasks' %}">My Tasks</a></li>
+<li class="breadcrumb-item active">Complete Task</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .task-detail-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+    
+    .task-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .task-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .points-display {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 25px;
+        text-align: center;
+    }
+    
+    .points-display .label {
+        font-size: 0.8rem;
+        opacity: 0.9;
+    }
+    
+    .points-display .value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .info-item i {
+        font-size: 1.5rem;
+        color: #3498db;
+    }
+    
+    .info-item .label {
+        font-size: 0.8rem;
+        color: #7f8c8d;
+        margin-bottom: 3px;
+    }
+    
+    .info-item .value {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .btn-submit {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(17, 153, 142, 0.4);
+        color: white;
+    }
+    
+    .btn-cancel {
+        background: #95a5a6;
+        border: none;
+        color: white;
+        padding: 15px 40px;
+        border-radius: 30px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-cancel:hover {
+        background: #7f8c8d;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="task-detail-card">
+            <div class="task-info">
+                <div>
+                    <div class="task-title">{{ task.task_type.name }}</div>
+                    <p class="text-muted mb-0">Package: {{ task.package.package_id }}</p>
+                </div>
+                <div class="points-display">
+                    <div class="label">You'll Earn</div>
+                    <div class="value">{{ task.task_type.points }}</div>
+                    <div class="label">Points</div>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="bi bi-person"></i>
+                    <div>
+                        <div class="label">Customer</div>
+                        <div class="value">{{ task.package.cat.owner.name }}</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <i class="bi bi-heart-fill text-danger"></i>
+                    <div>
+                        <div class="label">Cat</div>
+                        <div class="value">{{ task.package.cat.name }}</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <i class="bi bi-phone"></i>
+                    <div>
+                        <div class="label">Contact</div>
+                        <div class="value">{{ task.package.cat.owner.phone }}</div>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <i class="bi bi-box"></i>
+                    <div>
+                        <div class="label">Package ID</div>
+                        <div class="value">{{ task.package.package_id }}</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if task.notes %}
+            <div class="alert alert-info">
+                <strong><i class="bi bi-info-circle"></i> Task Notes:</strong>
+                <p class="mb-0 mt-2">{{ task.notes }}</p>
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="mt-4">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label for="completion_notes" class="form-label">
+                        <strong>Completion Notes</strong> (Optional)
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="completion_notes" 
+                        name="completion_notes" 
+                        rows="4" 
+                        placeholder="Add any notes about task completion..."
+                    ></textarea>
+                    <small class="text-muted">
+                        Add any relevant details, observations, or issues encountered during the task.
+                    </small>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong><i class="bi bi-exclamation-triangle"></i> Important:</strong>
+                    Once submitted, this task will be sent to your manager for approval.
+                </div>
+                
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-submit">
+                        <i class="bi bi-check-circle"></i> Submit for Approval
+                    </button>
+                    <a href="{% url 'task_management:my_tasks' %}" class="btn btn-cancel">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

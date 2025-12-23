@@ -1,0 +1,282 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Unassigned Packages - CatzoTeam{% endblock %}
+
+{% block page_title %}Unassigned Packages{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Unassigned Packages</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Task Assignment</h5>
+                <p class="mb-0">
+                    Assign tasks from pending packages to staff members. You can also assign tasks to yourself!
+                    {% if user.role == 'manager' %}
+                    <br><strong>Note:</strong> You can only assign to staff from your branch: {{ user.get_branch_display }}
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if packages %}
+    <div class="row">
+        {% for package in packages %}
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-box-seam"></i> Package {{ package.package_id }}
+                        </h5>
+                        <span class="badge bg-warning">Pending</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Package Info -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">Customer Information</h6>
+                        <p class="mb-1"><strong>{{ package.cat.owner.name }}</strong></p>
+                        <p class="mb-1 text-muted">
+                            <i class="bi bi-telephone"></i> {{ package.cat.owner.phone }}
+                        </p>
+                        <p class="mb-0 text-muted">
+                            <i class="bi bi-envelope"></i> {{ package.cat.owner.email|default:"No email" }}
+                        </p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Cat Information</h6>
+                        <p class="mb-1"><strong>{{ package.cat.name }}</strong> - {{ package.cat.breed }}</p>
+                        <p class="mb-0 text-muted">{{ package.cat.gender }}, {{ package.cat.age }} months</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-muted">Package Details</h6>
+                        <p class="mb-1">
+                            <span class="badge bg-info">{{ package.tasks.count }} Tasks</span>
+                            <span class="badge bg-success">{{ package.total_points }} Points</span>
+                        </p>
+                        <p class="mb-0 text-muted">
+                            Created: {{ package.created_at|date:"M d, Y H:i" }}
+                        </p>
+                    </div>
+
+                    <!-- Tasks List -->
+                    <div class="mb-3">
+                        <h6 class="text-muted">Tasks in this Package:</h6>
+                        <div class="list-group">
+                            {% for task in package.tasks.all %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ task.task_type.name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i> {{ task.scheduled_date|date:"M d, Y" }}
+                                            {% if task.scheduled_time %}
+                                            @ {{ task.scheduled_time }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                    <div>
+                                        <span class="badge bg-success">{{ task.points }} pts</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Assignment Form for Each Task -->
+                                <form method="post" action="{% url 'task_management:assign_task' task.task_id %}" class="mt-2">
+                                    {% csrf_token %}
+                                    <div class="input-group input-group-sm">
+                                        <select name="assigned_staff" class="form-select" required>
+                                            <option value="">Select Staff...</option>
+                                            
+                                            <!-- Self-assignment option -->
+                                            <option value="{{ current_user.id }}" class="bg-warning">
+                                                ⭐ Assign to ME ({{ current_user.username }})
+                                            </option>
+                                            
+                                            <option disabled>──────────</option>
+                                            
+                                            <!-- Staff from branch -->
+                                            {% for staff_member in staff %}
+                                                {% if staff_member.id != current_user.id %}
+                                                <option value="{{ staff_member.id }}">
+                                                    {{ staff_member.username }} ({{ staff_member.employee_id }})
+                                                    {% if staff_member.branch %}
+                                                    - {{ staff_member.get_branch_display }}
+                                                    {% endif %}
+                                                </option>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-person-check"></i> Assign
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    {% if package.notes %}
+                    <div class="alert alert-warning">
+                        <strong><i class="bi bi-sticky"></i> Package Notes:</strong>
+                        <p class="mb-0 mt-2">{{ package.notes|linebreaks }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            Created by: {{ package.created_by.username }}
+                        </small>
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-outline-primary" 
+                            data-bs-toggle="modal" 
+                            data-bs-target="#packageModal{{ package.id }}"
+                        >
+                            <i class="bi bi-eye"></i> View Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Package Detail Modal -->
+        <div class="modal fade" id="packageModal{{ package.id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-box-seam"></i> Package {{ package.package_id }} Details
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <h6>Customer</h6>
+                                <p><strong>{{ package.cat.owner.name }}</strong></p>
+                                <p class="text-muted">{{ package.cat.owner.phone }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Cat</h6>
+                                <p><strong>{{ package.cat.name }}</strong></p>
+                                <p class="text-muted">{{ package.cat.breed }}, {{ package.cat.age }} months</p>
+                            </div>
+                        </div>
+
+                        <h6>Tasks ({{ package.tasks.count }})</h6>
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Date</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in package.tasks.all %}
+                                <tr>
+                                    <td>{{ task.task_type.name }}</td>
+                                    <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
+                                    <td><span class="badge bg-success">{{ task.points }}</span></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="2">Total</th>
+                                    <th><span class="badge bg-success">{{ package.total_points }}</span></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        {% if package.cat.medical_notes %}
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Medical Notes</h6>
+                            <p class="mb-0">{{ package.cat.medical_notes|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if package.cat.special_requirements %}
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> Special Requirements</h6>
+                            <p class="mb-0">{{ package.cat.special_requirements|linebreaks }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h3 class="mt-3 text-muted">No Unassigned Packages</h3>
+                    <p class="text-muted">All packages have been assigned to staff members.</p>
+                    <a href="{% url 'dashboard:manager_dashboard' %}" class="btn btn-primary mt-3">
+                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+    }
+
+    .list-group-item {
+        border-left: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .list-group-item:hover {
+        border-left-color: #0d6efd;
+        background-color: #f8f9fa;
+    }
+
+    .bg-warning option {
+        font-weight: bold;
+    }
+</style>
+
+<script>
+    // Auto-submit on staff selection
+    document.querySelectorAll('select[name="assigned_staff"]').forEach(select => {
+        select.addEventListener('change', function() {
+            if (this.value && confirm(`Assign this task to ${this.options[this.selectedIndex].text}?`)) {
+                // Form will submit via button click
+            } else {
+                this.value = '';
+            }
+        });
+    });
+</script>
+{% endblock %}

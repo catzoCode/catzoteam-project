@@ -1,0 +1,319 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Admin Schedule Calendar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .calendar-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .view-toggle {
+        display: flex;
+        gap: 0.5rem;
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem;
+        border-radius: 8px;
+    }
+    
+    .view-toggle a {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        color: white;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    
+    .view-toggle a.active {
+        background: white;
+        color: #667eea;
+    }
+    
+    .calendar-table-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .calendar-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .calendar-table thead th {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+        border-bottom: 2px solid #dee2e6;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .calendar-table thead th:first-child {
+        text-align: left;
+        width: 150px;
+    }
+    
+    .calendar-table tbody td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        vertical-align: top;
+        min-height: 80px;
+    }
+    
+    .calendar-table tbody td:first-child {
+        background: #f8f9fa;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+    }
+    
+    .calendar-table tbody tr:hover td {
+        background: #f8f9fa;
+    }
+    
+    .day-header {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    
+    .day-header.today {
+        color: #10b981;
+        font-weight: 700;
+    }
+    
+    .schedule-cell {
+        min-height: 60px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .schedule-cell:hover {
+        background: #f3f4f6;
+    }
+    
+    .schedule-cell.empty {
+        background: #fef2f2;
+        border: 2px dashed #fca5a5;
+    }
+    
+    .schedule-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 0.25rem;
+    }
+    
+    .schedule-badge.morning { background: #dbeafe; color: #1e40af; }
+    .schedule-badge.afternoon { background: #fed7aa; color: #92400e; }
+    .schedule-badge.evening { background: #e9d5ff; color: #6b21a8; }
+    .schedule-badge.night { background: #e5e7eb; color: #1f2937; }
+    .schedule-badge.full_day { background: #d1fae5; color: #065f46; }
+    .schedule-badge.off { background: #f3f4f6; color: #6b7280; }
+    
+    .schedule-time {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 0.25rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    
+    .staff-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .staff-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #667eea;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Calendar Header -->
+    <div class="calendar-header">
+        <div class="calendar-controls">
+            <div>
+                <h2 class="mb-2">
+                    <i class="bi bi-calendar3"></i> Schedule Calendar
+                </h2>
+                <p class="mb-0 opacity-75">
+                    Week of {{ week_start|date:"M d" }} - {{ week_end|date:"M d, Y" }}
+                </p>
+            </div>
+            
+            <div class="view-toggle">
+                <a href="?view=week&date={{ current_date|date:'Y-m-d' }}&branch={{ branch_filter }}" class="active">
+                    <i class="bi bi-calendar-week"></i> Week
+                </a>
+                <a href="?view=month&date={{ current_date|date:'Y-m-d' }}&branch={{ branch_filter }}">
+                    <i class="bi bi-calendar-month"></i> Month
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="?date={{ prev_week|date:'Y-m-d' }}&branch={{ branch_filter }}&view=week" class="btn btn-outline-primary">
+            <i class="bi bi-chevron-left"></i> Previous Week
+        </a>
+        <a href="?date={{ next_week|date:'Y-m-d' }}&branch={{ branch_filter }}&view=week" class="btn btn-outline-primary">
+            Next Week <i class="bi bi-chevron-right"></i>
+        </a>
+        <a href="?date={{ today|date:'Y-m-d' }}&branch={{ branch_filter }}&view=week" class="btn btn-primary">
+            <i class="bi bi-calendar-check"></i> Today
+        </a>
+        <a href="{% url 'schedule:admin_create_schedule' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Create Schedule
+        </a>
+        <a href="{% url 'schedule:admin_bulk_create' %}" class="btn btn-info">
+            <i class="bi bi-stack"></i> Bulk Create
+        </a>
+        
+        <!-- Branch Filter -->
+        <select class="form-select" style="width: auto;" onchange="window.location.href='?date={{ current_date|date:'Y-m-d' }}&branch=' + this.value + '&view=week'">
+            <option value="all" {% if branch_filter == 'all' %}selected{% endif %}>All Branches</option>
+            {% for branch in branches %}
+            <option value="{{ branch.value }}" {% if branch_filter == branch.value %}selected{% endif %}>
+                {{ branch.label }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- Calendar Table -->
+    <div class="calendar-table-container">
+        <table class="calendar-table">
+            <thead>
+                <tr>
+                    <th>Staff Member</th>
+                    {% for day in week_days %}
+                    <th>
+                        <div class="day-header {% if day == today %}today{% endif %}">
+                            {{ day|date:"l" }}<br>
+                            <strong>{{ day|date:"M d" }}</strong>
+                        </div>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in schedule_rows %}
+                <tr>
+                    <td>
+                        <div class="staff-info">
+                            <div class="staff-avatar">
+                                {{ row.staff.username|slice:":2"|upper }}
+                            </div>
+                            <div>
+                                <div>{{ row.staff.get_full_name|default:row.staff.username }}</div>
+                                <small class="text-muted">{{ row.staff.get_branch_display }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    {% for cell in row.cells %}
+                    <td class="schedule-cell {% if not cell.schedule %}empty{% endif %}"
+                        onclick="handleCellClick('{{ row.staff.id }}', '{{ cell.day_key }}')">
+                        {% if cell.schedule %}
+                            <div class="schedule-badge {{ cell.schedule.shift_type }}">
+                                {{ cell.schedule.get_shift_type_display }}
+                            </div>
+                            {% if cell.schedule.shift_type != 'off' %}
+                            <div class="schedule-time">
+                                {{ cell.schedule.start_time|time:"g:i A" }}<br>
+                                {{ cell.schedule.end_time|time:"g:i A" }}
+                            </div>
+                            {% endif %}
+                            {% if cell.schedule.notes %}
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    <i class="bi bi-sticky"></i> {{ cell.schedule.notes|truncatewords:3 }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            <div class="mt-1 d-flex gap-1 justify-content-center">
+                                <a href="{% url 'schedule:admin_edit_schedule' cell.schedule.id %}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   onclick="event.stopPropagation()">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'schedule:admin_delete_schedule' cell.schedule.id %}" 
+                                   class="btn btn-sm btn-outline-danger"
+                                   onclick="event.stopPropagation(); return confirm('Delete this schedule?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center text-muted">
+                                <i class="bi bi-plus-circle"></i><br>
+                                <small>Add Schedule</small>
+                            </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-people" style="font-size: 3rem; color: #9ca3af;"></i>
+                        <p class="mt-3 text-muted">No staff found for this branch</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+function handleCellClick(staffId, date) {
+    // Redirect to create schedule with pre-filled staff and date
+    window.location.href = `{% url 'schedule:admin_create_schedule' %}?staff=${staffId}&date=${date}`;
+}
+</script>
+{% endblock %}

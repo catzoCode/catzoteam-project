@@ -1,0 +1,268 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Edit Schedule - CatzoTeam Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .form-section:last-child {
+        border-bottom: none;
+    }
+    
+    .form-section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        padding: 0.625rem 0.875rem;
+        transition: all 0.2s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    .info-box {
+        background: #f3f4f6;
+        border-left: 4px solid #3b82f6;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .info-box.warning {
+        background: #fffbeb;
+        border-left-color: #f59e0b;
+    }
+    
+    .shift-preview {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    .shift-badge-preview {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+    
+    .shift-badge-preview.morning { background: #dbeafe; color: #1e40af; }
+    .shift-badge-preview.afternoon { background: #fed7aa; color: #92400e; }
+    .shift-badge-preview.evening { background: #e9d5ff; color: #6b21a8; }
+    .shift-badge-preview.night { background: #e5e7eb; color: #1f2937; }
+    .shift-badge-preview.full_day { background: #d1fae5; color: #065f46; }
+    .shift-badge-preview.off { background: #f3f4f6; color: #6b7280; }
+    
+    .btn-group-custom {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        padding: 0.625rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-2">
+                    <i class="bi bi-pencil-square"></i> Edit Schedule
+                </h2>
+                <p class="mb-0 opacity-75">
+                    Modify schedule for {{ schedule.staff.get_full_name|default:schedule.staff.username }}
+                </p>
+            </div>
+            <a href="{% url 'schedule:admin_calendar' %}" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> Back to Calendar
+            </a>
+        </div>
+    </div>
+
+    <!-- Current Schedule Info -->
+    <div class="info-box mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-info-circle" style="font-size: 1.5rem; color: #3b82f6;"></i>
+            <div>
+                <strong>Current Schedule:</strong>
+                {{ schedule.date|date:"l, F d, Y" }} - 
+                {{ schedule.get_shift_type_display }}
+                {% if schedule.shift_type != 'off' %}
+                ({{ schedule.start_time|time:"g:i A" }} - {{ schedule.end_time|time:"g:i A" }})
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="form-card">
+        <form method="post" id="scheduleForm">
+            {% csrf_token %}
+            
+            <!-- Staff & Date Section -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-person-badge"></i> Staff & Date
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Staff Member</label>
+                        {{ form.staff }}
+                        {% if form.staff.errors %}
+                        <div class="text-danger mt-1">{{ form.staff.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Date</label>
+                        {{ form.date }}
+                        {% if form.date.errors %}
+                        <div class="text-danger mt-1">{{ form.date.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shift Details Section -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-clock"></i> Shift Details
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Shift Type</label>
+                        {{ form.shift_type }}
+                        {% if form.shift_type.errors %}
+                        <div class="text-danger mt-1">{{ form.shift_type.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row" id="timeFields">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Time</label>
+                        {{ form.start_time }}
+                        {% if form.start_time.errors %}
+                        <div class="text-danger mt-1">{{ form.start_time.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Time</label>
+                        {{ form.end_time }}
+                        {% if form.end_time.errors %}
+                        <div class="text-danger mt-1">{{ form.end_time.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Info Section -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-sticky"></i> Additional Information
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="text-danger mt-1">{{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                    <small class="text-muted">Add any special instructions or notes</small>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-group-custom">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Update Schedule
+                </button>
+                <a href="{% url 'schedule:admin_calendar' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <a href="{% url 'schedule:admin_delete_schedule' schedule.id %}" 
+                   class="btn btn-danger ms-auto"
+                   onclick="return confirm('Are you sure you want to delete this schedule?')">
+                    <i class="bi bi-trash"></i> Delete
+                </a>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+// Show/hide time fields based on shift type
+const shiftTypeSelect = document.querySelector('select[name="shift_type"]');
+const timeFields = document.getElementById('timeFields');
+
+function toggleTimeFields() {
+    if (shiftTypeSelect.value === 'off') {
+        timeFields.style.display = 'none';
+    } else {
+        timeFields.style.display = 'flex';
+    }
+}
+
+shiftTypeSelect.addEventListener('change', toggleTimeFields);
+toggleTimeFields(); // Initial state
+</script>
+{% endblock %}

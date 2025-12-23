@@ -1,0 +1,881 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Staff - CatzoTeam Admin{% endblock %}
+{% block page_title %}Manage Staff{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">Manage Staff</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #007bff;
+    }
+    
+    .stat-card.success { border-left-color: #28a745; }
+    .stat-card.danger { border-left-color: #dc3545; }
+    .stat-card.warning { border-left-color: #ffc107; }
+    .stat-card.info { border-left-color: #17a2b8; }
+    
+    .stat-label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-top: 5px;
+    }
+    
+    .filters-bar {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .filters-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr auto;
+        gap: 10px;
+        align-items: end;
+    }
+    
+    .staff-table-container {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+    }
+    
+    .modal.show {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        margin: 20px;
+    }
+    
+    .modal-content.large {
+        max-width: 800px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 99999;
+        display: none;
+        min-width: 300px;
+    }
+    
+    .toast.show {
+        display: block;
+        animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(400px); }
+        to { transform: translateX(0); }
+    }
+    
+    .toast.success { border-left: 4px solid #28a745; }
+    .toast.error { border-left: 4px solid #dc3545; }
+    
+    .action-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+        margin-right: 2px;
+    }
+    
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .chart-container {
+        height: 300px;
+        margin: 20px 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <strong id="toast-title">Success</strong>
+        <p id="toast-message" class="mb-0 mt-1"></p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-label">Total Staff</div>
+            <div class="stat-value">{{ stats.total }}</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-label">Active</div>
+            <div class="stat-value">{{ stats.active }}</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-label">Inactive</div>
+            <div class="stat-value">{{ stats.inactive }}</div>
+        </div>
+        <div class="stat-card info">
+            <div class="stat-label">Staff Role</div>
+            <div class="stat-value">{{ stats.staff_role }}</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-label">Managers</div>
+            <div class="stat-value">{{ stats.managers }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Admins</div>
+            <div class="stat-value">{{ stats.admins }}</div>
+        </div>
+    </div>
+    
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <form method="GET" id="filterForm">
+            <div class="filters-row">
+                <div class="form-group mb-0">
+                    <label>Search</label>
+                    <input type="text" 
+                           name="search" 
+                           class="form-control" 
+                           placeholder="Name, email, employee ID, phone..."
+                           value="{{ search_query }}">
+                </div>
+                <div class="form-group mb-0">
+                    <label>Role</label>
+                    <select name="role" class="form-control">
+                        <option value="all">All Roles</option>
+                        {% for role_code, role_name in role_choices %}
+                        <option value="{{ role_code }}" {% if role_filter == role_code %}selected{% endif %}>
+                            {{ role_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-0">
+                    <label>Branch</label>
+                    <select name="branch" class="form-control">
+                        <option value="all">All Branches</option>
+                        {% for branch_code, branch_name in branch_choices %}
+                        <option value="{{ branch_code }}" {% if branch_filter == branch_code %}selected{% endif %}>
+                            {{ branch_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group mb-0">
+                    <label>Status</label>
+                    <select name="status" class="form-control">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div class="form-group mb-0">
+                    <label>&nbsp;</label>
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Filter
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="showAddStaffModal()">
+                            <i class="bi bi-plus"></i> Add Staff
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Staff Table -->
+    <div class="staff-table-container">
+        {% if staff_list %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="10%">Employee ID</th>
+                        <th width="15%">Name</th>
+                        <th width="15%">Email</th>
+                        <th width="10%">Role</th>
+                        <th width="10%">Branch</th>
+                        <th width="8%">Status</th>
+                        <th width="12%">Joined</th>
+                        <th width="20%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for staff in staff_list %}
+                    <tr>
+                        <td><strong>{{ staff.employee_id }}</strong></td>
+                        <td>
+                            <strong>{{ staff.get_full_name|default:staff.username }}</strong>
+                            <br><small class="text-muted">@{{ staff.username }}</small>
+                        </td>
+                        <td>{{ staff.email }}</td>
+                        <td>
+                            {% if staff.role == 'admin' %}
+                            <span class="badge bg-danger">Admin</span>
+                            {% elif staff.role == 'manager' %}
+                            <span class="badge bg-primary">Manager</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Staff</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.get_branch_display }}</td>
+                        <td>
+                            {% if staff.is_active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ staff.date_joined|date:"M d, Y" }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary action-btn" 
+                                    onclick="editStaff({{ staff.id }}, '{{ staff.username }}', '{{ staff.email }}', '{{ staff.first_name }}', '{{ staff.last_name }}', '{{ staff.phone }}', '{{ staff.role }}', '{{ staff.branch }}', {{ staff.is_active|lower }})"
+                                    title="Edit">
+                                ✏️
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning action-btn" 
+                                    onclick="resetPassword({{ staff.id }}, '{{ staff.username }}')"
+                                    title="Reset Password">
+                                🔑
+                            </button>
+                            <button class="btn btn-sm btn-outline-info action-btn" 
+                                    onclick="viewPerformance({{ staff.id }}, '{{ staff.get_full_name|default:staff.username }}')"
+                                    title="View Performance">
+                                📊
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary action-btn" 
+                                    onclick="showReassignModal({{ staff.id }}, '{{ staff.username }}')"
+                                    title="Reassign Tasks">
+                                🔄
+                            </button>
+                            {% if staff.is_active %}
+                            <button class="btn btn-sm btn-outline-danger action-btn" 
+                                    onclick="deactivateStaff({{ staff.id }}, '{{ staff.username }}')"
+                                    title="Deactivate">
+                                ❌
+                            </button>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-success action-btn" 
+                                    onclick="activateStaff({{ staff.id }}, '{{ staff.username }}')"
+                                    title="Activate">
+                                ✅
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if staff_list.has_other_pages %}
+        <div class="pagination">
+            <nav>
+                <ul class="pagination mb-0">
+                    {% if staff_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ staff_list.previous_page_number }}&search={{ search_query }}&role={{ role_filter }}&branch={{ branch_filter }}&status={{ status_filter }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in staff_list.paginator.page_range %}
+                    {% if staff_list.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&search={{ search_query }}&role={{ role_filter }}&branch={{ branch_filter }}&status={{ status_filter }}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    {% if staff_list.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ staff_list.next_page_number }}&search={{ search_query }}&role={{ role_filter }}&branch={{ branch_filter }}&status={{ status_filter }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people display-1 text-muted"></i>
+            <p class="text-muted mt-3">No staff found</p>
+        </div>
+        {% endif %}
+    </div>
+    
+</div>
+
+<!-- Add Staff Modal -->
+<div id="addStaffModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Add New Staff Member</h4>
+        <form id="addStaffForm" onsubmit="submitAddStaff(event)">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Username <span class="text-danger">*</span></label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Email <span class="text-danger">*</span></label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" name="phone" class="form-control">
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Role <span class="text-danger">*</span></label>
+                        <select name="role" class="form-control" required>
+                            <option value="">Select Role</option>
+                            {% for role_code, role_name in role_choices %}
+                            <option value="{{ role_code }}">{{ role_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Branch <span class="text-danger">*</span></label>
+                        <select name="branch" class="form-control" required>
+                            <option value="">Select Branch</option>
+                            {% for branch_code, branch_name in branch_choices %}
+                            <option value="{{ branch_code }}">{{ branch_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> 
+                Employee ID and password will be auto-generated. Password will be shown once and emailed to the staff member.
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addStaffModal')">Cancel</button>
+                <button type="submit" class="btn btn-success">Create Staff</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div id="editStaffModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Edit Staff Member</h4>
+        <form id="editStaffForm" onsubmit="submitEditStaff(event)">
+            <input type="hidden" id="edit_user_id" name="user_id">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="edit_username" class="form-control" disabled>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="edit_email" name="email" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="edit_first_name" name="first_name" class="form-control">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="edit_last_name" name="last_name" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Phone</label>
+                <input type="text" id="edit_phone" name="phone" class="form-control">
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="edit_role" name="role" class="form-control">
+                            {% for role_code, role_name in role_choices %}
+                            <option value="{{ role_code }}">{{ role_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Branch</label>
+                        <select id="edit_branch" name="branch" class="form-control">
+                            {% for branch_code, branch_name in branch_choices %}
+                            <option value="{{ branch_code }}">{{ branch_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" id="edit_is_active" name="is_active" class="form-check-input">
+                <label class="form-check-label" for="edit_is_active">Active</label>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editStaffModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Staff</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Performance Modal -->
+<div id="performanceModal" class="modal">
+    <div class="modal-content large">
+        <h4 class="mb-4">Staff Performance - <span id="perf_staff_name"></span></h4>
+        <div id="performanceContent">
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('performanceModal')">Close</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reassign Tasks Modal -->
+<div id="reassignModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Reassign Tasks</h4>
+        <form id="reassignForm" onsubmit="submitReassign(event)">
+            <input type="hidden" id="reassign_from_user_id">
+            <p>Reassign all incomplete tasks from <strong id="reassign_from_name"></strong> to:</p>
+            <div class="form-group">
+                <label>Select Staff Member <span class="text-danger">*</span></label>
+                <select id="reassign_to_user" class="form-control" required>
+                    <option value="">Select Staff</option>
+                    {% for staff in staff_list %}
+                    {% if staff.is_active %}
+                    <option value="{{ staff.id }}">{{ staff.get_full_name|default:staff.username }} ({{ staff.employee_id }})</option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> 
+                This will reassign ALL incomplete tasks (assigned/in progress). Completed tasks will not be affected.
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('reassignModal')">Cancel</button>
+                <button type="submit" class="btn btn-warning">Reassign Tasks</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Password Result Modal -->
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Staff Created Successfully</h4>
+        <div class="alert alert-success">
+            <h5>Credentials Generated</h5>
+            <p><strong>Employee ID:</strong> <span id="result_employee_id"></span></p>
+            <p><strong>Password:</strong> <code id="result_password"></code></p>
+            <p class="mb-0"><small><i class="bi bi-envelope"></i> An email has been sent to the staff member with these credentials.</small></p>
+        </div>
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle"></i> 
+            Please save this password. It will not be shown again.
+        </div>
+        <div class="d-flex justify-content-end mt-4">
+            <button type="button" class="btn btn-primary" onclick="closePasswordModal()">Got It</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Toast Notification
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const title = document.getElementById('toast-title');
+    const msg = document.getElementById('toast-message');
+    
+    title.textContent = type === 'success' ? 'Success' : 'Error';
+    msg.textContent = message;
+    toast.className = `toast show ${type}`;
+    
+    setTimeout(() => {
+        toast.className = 'toast';
+    }, 3000);
+}
+
+// Modal Functions
+function showAddStaffModal() {
+    document.getElementById('addStaffModal').classList.add('show');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+}
+
+function closePasswordModal() {
+    closeModal('passwordModal');
+    location.reload();
+}
+
+// Add Staff
+function submitAddStaff(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+    
+    fetch('/dashboard/ajax/staff/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeModal('addStaffModal');
+            document.getElementById('result_employee_id').textContent = data.employee_id;
+            document.getElementById('result_password').textContent = data.password;
+            document.getElementById('passwordModal').classList.add('show');
+        } else {
+            showToast(data.error, 'error');
+        }
+    })
+    .catch(err => showToast('Network error', 'error'));
+}
+
+// Edit Staff
+function editStaff(userId, username, email, firstName, lastName, phone, role, branch, isActive) {
+    document.getElementById('edit_user_id').value = userId;
+    document.getElementById('edit_username').value = username;
+    document.getElementById('edit_email').value = email;
+    document.getElementById('edit_first_name').value = firstName;
+    document.getElementById('edit_last_name').value = lastName;
+    document.getElementById('edit_phone').value = phone;
+    document.getElementById('edit_role').value = role;
+    document.getElementById('edit_branch').value = branch;
+    document.getElementById('edit_is_active').checked = isActive;
+    document.getElementById('editStaffModal').classList.add('show');
+}
+
+function submitEditStaff(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+    data.is_active = formData.has('is_active');
+    const userId = document.getElementById('edit_user_id').value;
+    
+    fetch(`/dashboard/ajax/staff/${userId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Staff updated successfully');
+            closeModal('editStaffModal');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.error, 'error');
+        }
+    });
+}
+
+// Deactivate/Activate Staff
+function deactivateStaff(userId, username) {
+    if (confirm(`Deactivate staff member "${username}"?`)) {
+        fetch(`/dashboard/ajax/staff/${userId}/soft-delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error, 'error');
+            }
+        });
+    }
+}
+
+function activateStaff(userId, username) {
+    if (confirm(`Activate staff member "${username}"?`)) {
+        fetch(`/dashboard/ajax/staff/${userId}/activate/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error, 'error');
+            }
+        });
+    }
+}
+
+// Reset Password
+function resetPassword(userId, username) {
+    if (confirm(`Reset password for "${username}"? A new password will be generated and emailed to them.`)) {
+        fetch(`/dashboard/ajax/staff/${userId}/reset-password/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Password Reset Successful!\n\nNew Password: ${data.new_password}\n\nAn email has been sent to the staff member.`);
+            } else {
+                showToast(data.error, 'error');
+            }
+        });
+    }
+}
+
+// View Performance
+function viewPerformance(userId, staffName) {
+    document.getElementById('perf_staff_name').textContent = staffName;
+    document.getElementById('performanceModal').classList.add('show');
+    
+    fetch(`/dashboard/ajax/staff/${userId}/performance/`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const perf = data.performance;
+            const content = `
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Tasks</div>
+                            <div class="stat-value">${perf.task_stats.total}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card success">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value">${perf.task_stats.completed}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card warning">
+                            <div class="stat-label">In Progress</div>
+                            <div class="stat-value">${perf.task_stats.in_progress}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card info">
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value">${perf.task_stats.pending}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h5>Monthly Points: ${perf.monthly_points}</h5>
+                    <div class="chart-container">
+                        <canvas id="pointsChart"></canvas>
+                    </div>
+                </div>
+            `;
+            document.getElementById('performanceContent').innerHTML = content;
+            
+            // Draw chart
+            const ctx = document.getElementById('pointsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: perf.daily_points.dates,
+                    datasets: [{
+                        label: 'Daily Points',
+                        data: perf.daily_points.points,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    });
+}
+
+// Reassign Tasks
+function showReassignModal(fromUserId, fromUsername) {
+    document.getElementById('reassign_from_user_id').value = fromUserId;
+    document.getElementById('reassign_from_name').textContent = fromUsername;
+    document.getElementById('reassignModal').classList.add('show');
+}
+
+function submitReassign(event) {
+    event.preventDefault();
+    const fromUserId = document.getElementById('reassign_from_user_id').value;
+    const toUserId = document.getElementById('reassign_to_user').value;
+    
+    fetch(`/dashboard/ajax/staff/${fromUserId}/reassign-tasks/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ to_user_id: toUserId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message);
+            closeModal('reassignModal');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.error, 'error');
+        }
+    });
+}
+</script>
+{% endblock %}

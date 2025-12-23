@@ -1,0 +1,179 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Add New Cat{% endblock %}
+
+{% block page_title %}Add New Cat{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:register_step1' %}">Register Service</a></li>
+<li class="breadcrumb-item"><a href="{% url 'task_management:register_step2' customer.customer_id %}">Select Cats</a></li>
+<li class="breadcrumb-item active">Add Cat</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Customer Info -->
+        <div class="card mb-4 border-primary">
+            <div class="card-body">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle text-primary"></i>
+                    Adding cat for: {{ customer.name }}
+                </h5>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-tag"></i> {{ customer.customer_id }} | 
+                    <i class="bi bi-telephone"></i> {{ customer.phone }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Add Cat Form -->
+        <div class="card shadow-lg">
+            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h4 class="text-white mb-0">
+                    <i class="bi bi-heart-fill"></i> Cat Registration
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'task_management:register_step2_add_cat' customer.customer_id %}">
+                    {% csrf_token %}
+
+                    <!-- Employee ID Verification -->
+                    <div class="alert alert-warning border-warning">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <strong>Employee Verification Required</strong>
+                        <div class="mt-2">
+                            <label class="form-label fw-bold">Your Employee ID:</label>
+                            <input type="text" 
+                                   name="employee_id" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="CTZ001" 
+                                   value="{{ user.employee_id }}"
+                                   required>
+                            <small class="text-muted">Enter your employee ID to verify this registration</small>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 text-primary">
+                        <i class="bi bi-1-circle-fill"></i> Cat Information
+                    </h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Cat Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="name" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Fluffy" 
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Breed <span class="text-danger">*</span>
+                            </label>
+                            <select name="breed" class="form-select form-select-lg" required>
+                                <option value="">Select Breed</option>
+                                <option value="persian">Persian</option>
+                                <option value="siamese">Siamese</option>
+                                <option value="maine_coon">Maine Coon</option>
+                                <option value="british_shorthair">British Shorthair</option>
+                                <option value="ragdoll">Ragdoll</option>
+                                <option value="bengal">Bengal</option>
+                                <option value="mixed">Mixed Breed</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Age (years) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" 
+                                   name="age" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="3" 
+                                   min="0" 
+                                   max="30"
+                                   required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Gender <span class="text-danger">*</span>
+                            </label>
+                            <select name="gender" class="form-select form-select-lg" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">
+                                Color <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="color" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="White & Grey" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Vaccination Status <span class="text-danger">*</span>
+                        </label>
+                        <select name="vaccination_status" class="form-select form-select-lg" required>
+                            <option value="">Select Status</option>
+                            <option value="unknown">Unknown</option>
+                            <option value="up_to_date">Up to Date</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="not_vaccinated">Not Vaccinated</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Medical Notes & Allergies <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="medical_notes" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="Any allergies, medications, or medical conditions..." 
+                                  required></textarea>
+                        <small class="text-muted">Important: Include any allergies (e.g., allergic to chicken)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Special Requirements</label>
+                        <textarea name="special_requirements" 
+                                  class="form-control" 
+                                  rows="2" 
+                                  placeholder="Any special handling or care requirements..."></textarea>
+                        <small class="text-muted">Optional - Any special care instructions</small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'task_management:register_step2' customer.customer_id %}" 
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-check-circle"></i> Add Cat
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

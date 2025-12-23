@@ -1,0 +1,221 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Register Cat - Registration Portal{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="text-white mb-3">
+            <i class="bi bi-heart-fill text-danger"></i> Register Cat
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" class="btn btn-light">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Customer Info -->
+<div class="card mb-4 border-primary">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5 class="mb-0">
+                    <i class="bi bi-person-circle text-primary"></i>
+                    {{ customer.name }}
+                </h5>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-telephone"></i> {{ customer.phone }} | 
+                    <i class="bi bi-tag"></i> {{ customer.customer_id }}
+                </p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
+                   class="btn btn-info">
+                    <i class="bi bi-clipboard-check"></i> Skip to Service Request
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Existing Cats -->
+{% if cats %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-list"></i> Registered Cats</span>
+        <span class="badge bg-danger">{{ cats.count }} cat(s)</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {% for cat in cats %}
+            <div class="col-md-6">
+                <div class="card h-100 border-{{ cat.vaccination_status|default:'secondary' }}">
+                    <div class="card-body">
+                        <h6 class="mb-2">
+                            <i class="bi bi-heart-fill text-danger"></i> {{ cat.name }}
+                        </h6>
+                        <p class="mb-1 small">
+                            <strong>ID:</strong> {{ cat.cat_id }}
+                        </p>
+                        <p class="mb-1 small">
+                            {{ cat.breed }} | {{ cat.age }} years | {{ cat.get_gender_display }}
+                        </p>
+                        {% if cat.medical_notes %}
+                        <div class="alert alert-warning py-1 px-2 mb-0 mt-2">
+                            <small><i class="bi bi-exclamation-triangle"></i> {{ cat.medical_notes|truncatewords:10 }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Register New Cat Form -->
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle"></i> Register New Cat
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'registration_portal:register_cat' customer.customer_id %}">
+                    {% csrf_token %}
+                    
+                    <h5 class="text-primary mb-3">
+                        <i class="bi bi-info-circle"></i> Basic Information
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Cat Name <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   name="name" 
+                                   class="form-control" 
+                                   placeholder="Enter cat's name"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Breed <span class="text-danger">*</span></label>
+                            <select name="breed" class="form-select" required>
+                                <option value="mixed">Mixed Breed</option>
+                                <option value="persian">Persian</option>
+                                <option value="siamese">Siamese</option>
+                                <option value="maine_coon">Maine Coon</option>
+                                <option value="british_shorthair">British Shorthair</option>
+                                <option value="ragdoll">Ragdoll</option>
+                                <option value="bengal">Bengal</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Age (years) <span class="text-danger">*</span></label>
+                            <input type="number" 
+                                   name="age" 
+                                   class="form-control" 
+                                   min="0" 
+                                   max="30"
+                                   placeholder="0"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Gender <span class="text-danger">*</span></label>
+                            <select name="gender" class="form-select" required>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label">Color</label>
+                            <input type="text" 
+                                   name="color" 
+                                   class="form-control" 
+                                   placeholder="e.g., Orange, White">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" 
+                                   name="weight" 
+                                   class="form-control" 
+                                   step="0.1"
+                                   min="0"
+                                   placeholder="e.g., 4.5">
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Vaccination Status</label>
+                            <select name="vaccination_status" class="form-select">
+                                <option value="unknown">Unknown</option>
+                                <option value="up_to_date">Up to Date</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="not_vaccinated">Not Vaccinated</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-primary mb-3">
+                        <i class="bi bi-heart-pulse"></i> Health Information
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Medical Notes & Allergies <span class="text-danger">*</span></label>
+                            <textarea name="medical_notes" 
+                                      class="form-control" 
+                                      rows="3" 
+                                      placeholder="List any allergies, medical conditions, or current medications..."
+                                      required></textarea>
+                            <small class="text-muted">This is important for the safety of the cat</small>
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Special Requirements</label>
+                            <textarea name="special_requirements" 
+                                      class="form-control" 
+                                      rows="2" 
+                                      placeholder="Any special care instructions, dietary needs, or behavioral notes..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" 
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" 
+                                    name="action" 
+                                    value="another" 
+                                    class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-plus-circle"></i> Add Another Cat
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" 
+                                    name="action" 
+                                    value="service" 
+                                    class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-check-circle"></i> Save & Create Service
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

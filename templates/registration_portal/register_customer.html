@@ -1,0 +1,136 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Register Customer - Registration Portal{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="text-white mb-3">
+            <i class="bi bi-person-plus"></i> Register New Customer
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'registration_portal:customer_search' %}" class="btn btn-light">
+            <i class="bi bi-arrow-left"></i> Back to Search
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-clipboard-data"></i> Customer Information
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'registration_portal:register_customer' %}">
+                    {% csrf_token %}
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Required fields:</strong> Name and Phone Number
+                    </div>
+                    
+                    <h5 class="text-primary mb-3">
+                        <i class="bi bi-person"></i> Personal Information
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" 
+                                   name="name" 
+                                   class="form-control" 
+                                   placeholder="Enter full name"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">IC Number</label>
+                            <input type="text" 
+                                   name="ic_number" 
+                                   class="form-control" 
+                                   placeholder="Enter IC number">
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-primary mb-3">
+                        <i class="bi bi-telephone"></i> Contact Information
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                            <input type="tel" 
+                                   name="phone" 
+                                   class="form-control" 
+                                   placeholder="01X-XXXXXXX"
+                                   required>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" 
+                                   name="email" 
+                                   class="form-control" 
+                                   placeholder="example@email.com">
+                        </div>
+                        
+                        <div class="col-12">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" 
+                                      class="form-control" 
+                                      rows="3" 
+                                      placeholder="Enter full address"></textarea>
+                        </div>
+                    </div>
+                    
+                    <h5 class="text-primary mb-3">
+                        <i class="bi bi-shield-exclamation"></i> Emergency Contact
+                    </h5>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label">Emergency Contact Number</label>
+                            <input type="tel" 
+                                   name="emergency_contact" 
+                                   class="form-control" 
+                                   placeholder="Alternative contact number">
+                            <small class="text-muted">In case we can't reach the primary number</small>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'registration_portal:customer_search' %}" 
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-success btn-lg w-100">
+                                <i class="bi bi-check-circle"></i> Register Customer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="text-muted mb-2">
+                    <i class="bi bi-lightbulb"></i> What happens next?
+                </h6>
+                <ol class="mb-0 ps-3">
+                    <li>Customer will be registered with a unique ID</li>
+                    <li>You'll be redirected to register their cat(s)</li>
+                    <li>Then you can create a service request</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

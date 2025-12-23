@@ -1,0 +1,216 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Create Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+    
+    .header-section {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .branch-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        padding: 0.75rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    }
+    
+    .btn-primary {
+        background: #10b981;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+    }
+    
+    .btn-primary:hover {
+        background: #059669;
+    }
+    
+    .btn-secondary {
+        border-radius: 8px;
+        padding: 0.75rem 2rem;
+    }
+    
+    .alert {
+        border-radius: 8px;
+        border-left: 4px solid;
+    }
+    
+    .alert-info {
+        background: #ecfdf5;
+        border-left-color: #10b981;
+        color: #065f46;
+    }
+    
+    .alert-warning {
+        background: #fffbeb;
+        border-left-color: #f59e0b;
+        color: #92400e;
+    }
+    
+    .required-field::after {
+        content: " *";
+        color: #ef4444;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="header-section">
+        <h2 class="mb-0">
+            <i class="bi bi-calendar-plus"></i>
+            Create Schedule
+        </h2>
+        <div class="branch-badge">
+            <i class="bi bi-building"></i>
+            Branch: {{ request.user.branch }}
+        </div>
+    </div>
+
+    <div class="form-container">
+        
+        <div class="alert alert-info mb-3">
+            <i class="bi bi-info-circle"></i>
+            <strong>Note:</strong> You can only schedule staff members from your branch ({{ request.user.branch }}).
+        </div>
+        
+        <div class="alert alert-warning mb-4">
+            <i class="bi bi-exclamation-triangle"></i>
+            <strong>Reminder:</strong> OFF days don't require start/end times. One schedule per staff per day.
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Staff Selection -->
+            <div class="form-group">
+                <label class="form-label required-field">Staff Member</label>
+                {{ form.staff }}
+                {% if form.staff.errors %}
+                    <div class="text-danger mt-1">{{ form.staff.errors.0 }}</div>
+                {% endif %}
+                <small class="text-muted">Staff from {{ request.user.branch }} branch only</small>
+            </div>
+            
+            <!-- Date -->
+            <div class="form-group">
+                <label class="form-label required-field">Date</label>
+                {{ form.date }}
+                {% if form.date.errors %}
+                    <div class="text-danger mt-1">{{ form.date.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Shift Type -->
+            <div class="form-group">
+                <label class="form-label required-field">Shift Type</label>
+                {{ form.shift_type }}
+                {% if form.shift_type.errors %}
+                    <div class="text-danger mt-1">{{ form.shift_type.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Time Fields -->
+            <div id="timeFields">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">Start Time</label>
+                            {{ form.start_time }}
+                            {% if form.start_time.errors %}
+                                <div class="text-danger mt-1">{{ form.start_time.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="form-label">End Time</label>
+                            {{ form.end_time }}
+                            {% if form.end_time.errors %}
+                                <div class="text-danger mt-1">{{ form.end_time.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notes -->
+            <div class="form-group">
+                <label class="form-label">Notes (Optional)</label>
+                {{ form.notes }}
+                {% if form.notes.errors %}
+                    <div class="text-danger mt-1">{{ form.notes.errors.0 }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- Submit Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'schedule:manager_calendar' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Create Schedule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shiftTypeSelect = document.querySelector('[name="shift_type"]');
+    const timeFields = document.getElementById('timeFields');
+    
+    function toggleTimeFields() {
+        if (shiftTypeSelect.value === 'off') {
+            timeFields.style.display = 'none';
+        } else {
+            timeFields.style.display = 'block';
+        }
+    }
+    
+    toggleTimeFields();
+    shiftTypeSelect.addEventListener('change', toggleTimeFields);
+});
+</script>
+{% endblock %}

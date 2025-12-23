@@ -1,0 +1,103 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Customer Found{% endblock %}
+
+{% block page_title %}Customer Found{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:register_step1' %}">Register Service</a></li>
+<li class="breadcrumb-item active">Customer Found</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Search Info -->
+        <div class="alert alert-success">
+            <i class="bi bi-check-circle-fill"></i>
+            <strong>Found {{ customers.count }} customer(s)</strong> matching "{{ search_query }}"
+        </div>
+
+        <!-- Customer Selection -->
+        {% for customer in customers %}
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-2">
+                            <i class="bi bi-person-circle text-primary"></i>
+                            {{ customer.name }}
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <i class="bi bi-credit-card text-muted"></i>
+                                    <strong>IC:</strong> {{ customer.ic_number|default:"N/A" }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-telephone text-muted"></i>
+                                    <strong>Phone:</strong> {{ customer.phone }}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <i class="bi bi-envelope text-muted"></i>
+                                    <strong>Email:</strong> {{ customer.email|default:"N/A" }}
+                                </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-calendar text-muted"></i>
+                                    <strong>Registered:</strong> {{ customer.created_at|date:"M d, Y" }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Customer's Cats -->
+                        {% if customer.cats.all %}
+                        <div class="mt-3">
+                            <strong class="text-muted">Registered Cats:</strong>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                {% for cat in customer.cats.all %}
+                                <span class="badge bg-light text-dark border" style="font-size: 0.9rem;">
+                                    <i class="bi bi-heart-fill text-danger"></i>
+                                    {{ cat.name }} ({{ cat.breed }}, {{ cat.age }}y)
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="mt-3">
+                            <span class="badge bg-warning">No cats registered yet</span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Last Visit -->
+                        {% if customer.task_packages.exists %}
+                        <p class="mb-0 mt-2">
+                            <i class="bi bi-clock-history text-muted"></i>
+                            <small><strong>Last visit:</strong> {{ customer.task_packages.first.created_at|date:"M d, Y" }}</small>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4 text-end">
+                        <a href="{% url 'task_management:register_step2' customer.customer_id %}" 
+                           class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Select This Customer
+                        </a>
+                        <small class="text-muted d-block mt-2">ID: {{ customer.customer_id }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="{% url 'task_management:register_step1' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Search Again
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

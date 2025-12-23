@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking Confirmed - CatzoTeam</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f6fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        .info-row {
+            padding: 8px 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .task-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .task-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .task-details {
+            font-size: 14px;
+            color: #666;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #28a745;
+            color: white;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>✓ Booking Confirmed!</h1>
+            <p>Thank you for choosing CatzoTeam</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Greeting -->
+            <p>Dear <strong>{{ customer.name }}</strong>,</p>
+            <p>Your booking has been successfully confirmed. We're excited to take care of <strong>{{ cat.name }}</strong>!</p>
+
+            <!-- Booking Details -->
+            <div class="section">
+                <div class="section-title">📋 Booking Information</div>
+                <div class="info-row">
+                    <span class="info-label">Booking ID:</span> 
+                    <strong>{{ package.package_id }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date Created:</span> 
+                    {{ package.created_at|date:"F d, Y" }} at {{ package.created_at|time:"h:i A" }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Created by:</span> 
+                    {{ package.created_by.username }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Branch:</span> 
+                    {{ branch }}
+                </div>
+            </div>
+
+            <!-- Cat Information -->
+            <div class="section">
+                <div class="section-title">🐱 Pet Information</div>
+                <div class="info-row">
+                    <span class="info-label">Name:</span> 
+                    <strong>{{ cat.name }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Breed:</span> 
+                    {{ cat.breed }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Age:</span> 
+                    {{ cat.age }} years
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Gender:</span> 
+                    {{ cat.get_gender_display }}
+                </div>
+                {% if cat.medical_notes %}
+                <div class="alert">
+                    <strong>⚠️ Medical Notes:</strong> {{ cat.medical_notes }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Scheduled Services -->
+            <div class="section">
+                <div class="section-title">📅 Scheduled Services</div>
+                {% for task in tasks %}
+                <div class="task-item">
+                    <div class="task-title">{{ forloop.counter }}. {{ task.task_type.name }}</div>
+                    <div class="task-details">
+                        📅 {{ task.scheduled_date|date:"F d, Y" }} at {{ task.scheduled_time }}
+                        <br>⏱ Duration: Approximately {{ task.task_type.description|default:"varies" }}
+                        <br><span class="badge">{{ task.points }} Points</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Summary -->
+            <div class="section">
+                <div class="section-title">💰 Summary</div>
+                <div class="info-row">
+                    <span class="info-label">Total Services:</span> 
+                    <strong>{{ tasks.count }}</strong>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Points:</span> 
+                    <strong>{{ package.total_points }}</strong>
+                </div>
+            </div>
+
+            <!-- What's Next -->
+            <div class="section">
+                <div class="section-title">📍 What's Next?</div>
+                <ol style="margin: 0; padding-left: 20px;">
+                    <li>Our manager will assign a staff member to your booking</li>
+                    <li>You'll receive another email with staff assignment details</li>
+                    <li>Bring {{ cat.name }} on the scheduled date and time</li>
+                    <li>Payment can be made upon service completion</li>
+                </ol>
+            </div>
+
+            <!-- Important Information -->
+            <div class="section">
+                <div class="section-title">📞 Important Information</div>
+                
+                <p><strong>What to Bring:</strong></p>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                    <li>Vaccination records (if first visit)</li>
+                    <li>Current medications (if any)</li>
+                    <li>Favorite toy or blanket (optional)</li>
+                </ul>
+
+                <p style="margin-top: 15px;"><strong>Contact Information:</strong></p>
+                <div class="info-row">📍 CatzoTeam {{ branch }}</div>
+                <div class="info-row">📞 03-1234-5678</div>
+                <div class="info-row">📧 {{ branch|lower|cut:" " }}@catzoteam.com</div>
+                <div class="info-row">🕐 Mon-Sun: 9:00 AM - 7:00 PM</div>
+            </div>
+
+            <!-- Call to Action -->
+            <div style="text-align: center; margin: 30px 0;">
+                <p>Need to make changes to your booking?</p>
+                <a href="#" class="button">Manage Booking</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for trusting CatzoTeam with {{ cat.name }}'s care!</p>
+            <p style="margin: 10px 0 0 0; font-size: 12px; color: #999;">
+                This is an automated email. Please do not reply.<br>
+                For assistance, contact: support@catzoteam.com
+            </p>
+        </div>
+    </div>
+</body>
+</html>

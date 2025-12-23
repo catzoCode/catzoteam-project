@@ -1,0 +1,181 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Schedule Calendar - Month View{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendar-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .month-calendar {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background: #dee2e6;
+    }
+    
+    .day-name {
+        background: #f8f9fa;
+        padding: 1rem;
+        text-align: center;
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .calendar-day {
+        background: white;
+        min-height: 120px;
+        padding: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .calendar-day:hover {
+        background: #f8f9fa;
+        transform: translateY(-2px);
+    }
+    
+    .calendar-day.other-month {
+        background: #f8f9fa;
+        opacity: 0.5;
+    }
+    
+    .calendar-day.today {
+        background: #e0e7ff;
+        border: 2px solid #667eea;
+    }
+    
+    .day-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+    }
+    
+    .day-count {
+        background: #667eea;
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .day-count.zero {
+        background: #9ca3af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <!-- Header -->
+    <div class="calendar-header">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="mb-0">
+                    <i class="bi bi-calendar3"></i>
+                    Schedule Calendar - Admin
+                </h2>
+                <p class="mb-0 mt-2 opacity-75">Month view</p>
+            </div>
+            <div class="view-toggle" style="background: white; border-radius: 8px; padding: 0.5rem; display: inline-flex; gap: 0.5rem;">
+                <a href="?view=week&date={{ current_date.isoformat }}&branch={{ branch_filter }}" class="btn">
+                    <i class="bi bi-calendar-week"></i> Week
+                </a>
+                <a href="?view=month&date={{ current_date.isoformat }}&branch={{ branch_filter }}" 
+                   class="btn" style="background: #667eea; color: white;">
+                    <i class="bi bi-calendar-month"></i> Month
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mb-3">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'schedule:admin_create_schedule' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Add Schedule
+            </a>
+            <a href="{% url 'schedule:admin_bulk_create' %}" class="btn btn-success">
+                <i class="bi bi-calendar-plus"></i> Bulk Create
+            </a>
+            <a href="{% url 'schedule:admin_export_pdf' %}?type=month&date={{ current_date.isoformat }}&branch={{ branch_filter }}" 
+               class="btn btn-outline-primary">
+                <i class="bi bi-file-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+
+    <!-- Month Navigation -->
+    <div class="d-flex align-items-center gap-3 mb-3">
+        <a href="?view=month&date={{ prev_month.isoformat }}&branch={{ branch_filter }}" 
+           class="btn btn-outline-secondary">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        <h3 class="mb-0">{{ month_start|date:"F Y" }}</h3>
+        <a href="?view=month&date={{ next_month.isoformat }}&branch={{ branch_filter }}" 
+           class="btn btn-outline-secondary">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+    </div>
+
+    <!-- Month Calendar -->
+    <div class="month-calendar">
+        <div class="calendar-grid">
+            
+            <!-- Day Names -->
+            {% for day_name in day_names %}
+                <div class="day-name">{{ day_name }}</div>
+            {% endfor %}
+
+
+            <!-- Calendar Days -->
+            {% for week in calendar_weeks %}
+            {% for cell in week %}
+                {% with day=cell.day count=cell.count %}
+                <div class="calendar-day {% if day.month != month_start.month %}other-month{% endif %} {% if day == today %}today{% endif %}"
+                    onclick="viewDay('{{ day.isoformat }}')">
+                    <div class="day-number">{{ day.day }}</div>
+
+                    {% if day.month == month_start.month %}
+                    <div class="day-count {% if count == 0 %}zero{% endif %}">
+                        {{ count }} schedule{{ count|pluralize }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endwith %}
+            {% endfor %}
+            {% endfor %}
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+function viewDay(date) {
+    // Go to week view for that day
+    window.location.href = `?view=week&date=${date}&branch={{ branch_filter }}`;
+}
+
+// Template filter helper
+Object.prototype.get_item = function(key) {
+    return this[key];
+};
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Register Service - Search Customer{% endblock %}
+
+{% block page_title %}Register Cat Service{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Register Service</li>
+<li class="breadcrumb-item active">Step 1: Customer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Progress Steps -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold;">
+                            1
+                        </div>
+                        <div class="mt-2 text-primary fw-bold">Customer</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 10px;"></div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold; opacity: 0.5;">
+                            2
+                        </div>
+                        <div class="mt-2 text-muted">Select Cat</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 10px;"></div>
+                    <div class="text-center flex-fill">
+                        <div class="rounded-circle bg-secondary text-white d-inline-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem; font-weight: bold; opacity: 0.5;">
+                            3
+                        </div>
+                        <div class="mt-2 text-muted">Select Tasks</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Form -->
+        <div class="card shadow-lg">
+            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h4 class="text-white mb-0">
+                    <i class="bi bi-search"></i> Search Customer
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Search for existing customer</strong> by IC Number, Name, Email, or Phone Number.
+                    If not found, you can register a new customer.
+                </div>
+
+                <form method="post" action="{% url 'task_management:register_step1' %}">
+                    {% csrf_token %}
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Search By:</label>
+                            <select name="search_type" class="form-select form-select-lg" required>
+                                <option value="ic">IC Number</option>
+                                <option value="name">Name</option>
+                                <option value="email">Email</option>
+                                <option value="phone">Phone</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-bold">Search Term:</label>
+                            <input type="text" 
+                                   name="search_query" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Enter IC number, name, email, or phone..." 
+                                   required
+                                   autofocus>
+                            <small class="text-muted">Examples: 123456-12-1234, Mrs. Lee, 012-345-6789</small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-search"></i> Search Customer
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="text-muted mb-2">Customer not in system?</p>
+                    <p class="text-muted small">Search first to check, then you can register a new customer if not found.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-people text-primary" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ total_customers|default:0 }}</h3>
+                        <small class="text-muted">Total Customers</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-heart-fill text-danger" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ total_cats|default:0 }}</h3>
+                        <small class="text-muted">Total Cats</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <i class="bi bi-calendar-check text-success" style="font-size: 2rem;"></i>
+                        <h3 class="mt-2 mb-0">{{ today_packages|default:0 }}</h3>
+                        <small class="text-muted">Packages Today</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.bg-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+{% endblock %}

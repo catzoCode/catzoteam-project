@@ -1,0 +1,171 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Request Leave{% endblock %}
+
+{% block extra_css %}
+<style>
+    .leave-header {
+        background: linear-gradient(135deg, {% if is_manager %}#667eea 0%, #764ba2{% else %}#10b981 0%, #059669{% endif %} 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Header -->
+            <div class="leave-header">
+                <h2 class="mb-0">
+                    <i class="bi bi-calendar-plus"></i> Request Leave
+                </h2>
+                <p class="mb-0 mt-2 opacity-75">
+                    {{ request.user.get_full_name|default:request.user.username }}
+                    {% if is_manager %}- Manager{% endif %}
+                </p>
+            </div>
+            
+            <!-- Info Alert -->
+            {% if is_manager %}
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle"></i>
+                <strong>Manager Leave Request Process:</strong>
+                <ol class="mb-0 mt-2">
+                    <li>Submit your leave request below</li>
+                    <li>Request goes <strong>directly to administrator</strong> (no manager approval needed)</li>
+                    <li>Admin reviews and approves/rejects</li>
+                    <li>You'll be notified of the decision</li>
+                </ol>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-4">
+                <i class="bi bi-info-circle"></i>
+                <strong>Approval Process:</strong>
+                <ol class="mb-0 mt-2">
+                    <li>Your manager will review first</li>
+                    <li>If approved, sent to admin for final approval</li>
+                    <li>You'll be notified of the decision</li>
+                </ol>
+            </div>
+            {% endif %}
+            
+            <!-- Form Card -->
+            <div class="form-card">
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <!-- Leave Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-tag"></i> Leave Type
+                            </label>
+                            {{ form.leave_type }}
+                            <small class="form-text text-muted">
+                                Select the type of leave you're requesting
+                            </small>
+                        </div>
+                        
+                        <!-- Date Range -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar-event"></i> Start Date
+                                </label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">
+                                    <i class="bi bi-calendar-check"></i> End Date
+                                </label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+                        
+                        <!-- Reason -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-chat-left-text"></i> Reason
+                            </label>
+                            {{ form.reason }}
+                            <small class="form-text text-muted">
+                                Please explain why you need this leave
+                            </small>
+                        </div>
+                        
+                        <!-- Medical Proof (conditional) -->
+                        <div class="mb-4" id="medicalProofDiv" style="display:none;">
+                            <label class="form-label fw-bold text-danger">
+                                <i class="bi bi-file-medical"></i> Medical Certificate
+                                <span class="text-danger">*Required</span>
+                            </label>
+                            {{ form.medical_proof }}
+                            <div class="alert alert-warning mt-2">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Medical leave requires proof:</strong>
+                                Please upload a medical certificate or doctor's note
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn {% if is_manager %}btn-primary{% else %}btn-success{% endif %} btn-lg">
+                                <i class="bi bi-send"></i> Submit Request
+                            </button>
+                            <a href="{% if is_manager %}{% url 'schedule:manager_my_schedule' %}{% else %}{% url 'schedule:staff_my_schedule' %}{% endif %}" 
+                               class="btn btn-secondary btn-lg">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- View Existing Requests -->
+            <div class="text-center mt-4">
+                <a href="{% if is_manager %}{% url 'schedule:manager_my_leaves' %}{% else %}{% url 'schedule:staff_my_leaves' %}{% endif %}" 
+                   class="btn btn-outline-primary">
+                    <i class="bi bi-list-ul"></i> View My Leave Requests
+                </a>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide medical proof field based on leave type
+document.querySelector('#id_leave_type').addEventListener('change', function() {
+    const medicalDiv = document.getElementById('medicalProofDiv');
+    const medicalInput = document.querySelector('#id_medical_proof');
+    
+    if (this.value === 'medical') {
+        medicalDiv.style.display = 'block';
+        medicalInput.required = true;
+    } else {
+        medicalDiv.style.display = 'none';
+        medicalInput.required = false;
+    }
+});
+
+// Trigger on page load in case form was submitted with errors
+window.addEventListener('load', function() {
+    const leaveType = document.querySelector('#id_leave_type');
+    if (leaveType.value === 'medical') {
+        document.getElementById('medicalProofDiv').style.display = 'block';
+    }
+});
+</script>
+{% endblock %}

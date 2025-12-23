@@ -1,0 +1,612 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Point Requests - CatzoTeam Admin{% endblock %}
+
+{% block page_title %}Point Requests Management{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item active">Point Requests</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* NUCLEAR OPTION - Kill everything */
+    * {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
+    }
+
+    *:hover {
+        transition: none !important;
+        animation: none !important;
+    }
+
+    /* Basic card styling */
+    .card {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Table hover - only when modal is NOT open */
+    body:not(.modal-open) .table-hover tbody tr:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    /* Kill table when modal is open */
+    body.modal-open table,
+    body.modal-open .table-hover tbody tr,
+    body.modal-open .table-hover tbody tr:hover {
+        pointer-events: none !important;
+        background-color: transparent !important;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        z-index: 1050;
+    }
+
+    .modal.show {
+        display: block !important;
+    }
+
+    .modal-dialog {
+        position: relative;
+        width: auto;
+        margin: 1.75rem auto;
+        max-width: 800px;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff !important;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 0.3rem;
+    }
+
+    /* Modal header - stays blue always */
+    .modal-header {
+        background-color: #0d6efd !important;
+        color: white !important;
+        padding: 1rem;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 0.3rem 0.3rem 0 0;
+    }
+
+    .modal-header:hover {
+        background-color: #0d6efd !important;
+    }
+
+    .modal-header * {
+        color: white !important;
+    }
+
+    /* ABSOLUTE KILL for modal body - NO HOVER ANYWHERE */
+    .modal-body {
+        position: relative;
+        padding: 1rem;
+        background-color: white !important;
+        pointer-events: auto !important;
+    }
+
+    /* Kill hover on EVERY element inside modal */
+    .modal-body,
+    .modal-body *,
+    .modal-body::before,
+    .modal-body::after,
+    .modal-body *::before,
+    .modal-body *::after {
+        background-color: transparent !important;
+        background: none !important;
+    }
+
+    .modal-body:hover,
+    .modal-body *:hover,
+    .modal-body::before:hover,
+    .modal-body::after:hover,
+    .modal-body *::before:hover,
+    .modal-body *::after:hover {
+        background-color: transparent !important;
+        background: none !important;
+    }
+
+    /* Force white background on modal body container only */
+    .modal-body {
+        background: white !important;
+    }
+
+    /* Specific elements that need their backgrounds preserved */
+    .modal-body .bg-light,
+    .modal-body .bg-light:hover {
+        background-color: #f8f9fa !important;
+        background: #f8f9fa !important;
+    }
+
+    .modal-body .alert-success,
+    .modal-body .alert-success:hover,
+    .modal-body .alert-success * {
+        background-color: #d1e7dd !important;
+        background: #d1e7dd !important;
+    }
+
+    .modal-body .alert-info,
+    .modal-body .alert-info:hover,
+    .modal-body .alert-info * {
+        background-color: #cff4fc !important;
+        background: #cff4fc !important;
+    }
+
+    .modal-body .badge {
+        background-color: var(--bs-badge-bg) !important;
+    }
+
+    .modal-body .badge:hover {
+        background-color: var(--bs-badge-bg) !important;
+    }
+
+    /* Text elements - absolutely no background */
+    .modal-body label,
+    .modal-body label:hover,
+    .modal-body div,
+    .modal-body div:hover,
+    .modal-body p,
+    .modal-body p:hover,
+    .modal-body span,
+    .modal-body span:hover,
+    .modal-body small,
+    .modal-body small:hover {
+        background: none !important;
+        background-color: transparent !important;
+    }
+
+    /* Rows and columns - no background */
+    .modal-body .row,
+    .modal-body .row:hover,
+    .modal-body [class*="col-"],
+    .modal-body [class*="col-"]:hover {
+        background: none !important;
+        background-color: transparent !important;
+    }
+
+    /* Modal footer */
+    .modal-footer {
+        padding: 1rem;
+        border-top: 1px solid #dee2e6;
+        background-color: #fff !important;
+    }
+
+    .modal-footer:hover {
+        background-color: #fff !important;
+    }
+
+    /* Backdrop */
+    .modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        z-index: 1040;
+    }
+
+    /* Body when modal is open */
+    body.modal-open {
+        overflow: hidden;
+    }
+
+    /* Disable main content interaction when modal is open */
+    body.modal-open .container-fluid > *:not(.modal):not(.modal-backdrop) {
+        pointer-events: none !important;
+    }
+
+    /* Buttons */
+    .btn {
+        cursor: pointer !important;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+
+    /* Close button */
+    .btn-close-white {
+        filter: brightness(0) invert(1);
+    }
+
+    /* Text selection in modal */
+    .modal-body {
+        user-select: text;
+        -webkit-user-select: text;
+    }
+
+    /* Ensure modal elements are clickable */
+    .modal.show,
+    .modal.show * {
+        pointer-events: auto !important;
+    }
+
+    /* Override any Bootstrap hover states */
+    .modal-body .row:hover,
+    .modal-body .col:hover,
+    .modal-body .col-md-6:hover,
+    .modal-body .col-md-12:hover,
+    .modal-body .mb-3:hover,
+    .modal-body .mb-0:hover {
+        background-color: transparent !important;
+        background: none !important;
+    }
+
+    /* HR elements */
+    .modal-body hr {
+        background-color: #dee2e6 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Pending Review</h6>
+                            <h2 class="mb-0 mt-1">{{ stats.pending }}</h2>
+                        </div>
+                        <div class="fs-1"><i class="bi bi-clock-history"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Approved</h6>
+                            <h2 class="mb-0 mt-1">{{ stats.approved }}</h2>
+                        </div>
+                        <div class="fs-1"><i class="bi bi-check-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Rejected</h6>
+                            <h2 class="mb-0 mt-1">{{ stats.rejected }}</h2>
+                        </div>
+                        <div class="fs-1"><i class="bi bi-x-circle"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0">Total</h6>
+                            <h2 class="mb-0 mt-1">{{ stats.total }}</h2>
+                        </div>
+                        <div class="fs-1"><i class="bi bi-list-check"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="btn-group" role="group">
+                <a href="?status=pending" class="btn {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                    <i class="bi bi-clock-history"></i> Pending ({{ stats.pending }})
+                </a>
+                <a href="?status=approved" class="btn {% if status_filter == 'approved' %}btn-success{% else %}btn-outline-success{% endif %}">
+                    <i class="bi bi-check-circle"></i> Approved ({{ stats.approved }})
+                </a>
+                <a href="?status=rejected" class="btn {% if status_filter == 'rejected' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                    <i class="bi bi-x-circle"></i> Rejected ({{ stats.rejected }})
+                </a>
+                <a href="?status=all" class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="bi bi-list"></i> All ({{ stats.total }})
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Point Requests</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if requests %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Staff</th>
+                            <th>Task Details</th>
+                            <th>Points</th>
+                            <th>Task Date</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for req in requests %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ req.request_id }}</span></td>
+                            <td>
+                                <strong>{{ req.staff.username }}</strong><br>
+                                <small class="text-muted">{{ req.staff.employee_id }}</small><br>
+                                <small class="text-muted">{{ req.staff.get_branch_display }}</small>
+                            </td>
+                            <td>
+                                <strong>
+                                    {% if req.task_type %}
+                                        {{ req.task_type.name }}
+                                    {% else %}
+                                        Custom Task
+                                    {% endif %}
+                                </strong>
+                                <br>
+                                <small class="text-muted">{{ req.reason_details|truncatewords:15 }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">{{ req.points_requested }} pts</span>
+                                {% if req.approval_status == 'approved' and req.points_awarded != req.points_requested %}
+                                <br><small class="text-success">Awarded: {{ req.points_awarded }} pts</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ req.date_completed|date:"M d, Y" }}</td>
+                            <td>{{ req.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                {% if req.approval_status == 'pending' %}
+                                <span class="badge bg-warning">
+                                    <i class="bi bi-clock-history"></i> Pending
+                                </span>
+                                {% elif req.approval_status == 'approved' %}
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle"></i> Approved
+                                </span>
+                                <br>
+                                <small class="text-muted">by {{ req.approved_by.username }}</small>
+                                {% elif req.approval_status == 'rejected' %}
+                                <span class="badge bg-danger">
+                                    <i class="bi bi-x-circle"></i> Rejected
+                                </span>
+                                <br>
+                                <small class="text-muted">by {{ req.approved_by.username }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if req.approval_status == 'pending' %}
+                                <a href="{% url 'task_management:review_point_request' req.id %}" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-clipboard-check"></i> Review
+                                </a>
+                                {% else %}
+                                <button 
+                                    type="button"
+                                    class="btn btn-sm btn-outline-primary" 
+                                    onclick="showModal('detailModal{{ forloop.counter }}')"
+                                >
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Detail Modals -->
+            {% for req in requests %}
+            <div class="modal" id="detailModal{{ forloop.counter }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="bi bi-clipboard-check"></i> Request Details - {{ req.request_id }}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" onclick="hideModal('detailModal{{ forloop.counter }}')"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Staff</label>
+                                    <div class="fw-bold">{{ req.staff.username }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Branch</label>
+                                    <div>{{ req.staff.get_branch_display }}</div>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Points Requested</label>
+                                    <div class="fw-bold">{{ req.points_requested }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Task Date</label>
+                                    <div>{{ req.date_completed|date:"F d, Y" }}</div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Task Description</label>
+                                <div class="p-3 bg-light rounded">{{ req.reason_details|linebreaks }}</div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Reviewed By</label>
+                                    <div>{{ req.approved_by.username }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="text-muted small">Review Date</label>
+                                    <div>{{ req.approved_at|date:"F d, Y H:i" }}</div>
+                                </div>
+                            </div>
+                            {% if req.manager_notes %}
+                            <div class="mt-3">
+                                <label class="text-muted small">Review Notes</label>
+                                <div class="alert alert-info">{{ req.manager_notes|linebreaks }}</div>
+                            </div>
+                            {% endif %}
+                            {% if req.approval_status == 'approved' %}
+                            <div class="alert alert-success mt-3">
+                                <strong><i class="bi bi-check-circle"></i> Approved!</strong> {{ req.points_awarded }} points awarded on {{ req.date_completed|date:"F d, Y" }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="hideModal('detailModal{{ forloop.counter }}')">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Backdrop for this modal -->
+            <div class="modal-backdrop" id="backdrop{{ forloop.counter }}" style="display: none;"></div>
+            {% endfor %}
+
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No point requests found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal functions with anti-glitch protection
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const backdrop = document.getElementById('backdrop' + modalId.replace('detailModal', ''));
+    
+    if (modal && backdrop) {
+        // Disable body scroll
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+        
+        // Show backdrop first
+        backdrop.style.display = 'block';
+        backdrop.style.opacity = '0.5';
+        
+        // Show modal
+        modal.style.display = 'block';
+        modal.classList.add('show');
+        
+        // Force repaint
+        modal.offsetHeight;
+        
+        // Extra: Remove any lingering hover states
+        document.querySelectorAll('.modal-body *').forEach(el => {
+            el.style.backgroundColor = 'transparent';
+        });
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    const backdrop = document.getElementById('backdrop' + modalId.replace('detailModal', ''));
+    
+    if (modal && backdrop) {
+        // Hide modal
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+        
+        // Hide backdrop
+        backdrop.style.display = 'none';
+        backdrop.style.opacity = '0';
+        
+        // Re-enable body scroll
+        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
+    }
+}
+
+// Click backdrop to close
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop')) {
+        const backdrops = document.querySelectorAll('.modal-backdrop');
+        backdrops.forEach(function(backdrop, index) {
+            if (backdrop === e.target && backdrop.style.display !== 'none') {
+                hideModal('detailModal' + (index + 1));
+            }
+        });
+    }
+});
+
+// ESC key to close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal.show');
+        modals.forEach(function(modal) {
+            hideModal(modal.id);
+        });
+    }
+});
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Clean up any lingering states
+    document.querySelectorAll('.modal').forEach(function(modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('show');
+    });
+    
+    document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
+        backdrop.style.display = 'none';
+    });
+    
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    
+    // Kill all hover effects in modal body on page load
+    const style = document.createElement('style');
+    style.textContent = `
+        .modal-body *, .modal-body *:hover {
+            background-color: transparent !important;
+            background: none !important;
+        }
+        .modal-body .bg-light, .modal-body .bg-light:hover {
+            background-color: #f8f9fa !important;
+        }
+        .modal-body .alert-success, .modal-body .alert-success:hover {
+            background-color: #d1e7dd !important;
+        }
+        .modal-body .alert-info, .modal-body .alert-info:hover {
+            background-color: #cff4fc !important;
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}

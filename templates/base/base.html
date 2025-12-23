@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CatzoTeam{% endblock %}</title>
+
+    {% load static %}
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --sidebar-width: 260px;
+            --sidebar-bg: #2c3e50;
+            --sidebar-hover: #34495e;
+            --sidebar-active: #3498db;
+            --header-height: 70px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f6fa;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            color: white;
+            z-index: 1000;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-inner {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 25px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-logo {
+            margin-bottom: 15px;
+        }
+
+        .logo-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 50%;
+            background: white;
+            padding: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-header i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .sidebar-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-header p {
+            margin: 5px 0 0 0;
+            font-size: 0.75rem;
+            opacity: 0.9;
+        }
+
+        /* Navigation */
+        .sidebar-nav {
+            padding: 15px 0;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .nav-section-title {
+            padding: 15px 20px 10px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #95a5a6;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            list-style: none;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--sidebar-active);
+        }
+
+        .nav-link.active {
+            background: var(--sidebar-hover);
+            color: white;
+            border-left-color: var(--sidebar-active);
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+            margin-right: 12px;
+            width: 25px;
+            text-align: center;
+        }
+
+        .nav-link span {
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Sidebar Footer */
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--sidebar-bg);
+        }
+
+        .btn-logout {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 100%;
+            padding: 14px 36px;
+            border: 4px solid transparent;
+            font-size: 16px;
+            background-color: transparent;
+            border-radius: 100px;
+            font-weight: 600;
+            color: #e74c3c;
+            box-shadow: 0 0 0 2px #e74c3c;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+            text-decoration: none;
+        }
+
+        .btn-logout svg {
+            position: absolute;
+            width: 20px;
+            fill: #e74c3c;
+            z-index: 9;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .btn-logout .logout-icon-1 { right: 16px; }
+        .btn-logout .logout-icon-2 { left: -25%; }
+
+        .btn-logout .logout-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .btn-logout .logout-text {
+            position: relative;
+            z-index: 1;
+            transform: translateX(-12px);
+            transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .btn-logout:hover {
+            box-shadow: 0 0 0 12px transparent;
+            color: #2c3e50;
+            border-radius: 12px;
+        }
+
+        .btn-logout:hover .logout-icon-1 { right: -25%; }
+        .btn-logout:hover .logout-icon-2 { left: 16px; }
+        .btn-logout:hover .logout-text { transform: translateX(12px); }
+        .btn-logout:hover svg { fill: #2c3e50; }
+
+        .btn-logout:active {
+            scale: 0.95;
+            box-shadow: 0 0 0 4px #e74c3c;
+        }
+
+        .btn-logout:hover .logout-circle {
+            width: 220px;
+            height: 220px;
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        /* Top Header */
+        .top-header {
+            background: white;
+            height: var(--header-height);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .header-left .breadcrumb {
+            font-size: 0.85rem;
+            color: #95a5a6;
+            margin: 0;
+            background: transparent;
+            padding: 0;
+        }
+
+        .breadcrumb-item a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .breadcrumb-item a:hover {
+            text-decoration: underline;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Header User Profile */
+        .header-user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .header-user-profile:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .header-user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header-user-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .header-user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            line-height: 1.2;
+        }
+
+        .header-user-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #95a5a6;
+        }
+
+        .header-user-role {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-user-id {
+            padding: 2px 6px;
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 8px;
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        /* Content Area */
+        .content-area { padding: 30px; }
+
+        /* Cards */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            background: white;
+            border-bottom: 2px solid #f8f9fa;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .card-body { padding: 25px; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .mobile-toggle { display: block !important; }
+            .header-user-info { display: none; }
+            .header-user-profile { padding: 8px; }
+        }
+
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            cursor: pointer;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <img src="{% static 'images/catzonia.png' %}" alt="CatzoTeam Logo" class="logo-img">
+                </div>
+                <i class="bi bi-cat-fill"></i>
+                <h3>CatzoTeam</h3>
+                <p>Employee Management System</p>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="sidebar-nav">
+                <ul class="nav flex-column">
+                    <!-- MAIN SECTION -->
+                    <li class="nav-section-title">MAIN</li>
+
+                    <!-- DASHBOARD (ROLE SAFE) -->
+                    <li class="nav-item">
+                        {% if user.role == 'admin' %}
+                            <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard:admin_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        {% elif user.role == 'manager' %}
+                            <a class="nav-link {% if request.resolver_match.url_name == 'manager_dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard:manager_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        {% else %}
+                            <a class="nav-link {% if request.resolver_match.url_name == 'staff_dashboard' %}active{% endif %}"
+                            href="{% url 'dashboard:staff_dashboard' %}">
+                                <i class="bi bi-speedometer2"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        {% endif %}
+                    </li>
+
+                    <!-- Calculator -->
+                    {% if user.role == 'staff' or user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'projection_calculator' %}active{% endif %}"
+                           href="{% url 'projection_calculator' %}">
+                            <i class="bi bi-calculator"></i>
+                            <span>Calculator</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- TASKS SECTION -->
+                    <li class="nav-section-title">TASKS</li>
+
+                    {% if user.role == 'staff' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'my_tasks_new' %}active{% endif %}"
+                           href="{% url 'task_management:my_tasks_new' %}">
+                            <i class="bi bi-list-check"></i>
+                            <span>My Tasks</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'request_custom_points' %}active{% endif %}"
+                           href="{% url 'task_management:request_custom_points' %}">
+                            <i class="bi bi-plus-circle-dotted"></i>
+                            <span>Request Task Points</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'my_point_requests' %}active{% endif %}"
+                           href="{% url 'task_management:my_point_requests' %}">
+                            <i class="bi bi-clock-history"></i>
+                            <span>My Point Requests</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if user.role == 'manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'my_tasks_new' %}active{% endif %}"
+                           href="{% url 'task_management:my_tasks_new' %}">
+                            <i class="bi bi-list-check"></i>
+                            <span>My Tasks</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'staff_tasks_branch' %}active{% endif %}"
+                           href="{% url 'task_management:staff_tasks_branch' %}">
+                            <i class="bi bi-people"></i>
+                            <span>Staff Tasks</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'request_custom_points' %}active{% endif %}"
+                           href="{% url 'task_management:request_custom_points' %}">
+                            <i class="bi bi-plus-circle-dotted"></i>
+                            <span>Request Task Points</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_all_tasks_monitor' %}active{% endif %}"
+                           href="{% url 'task_management:admin_all_tasks_monitor' %}">
+                            <i class="bi bi-kanban"></i>
+                            <span>All Tasks Monitor</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_point_requests' %}active{% endif %}"
+                           href="{% url 'task_management:admin_point_requests' %}">
+                            <i class="bi bi-clipboard-check"></i>
+                            <span>Point Requests</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- SCHEDULE SECTION -->
+                    <li class="nav-section-title">SCHEDULE</li>
+
+                    <!-- My Schedule (role-safe) -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'staff_my_schedule' %}active{% endif %}"
+                           href="{% url 'schedule:staff_my_schedule' %}">
+                            <i class="bi bi-calendar-month"></i>
+                            <span>My Schedule</span>
+                        </a>
+                    </li>
+
+                    <!-- My Leaves (role-safe) -->
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'staff_my_leaves' or request.resolver_match.url_name == 'manager_my_leaves' %}active{% endif %}"
+                           href="{% if user.role == 'manager' %}{% url 'schedule:manager_my_leaves' %}{% else %}{% url 'schedule:staff_my_leaves' %}{% endif %}">
+                            <i class="bi bi-calendar2-x"></i>
+                            <span>My Leaves</span>
+                        </a>
+                    </li>
+
+                    <!-- Request Leave (staff + manager) -->
+                    {% if user.role == 'staff' or user.role == 'manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'staff_request_leave' %}active{% endif %}"
+                           href="{% url 'schedule:staff_request_leave' %}">
+                            <i class="bi bi-plus-square"></i>
+                            <span>Request Leave</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Manage Schedules (manager/admin) -->
+                    {% if user.role == 'manager' or user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_calendar' or request.resolver_match.url_name == 'manager_calendar' %}active{% endif %}"
+                           href="{% if user.role == 'admin' %}{% url 'schedule:admin_calendar' %}{% else %}{% url 'schedule:manager_calendar' %}{% endif %}">
+                            <i class="bi bi-calendar-week"></i>
+                            <span>Manage Schedules</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Manager leave approvals (manager) -->
+                    {% if user.role == 'manager' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'manager_leave_requests' %}active{% endif %}"
+                           href="{% url 'schedule:manager_leave_requests' %}">
+                            <i class="bi bi-check2-square"></i>
+                            <span>Approve Team Leaves</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- Admin leave approvals (admin) -->
+                    {% if user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_leave_requests' %}active{% endif %}"
+                           href="{% url 'schedule:admin_leave_requests' %}">
+                            <i class="bi bi-shield-check"></i>
+                            <span>Approve Leaves</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- MANAGEMENT SECTION - Manager -->
+                    {% if user.role == 'manager' %}
+                    <li class="nav-section-title">MANAGEMENT</li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'submit_closing_report' %}active{% endif %}"
+                           href="{% url 'task_management:submit_closing_report' %}">
+                            <i class="bi bi-clipboard-check"></i>
+                            <span>Submit Closing Report</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'my_closing_reports' %}active{% endif %}"
+                           href="{% url 'task_management:my_closing_reports' %}">
+                            <i class="bi bi-file-text"></i>
+                            <span>My Closing Reports</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'manager_analytics_dashboard' %}active{% endif %}"
+                           href="{% url 'task_management:manager_analytics_dashboard' %}">
+                            <i class="bi bi-graph-up"></i>
+                            <span>Branch Analytics</span>
+                        </a>
+                    </li>
+
+                    <!-- placeholders if you later implement pages -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard:manager_dashboard' %}">
+                            <i class="bi bi-list-task"></i>
+                            <span>Task Assignment</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard:manager_dashboard' %}">
+                            <i class="bi bi-people"></i>
+                            <span>Staff Overview</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- MANAGEMENT SECTION - Admin -->
+                    {% if user.role == 'admin' %}
+                    <li class="nav-section-title">MANAGEMENT</li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_all_closing_reports' %}active{% endif %}"
+                           href="{% url 'task_management:admin_all_closing_reports' %}">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>All Branch Reports</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_analytics_dashboard' %}active{% endif %}"
+                           href="{% url 'task_management:admin_analytics_dashboard' %}">
+                            <i class="bi bi-bar-chart-line"></i>
+                            <span>Sales Analytics</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_manage_staff' %}active{% endif %}"
+                           href="{% url 'dashboard:admin_manage_staff' %}">
+                            <i class="bi bi-person-badge"></i>
+                            <span>Manage Staff</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'admin_manage_tasks' %}active{% endif %}"
+                           href="{% url 'task_management:admin_manage_tasks' %}">
+                            <i class="bi bi-list-check"></i>
+                            <span>Manage Tasks</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    <!-- SYSTEM - All roles -->
+                    <li class="nav-section-title">SYSTEM</li>
+
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}"
+                           href="{% url 'accounts:profile' %}">
+                            <i class="bi bi-person-circle"></i>
+                            <span>My Profile</span>
+                        </a>
+                    </li>
+
+                    {% if user.role == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/">
+                            <i class="bi bi-gear"></i>
+                            <span>Django Admin Panel</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+            <!-- Logout -->
+            <div class="sidebar-footer">
+                <a href="{% url 'accounts:logout' %}" class="btn-logout">
+                    <svg viewBox="0 0 24 24" class="logout-icon-2" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 22C4.44772 22 4 21.5523 4 21V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V6H18V4H6V20H18V18H20V21C20 21.5523 19.5523 22 19 22H5ZM18 16V13H11V11H18V8L23 12L18 16Z"></path>
+                    </svg>
+                    <span class="logout-text">Logout</span>
+                    <span class="logout-circle"></span>
+                    <svg viewBox="0 0 24 24" class="logout-icon-1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 22C4.44772 22 4 21.5523 4 21V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V6H18V4H6V20H18V18H20V21C20 21.5523 19.5523 22 19 22H5ZM18 16V13H11V11H18V8L23 12L18 16Z"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="top-header">
+            <div class="header-left">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'dashboard:home' %}">Home</a></li>
+                        {% block breadcrumbs %}{% endblock %}
+                    </ol>
+                </nav>
+            </div>
+
+            <div class="header-right">
+                <a href="{% url 'accounts:profile' %}" class="header-user-profile" style="text-decoration: none;">
+                    <div class="header-user-avatar">
+                        {% if user.profile_picture %}
+                            <img src="{{ user.profile_picture.url }}"
+                                alt="{{ user.username }}"
+                                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                        {% else %}
+                            <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </div>
+                    <div class="header-user-info">
+                        <div class="header-user-name">{{ user.first_name|default:user.username }}</div>
+                        <div class="header-user-meta">
+                            <span class="header-user-role">{{ user.get_role_display }}</span>
+                            <span class="header-user-id">{{ user.employee_id }}</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div class="content-area">
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    <strong>
+                        {% if message.tags == 'success' %}<i class="bi bi-check-circle"></i>{% endif %}
+                        {% if message.tags == 'error' %}<i class="bi bi-exclamation-triangle"></i>{% endif %}
+                        {% if message.tags == 'warning' %}<i class="bi bi-info-circle"></i>{% endif %}
+                        {% if message.tags == 'info' %}<i class="bi bi-info-circle"></i>{% endif %}
+                    </strong>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" id="mobileToggle">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const mobileToggle = document.getElementById('mobileToggle');
+        const sidebar = document.getElementById('sidebar');
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('mobile-open');
+            });
+
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(event.target) && !mobileToggle.contains(event.target)) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                }
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,133 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Projection Calculator - CatzoTeam{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-calculator"></i> Projection Calculator
+        </h1>
+        <p class="lead">See how different daily averages affect your monthly total</p>
+    </div>
+</div>
+
+<!-- Current Status -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5><i class="bi bi-info-circle"></i> Current Status</h5>
+                <p><strong>Current Month Total:</strong> {{ current_total|floatformat:2 }} points</p>
+                <p><strong>Days Remaining:</strong> {{ days_remaining }} days</p>
+                <p class="mb-0"><strong>Target:</strong> 1,200 points</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h5><i class="bi bi-search"></i> Custom Calculator</h5>
+                <form method="get" class="d-flex gap-2">
+                    <input type="number" 
+                           name="average" 
+                           class="form-control" 
+                           placeholder="Enter daily average" 
+                           min="0" 
+                           max="100" 
+                           step="0.1"
+                           value="{{ custom_average }}">
+                    <button type="submit" class="btn btn-primary">Calculate</button>
+                </form>
+                <small class="text-muted">Enter your expected daily average to see projections</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scenarios -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Projection Scenarios</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-4">If you continue with the remaining {{ days_remaining }} days...</p>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Daily Average</th>
+                                <th>Projected Total</th>
+                                <th>vs Target (1,200)</th>
+                                <th>Bonus</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for scenario in scenarios %}
+                            <tr class="{% if scenario.status == 'success' %}table-success{% elif scenario.status == 'danger' %}table-danger{% else %}table-warning{% endif %}">
+                                <td><strong>{{ scenario.average }} pts/day</strong></td>
+                                <td><strong>{{ scenario.projected_total|floatformat:2 }}</strong></td>
+                                <td>
+                                    {% if scenario.projected_total >= 1200 %}
+                                        <span class="text-success">+{{ scenario.projected_total|add:"-1200"|floatformat:0 }}</span>
+                                    {% else %}
+                                        <span class="text-danger">-{{ 1200|add:scenario.projected_total|floatformat:0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if scenario.bonus > 0 %}
+                                        <strong class="text-success">RM{{ scenario.bonus|floatformat:2 }}</strong>
+                                    {% else %}
+                                        <span class="text-muted">RM0.00</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ scenario.status }}">
+                                        {{ scenario.message|safe }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Reference -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-bookmark"></i> Quick Reference</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-success"><i class="bi bi-check-circle"></i> Target Zone (1,200+)</h6>
+                        <p>Base incentive + Bonus (RM0.50/point above 1,200)</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-warning"><i class="bi bi-info-circle"></i> Safe Zone (850-1,199)</h6>
+                        <p>Reduced incentive, no bonus, but no warning</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Warning Zone (<850)</h6>
+                        <p>Warning letter issued, disciplinary action possible</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

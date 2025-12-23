@@ -1,0 +1,212 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Review Point Request - CatzoTeam{% endblock %}
+
+{% block page_title %}Review Point Request{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:admin_point_requests' %}">Point Requests</a></li>
+<li class="breadcrumb-item active">Review Request</li>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            
+            <!-- Request Info Card -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Request Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Request ID</label>
+                            <div><span class="badge bg-secondary fs-6">{{ point_request.request_id }}</span></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Status</label>
+                            <div><span class="badge bg-warning fs-6">{{ point_request.get_approval_status_display }}</span></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Staff</label>
+                            <div>
+                                <strong>{{ point_request.staff.username }}</strong><br>
+                                <small class="text-muted">{{ point_request.staff.employee_id }}</small><br>
+                                <small class="text-muted">{{ point_request.staff.get_branch_display }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Requested Date</label>
+                            <div>{{ point_request.created_at|date:"F d, Y H:i" }}</div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Points Requested</label>
+                            <div><span class="badge bg-info fs-5">{{ point_request.points_requested }} points</span></div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small">Task Completion Date</label>
+                            <div><strong>{{ point_request.date_completed|date:"F d, Y" }}</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small">Task Type</label>
+                        <div>
+                            <strong>
+                                {% if point_request.task_type %}
+                                    {{ point_request.task_type.name }}
+                                {% else %}
+                                    Custom Task (Not in System)
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small">Reason Category</label>
+                        <div><span class="badge bg-secondary">{{ point_request.get_reason_display }}</span></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-muted small">Task Description / Reason</label>
+                        <div class="p-3 bg-light rounded">
+                            {{ point_request.reason_details|linebreaks }}
+                        </div>
+                    </div>
+
+                    {% if point_request.proof_photo %}
+                    <div class="mb-3">
+                        <label class="text-muted small">Proof Photo</label>
+                        <div>
+                            <img src="{{ point_request.proof_photo.url }}" class="img-fluid rounded" style="max-height: 300px;" alt="Proof">
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Review This Request</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="reviewForm">
+                        {% csrf_token %}
+                        
+                        <!-- Points to Award (if approving) -->
+                        <div class="mb-4" id="pointsAwardSection">
+                            <label for="awarded_points" class="form-label">
+                                Points to Award <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="number" 
+                                class="form-control form-control-lg" 
+                                id="awarded_points" 
+                                name="awarded_points" 
+                                value="{{ point_request.points_requested }}"
+                                min="1"
+                                max="500"
+                            >
+                            <small class="form-text text-muted">
+                                You can award different points than requested. Default: {{ point_request.points_requested }} points
+                            </small>
+                        </div>
+
+                        <!-- Review Notes -->
+                        <div class="mb-4">
+                            <label for="review_notes" class="form-label">
+                                Review Notes <span class="text-muted">(Optional)</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="review_notes" 
+                                name="review_notes" 
+                                rows="4" 
+                                placeholder="Add notes explaining your decision..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Decision Buttons -->
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Important</h6>
+                            <p class="mb-0">
+                                If approved, points will be awarded on <strong>{{ point_request.date_completed|date:"F d, Y" }}</strong> (the task completion date), not today.
+                            </p>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-success btn-lg" onclick="submitDecision('approve')">
+                                <i class="bi bi-check-circle"></i> Approve & Award Points
+                            </button>
+                            <button type="button" class="btn btn-danger btn-lg" onclick="submitDecision('reject')">
+                                <i class="bi bi-x-circle"></i> Reject Request
+                            </button>
+                            <a href="{% url 'task_management:admin_point_requests' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Requests
+                            </a>
+                        </div>
+
+                        <input type="hidden" name="action" id="actionInput">
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    }
+</style>
+
+<script>
+    function submitDecision(action) {
+        const form = document.getElementById('reviewForm');
+        const actionInput = document.getElementById('actionInput');
+        const awardedPoints = document.getElementById('awarded_points').value;
+        
+        if (action === 'approve') {
+            if (!awardedPoints || awardedPoints < 1) {
+                alert('Please enter valid points to award (minimum 1 point)');
+                return;
+            }
+            
+            if (confirm(`Approve this request and award ${awardedPoints} points to ${document.querySelector('.card-body strong').textContent}?`)) {
+                actionInput.value = 'approve';
+                form.submit();
+            }
+        } else if (action === 'reject') {
+            const notes = document.getElementById('review_notes').value;
+            
+            if (!notes.trim()) {
+                alert('Please provide a reason for rejection in the review notes');
+                return;
+            }
+            
+            if (confirm('Reject this point request? The staff will NOT receive any points.')) {
+                actionInput.value = 'reject';
+                form.submit();
+            }
+        }
+    }
+
+    // Auto-focus on points input
+    document.getElementById('awarded_points').focus();
+</script>
+{% endblock %}

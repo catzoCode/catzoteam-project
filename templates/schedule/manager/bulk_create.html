@@ -1,0 +1,459 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Bulk Create Schedules{% endblock %}
+
+{% block extra_css %}
+<style>
+    .staff-checkbox-list{
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    max-height: 260px;
+    overflow: auto;
+    }
+
+    .staff-item{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    margin: 0;
+    border-bottom: 1px solid #f1f5f9;
+    }
+
+    .staff-item:last-child{ border-bottom: none; }
+
+    .staff-item input[type="checkbox"]{
+    margin-top: 0;
+    }
+
+    .form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+    }
+
+    .header-section {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .mode-selector {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .mode-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 1rem;
+    }
+
+    .mode-card:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59,130,246,0.2);
+    }
+
+    .mode-card.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .mode-icon {
+        font-size: 2rem;
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .week-pattern-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .day-pattern {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+
+    .btn-primary {
+        background: #3b82f6;
+        border: none;
+        padding: 0.75rem 2rem;
+    }
+
+    .btn-primary:hover {
+        background: #2563eb;
+    }
+
+    .alert-info {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        color: #1e40af;
+    }
+
+    /* Make checkbox lists look normal */
+    .staff-checkbox-list {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 12px;
+        max-height: 240px;
+        overflow: auto;
+    }
+    .staff-checkbox-list ul {
+        list-style: none;
+        padding-left: 0;
+        margin: 0;
+    }
+    .staff-checkbox-list li {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 6px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .staff-checkbox-list li:last-child { border-bottom: none; }
+    .staff-checkbox-list input[type="checkbox"] { transform: scale(1.05); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="header-section">
+        <h2 class="mb-0">
+            <i class="bi bi-calendar-plus"></i>
+            Bulk Create Schedules
+        </h2>
+        <p class="mb-0 mt-2 opacity-75">Create multiple schedules at once</p>
+    </div>
+
+    <div class="form-container">
+
+        <!-- Mode Selection -->
+        <div class="mode-selector">
+            <h5 class="mb-3">Select Creation Mode</h5>
+
+            <div class="mode-card" data-mode="same_shift">
+                <div class="mode-icon"><i class="bi bi-people"></i></div>
+                <h6 class="fw-bold">Same Shift for Multiple Staff</h6>
+                <p class="text-muted mb-0">Assign the same shift to multiple staff members over a date range</p>
+            </div>
+
+            <div class="mode-card" data-mode="weekly_pattern">
+                <div class="mode-icon"><i class="bi bi-calendar-week"></i></div>
+                <h6 class="fw-bold">Weekly Pattern for One Staff</h6>
+                <p class="text-muted mb-0">Create a repeating weekly pattern for one staff member</p>
+            </div>
+
+            <div class="mode-card" data-mode="copy_week">
+                <div class="mode-icon"><i class="bi bi-files"></i></div>
+                <h6 class="fw-bold">Copy Previous Week</h6>
+                <p class="text-muted mb-0">Duplicate schedules from a previous week to a new week</p>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="post" id="bulkForm">
+            {% csrf_token %}
+            <input type="hidden" name="mode" id="selectedMode">
+
+            <!-- Same Shift Mode -->
+            <div id="form_same_shift" class="form-section" hidden>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Create the same shift for multiple staff over a date range
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Staff Members *</label>
+                    <div class="staff-checkbox-list">
+                    {% for cb in form.staff_members %}
+                        <label class="form-check staff-item">
+                        {{ cb.tag }}
+                        <span class="form-check-label">{{ cb.choice_label }}</span>
+                        </label>
+                    {% endfor %}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Date *</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">End Date *</label>
+                        {{ form.end_date }}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Shift Type *</label>
+                    {{ form.shift_type }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Time</label>
+                        {{ form.start_time }}
+                        <small class="text-muted">Not needed for OFF days</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">End Time</label>
+                        {{ form.end_time }}
+                        <small class="text-muted">Not needed for OFF days</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weekly Pattern Mode -->
+            <div id="form_weekly_pattern" class="form-section" hidden>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Set a weekly pattern that will repeat for the selected period
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Staff Member *</label>
+                    {{ form.single_staff }}
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Start Date *</label>
+                        {{ form.start_date }}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">End Date *</label>
+                        {{ form.end_date }}
+                    </div>
+                </div>
+
+                <h6 class="mt-4 mb-3">Weekly Pattern</h6>
+                <div class="week-pattern-grid">
+                    <div class="day-pattern">
+                        <h6>Monday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.monday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.monday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.monday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Tuesday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.tuesday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.tuesday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.tuesday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Wednesday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.wednesday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.wednesday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.wednesday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Thursday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.thursday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.thursday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.thursday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Friday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.friday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.friday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.friday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Saturday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.saturday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.saturday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.saturday_end }}</div>
+                        </div>
+                    </div>
+
+                    <div class="day-pattern">
+                        <h6>Sunday</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-2">{{ form.sunday_shift }}</div>
+                            <div class="col-md-4 mb-2">{{ form.sunday_start }}</div>
+                            <div class="col-md-4 mb-2">{{ form.sunday_end }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Copy Week Mode -->
+            <div id="form_copy_week" class="form-section" hidden>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Copy all schedules from one week to another week
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Copy From Week Starting *</label>
+                        {{ form.copy_from_date }}
+                        <small class="text-muted">Select any date in the source week</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Copy To Week Starting *</label>
+                        {{ form.start_date }}
+                        <small class="text-muted">Select any date in the target week</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="d-flex justify-content-between mt-4" id="submitButtons" hidden>
+                <a href="{% url 'schedule:admin_calendar' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Create Schedules
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const modeCards = document.querySelectorAll('.mode-card');
+  const form = document.getElementById('bulkForm');
+  const selectedModeInput = document.getElementById('selectedMode');
+  const submitButtons = document.getElementById('submitButtons');
+
+  const sections = {
+    same_shift: document.getElementById('form_same_shift'),
+    weekly_pattern: document.getElementById('form_weekly_pattern'),
+    copy_week: document.getElementById('form_copy_week'),
+  };
+
+  // Disable/enable all controls inside a section
+  function setSectionEnabled(sectionEl, enabled) {
+    if (!sectionEl) return;
+    const controls = sectionEl.querySelectorAll('input, select, textarea, button');
+    controls.forEach(el => {
+      el.disabled = !enabled;
+      if (!enabled) el.removeAttribute('required'); // prevent hidden required
+    });
+  }
+
+  // Set/unset required on ALL matching controls
+  function setRequiredByName(names, required) {
+    names.forEach(name => {
+      const els = form.querySelectorAll(`[name="${name}"]`);
+      els.forEach(el => {
+        if (required) el.setAttribute('required', 'required');
+        else el.removeAttribute('required');
+      });
+    });
+  }
+
+  // DO NOT include checkbox group here
+  const ALL_POSSIBLE_REQUIRED = [
+    'single_staff',
+    'start_date', 'end_date',
+    'shift_type', 'copy_from_date'
+  ];
+
+  // DO NOT include staff_members here
+  const REQUIRED_BY_MODE = {
+    same_shift:     ['start_date', 'end_date', 'shift_type'],
+    weekly_pattern: ['single_staff', 'start_date', 'end_date'],
+    copy_week:      ['copy_from_date', 'start_date'],
+  };
+
+  function showMode(mode) {
+    // Hide + disable all sections first
+    Object.keys(sections).forEach(key => {
+      sections[key].hidden = true;
+      setSectionEnabled(sections[key], false);
+    });
+
+    // Show + enable selected section
+    sections[mode].hidden = false;
+    setSectionEnabled(sections[mode], true);
+
+    selectedModeInput.value = mode;
+    submitButtons.hidden = false;
+
+    // Required rules
+    setRequiredByName(ALL_POSSIBLE_REQUIRED, false);
+    setRequiredByName(REQUIRED_BY_MODE[mode] || [], true);
+  }
+
+  // Mode card click
+  modeCards.forEach(card => {
+    card.addEventListener('click', function () {
+      const mode = this.dataset.mode;
+      modeCards.forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      showMode(mode);
+    });
+  });
+
+  // ✅ Validate checkbox group properly (at least 1 selected)
+  form.addEventListener('submit', function (e) {
+    if (selectedModeInput.value === 'same_shift') {
+      const checked = form.querySelectorAll('input[name="staff_members"]:checked');
+      if (checked.length === 0) {
+        e.preventDefault();
+        alert('Please select at least one staff member.');
+      }
+    }
+  });
+
+  // Restore mode if already selected
+  if (selectedModeInput.value && sections[selectedModeInput.value]) {
+    showMode(selectedModeInput.value);
+    modeCards.forEach(c => c.classList.toggle('selected', c.dataset.mode === selectedModeInput.value));
+  } else {
+    Object.keys(sections).forEach(key => setSectionEnabled(sections[key], false));
+  }
+});
+</script>
+
+
+{% endblock %}

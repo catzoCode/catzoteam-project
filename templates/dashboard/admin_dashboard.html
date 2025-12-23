@@ -1,0 +1,230 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Admin Dashboard - CatzoTeam{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="bi bi-bar-chart"></i> Admin Analytics Dashboard
+        </h1>
+        <p class="lead">Overview of all staff performance across branches</p>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>Total Staff</h6>
+                <h2>{{ stats.total_staff|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>On Track</h6>
+                <h2>{{ stats.on_track_count|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6>Needs Improvement</h6>
+                <h2>{{ stats.needs_improvement_count|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>Warning Zone</h6>
+                <h2>{{ stats.warning_count|default:0 }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Branch Comparison -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-building"></i> Branch Performance Comparison</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Branch</th>
+                                <th>Staff Count</th>
+                                <th>Total Points</th>
+                                <th>Average Points</th>
+                                <th>On Track</th>
+                                <th>Warnings</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for branch in branch_stats %}
+                            <tr>
+                                <td><strong>{{ branch.name }}</strong></td>
+                                <td>{{ branch.staff_count }}</td>
+                                <td>{{ branch.total_points|floatformat:2 }}</td>
+                                <td>{{ branch.average_points|floatformat:2 }}</td>
+                                <td><span class="badge bg-success">{{ branch.on_track_count }}</span></td>
+                                <td>
+                                    {% if branch.warning_count > 0 %}
+                                    <span class="badge bg-danger">{{ branch.warning_count }}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% widthratio branch.on_track_count branch.staff_count 100 as performance %}
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if performance >= 75 %}bg-success{% elif performance >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ performance }}%;">
+                                            {{ performance }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Individual Staff Performance -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-people"></i> Individual Staff Performance</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Employee</th>
+                                <th>Branch</th>
+                                <th>Current Points</th>
+                                <th>Daily Average</th>
+                                <th>Days Worked</th>
+                                <th>Projected Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for staff in staff_performance %}
+                            <tr>
+                                <td>
+                                    <strong>{{ staff.user.username }}</strong><br>
+                                    <small class="text-muted">{{ staff.user.employee_id }}</small>
+                                </td>
+                                <td>{{ staff.user.get_branch_display }}</td>
+                                <td>{{ staff.current_points|floatformat:2 }}</td>
+                                <td>{{ staff.daily_average|floatformat:2 }}</td>
+                                <td>{{ staff.days_worked }}</td>
+                                <td><strong>{{ staff.projected_total|floatformat:2 }}</strong></td>
+                                <td>
+                                    <span class="badge bg-{{ staff.status_class }}">
+                                        {{ staff.status_label }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center">No staff data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Distribution Chart -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Performance Distribution</h5>
+            </div>
+            <div class="card-body">
+                {% with on_track=0 warning=0 needs_improvement=0 %}
+                    {% for staff in staff_performance %}
+                        {% if staff.status == 'on_track' %}
+                            {% with on_track=on_track|add:1 %}{% endwith %}
+                        {% elif staff.status == 'warning' %}
+                            {% with warning=warning|add:1 %}{% endwith %}
+                        {% else %}
+                            {% with needs_improvement=needs_improvement|add:1 %}{% endwith %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h1 class="text-success">{{ on_track }}</h1>
+                            <p>On Track</p>
+                        </div>
+                        <div class="col-4">
+                            <h1 class="text-warning">{{ needs_improvement }}</h1>
+                            <p>Needs Work</p>
+                        </div>
+                        <div class="col-4">
+                            <h1 class="text-danger">{{ warning }}</h1>
+                            <p>Warning</p>
+                        </div>
+                    </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Action Items</h5>
+            </div>
+            <div class="card-body">
+                <h6>Staff Needing Attention:</h6>
+                <ul class="list-group">
+                    {% for staff in staff_performance %}
+                        {% if staff.status == 'warning' or staff.status == 'needs_improvement' %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ staff.user.username }}</strong>
+                                <br><small>{{ staff.user.get_branch_display }}</small>
+                            </div>
+                            <div class="text-end">
+                                <div>{{ staff.projected_total|floatformat:0 }} pts</div>
+                                <small class="text-muted">Daily avg: {{ staff.daily_average|floatformat:1 }}</small>
+                            </div>
+                        </li>
+                        {% endif %}
+                    {% empty %}
+                    <li class="list-group-item text-success">
+                        <i class="bi bi-check-circle"></i> All staff performing well!
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

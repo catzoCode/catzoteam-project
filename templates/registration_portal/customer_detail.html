@@ -1,0 +1,240 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Customer Details - Registration Portal{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="text-white mb-3">
+            <i class="bi bi-person-circle"></i> Customer Details
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{% url 'registration_portal:customer_search' %}" class="btn btn-light">
+            <i class="bi bi-arrow-left"></i> Back to Search
+        </a>
+    </div>
+</div>
+
+<!-- Customer Information -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-person-badge"></i> Customer Information</span>
+        <span class="badge bg-primary">{{ customer.customer_id }}</span>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h5 class="mb-3">{{ customer.name }}</h5>
+                
+                <p class="mb-2">
+                    <i class="bi bi-telephone text-primary"></i>
+                    <strong>Phone:</strong> {{ customer.phone }}
+                </p>
+                
+                {% if customer.email %}
+                <p class="mb-2">
+                    <i class="bi bi-envelope text-primary"></i>
+                    <strong>Email:</strong> {{ customer.email }}
+                </p>
+                {% endif %}
+                
+                {% if customer.ic_number %}
+                <p class="mb-2">
+                    <i class="bi bi-card-text text-primary"></i>
+                    <strong>IC Number:</strong> {{ customer.ic_number }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+                {% if customer.address %}
+                <p class="mb-2">
+                    <i class="bi bi-geo-alt text-primary"></i>
+                    <strong>Address:</strong><br>
+                    {{ customer.address }}
+                </p>
+                {% endif %}
+                
+                {% if customer.emergency_contact %}
+                <p class="mb-2">
+                    <i class="bi bi-shield-exclamation text-danger"></i>
+                    <strong>Emergency Contact:</strong> {{ customer.emergency_contact }}
+                </p>
+                {% endif %}
+                
+                <p class="mb-0 text-muted small">
+                    <i class="bi bi-clock"></i> Registered {{ customer.created_at|timesince }} ago
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
+           class="btn btn-success w-100 py-3">
+            <i class="bi bi-plus-circle" style="font-size: 2rem;"></i>
+            <h6 class="mt-2 mb-0">Register Cat</h6>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
+           class="btn btn-primary w-100 py-3">
+            <i class="bi bi-clipboard-check" style="font-size: 2rem;"></i>
+            <h6 class="mt-2 mb-0">Create Service Request</h6>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{% url 'registration_portal:dashboard' %}" 
+           class="btn btn-outline-light w-100 py-3">
+            <i class="bi bi-house" style="font-size: 2rem;"></i>
+            <h6 class="mt-2 mb-0">Dashboard</h6>
+        </a>
+    </div>
+</div>
+
+<!-- Registered Cats -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-heart-fill text-danger"></i> Registered Cats</span>
+        <span class="badge bg-danger">{{ cats.count }} cat(s)</span>
+    </div>
+    <div class="card-body">
+        {% if cats %}
+        <div class="row g-3">
+            {% for cat in cats %}
+            <div class="col-md-6">
+                <div class="card h-100 border-{{ cat.vaccination_status|default:'secondary' }}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="mb-0">
+                                <i class="bi bi-heart-fill text-danger"></i> {{ cat.name }}
+                            </h5>
+                            {% if cat.vaccination_status == 'up_to_date' %}
+                            <span class="badge bg-success">✓ Vaccinated</span>
+                            {% elif cat.vaccination_status == 'overdue' %}
+                            <span class="badge bg-warning">⚠ Overdue</span>
+                            {% elif cat.vaccination_status == 'not_vaccinated' %}
+                            <span class="badge bg-danger">✗ Not Vaccinated</span>
+                            {% else %}
+                            <span class="badge bg-secondary">? Unknown</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p class="mb-2 small text-muted">
+                            <i class="bi bi-tag"></i> {{ cat.cat_id }}
+                        </p>
+                        
+                        <p class="mb-2">
+                            <strong>Breed:</strong> {{ cat.breed }}<br>
+                            <strong>Age:</strong> {{ cat.age }} years<br>
+                            <strong>Gender:</strong> {{ cat.get_gender_display }}<br>
+                            {% if cat.color %}
+                            <strong>Color:</strong> {{ cat.color }}<br>
+                            {% endif %}
+                            {% if cat.weight %}
+                            <strong>Weight:</strong> {{ cat.weight }} kg<br>
+                            {% endif %}
+                        </p>
+                        
+                        {% if cat.medical_notes %}
+                        <div class="alert alert-warning py-2 px-2 mb-2">
+                            <small><strong>Medical:</strong> {{ cat.medical_notes }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        {% if cat.special_requirements %}
+                        <div class="alert alert-info py-2 px-2 mb-2">
+                            <small><strong>Special:</strong> {{ cat.special_requirements }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        <small class="text-muted">
+                            <i class="bi bi-clock"></i> Registered {{ cat.registration_date|timesince }} ago
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-heart text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mb-3">No cats registered yet</p>
+            <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
+               class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Register First Cat
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Service Requests -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clipboard-check"></i> Service Requests</span>
+        <span class="badge bg-primary">{{ service_requests.count }}</span>
+    </div>
+    <div class="card-body">
+        {% if service_requests %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Cat</th>
+                        <th>Services</th>
+                        <th>Preferred Date</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for request in service_requests %}
+                    <tr>
+                        <td><strong>{{ request.request_id }}</strong></td>
+                        <td>{{ request.cat.name }}</td>
+                        <td>{{ request.services_wanted|truncatewords:5 }}</td>
+                        <td>
+                            {% if request.preferred_date %}
+                            {{ request.preferred_date|date:"M d, Y" }}
+                            {% else %}
+                            <span class="text-muted">Any time</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if request.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% elif request.status == 'converted' %}
+                            <span class="badge bg-success">Assigned</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ request.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ request.created_at|timesince }} ago</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <i class="bi bi-clipboard text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mb-3">No service requests yet</p>
+            {% if cats %}
+            <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
+               class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Create Service Request
+            </a>
+            {% else %}
+            <p class="text-muted small">Register a cat first before creating service requests</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

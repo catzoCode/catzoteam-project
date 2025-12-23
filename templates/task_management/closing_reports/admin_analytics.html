@@ -1,0 +1,391 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Sales Analytics - All Branches - CatzoTeam{% endblock %}
+
+{% block page_title %}Sales Analytics - All Branches{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">Sales Analytics</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 450px;
+        margin-bottom: 30px;
+    }
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="?period=7" class="btn {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Last 7 Days
+                </a>
+                <a href="?period=30" class="btn {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Last 30 Days
+                </a>
+                <a href="?period=90" class="btn {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    Last 3 Months
+                </a>
+            </div>
+            
+            <a href="{% url 'task_management:admin_all_closing_reports' %}" class="btn btn-outline-secondary float-end">
+                <i class="bi bi-file-text"></i> View All Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- System-Wide Summary Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Total Revenue (30d)</h6>
+                    <h2 class="mb-0 mt-1">RM {{ system_stats.total_revenue|floatformat:2|default:"0.00" }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Total Customers (30d)</h6>
+                    <h2 class="mb-0 mt-1">{{ system_stats.total_customers|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Avg Revenue/Day</h6>
+                    <h2 class="mb-0 mt-1">RM {{ system_stats.avg_revenue|floatformat:2|default:"0.00" }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Reports Submitted</h6>
+                    <h2 class="mb-0 mt-1">{{ system_stats.total_reports|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Comparison Chart - All Branches -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Revenue Comparison - All Branches</h5>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="revenueComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Projection Chart - All Branches -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Revenue Projection (30-day avg) - All Branches</h5>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="projectionComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Comparison Chart -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> Customer Comparison - All Branches</h5>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="customerComparisonChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Branch Performance Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Branch Performance Summary (30d)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Branch</th>
+                            <th>Total Revenue</th>
+                            <th>Avg Revenue/Day</th>
+                            <th>Total Customers</th>
+                            <th>Avg Customers/Day</th>
+                            <th>Reports Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchPerformanceTable">
+                        <!-- Will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Data from Django
+const branchesData = {{ branches_data|safe }};
+const projectionDates = {{ projection_dates|safe }};
+
+console.log('Branches Data:', branchesData); // Debug log
+
+// DYNAMIC COLOR GENERATION - Works with ANY branch codes!
+function generateColor(index) {
+    const colors = [
+        { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.2)' },   // Red
+        { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.2)' },   // Blue
+        { border: 'rgb(255, 206, 86)', bg: 'rgba(255, 206, 86, 0.2)' },   // Yellow
+        { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.2)' },   // Teal
+        { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.2)' }, // Purple
+        { border: 'rgb(255, 159, 64)', bg: 'rgba(255, 159, 64, 0.2)' },   // Orange
+        { border: 'rgb(201, 203, 207)', bg: 'rgba(201, 203, 207, 0.2)' }, // Gray
+        { border: 'rgb(255, 0, 255)', bg: 'rgba(255, 0, 255, 0.2)' },     // Magenta
+        { border: 'rgb(0, 255, 255)', bg: 'rgba(0, 255, 255, 0.2)' },     // Cyan
+        { border: 'rgb(128, 0, 128)', bg: 'rgba(128, 0, 128, 0.2)' },     // Dark Purple
+    ];
+    return colors[index % colors.length];
+}
+
+// Generate color mapping for all branches
+const branchColors = {};
+const branchKeys = Object.keys(branchesData);
+branchKeys.forEach((branchCode, index) => {
+    branchColors[branchCode] = generateColor(index);
+});
+
+console.log('Branch Colors:', branchColors); // Debug log
+
+// Check if we have data
+if (!branchesData || Object.keys(branchesData).length === 0) {
+    console.error('No branches data available');
+    document.getElementById('revenueComparisonChart').parentElement.innerHTML = 
+        '<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>No data available</p></div>';
+} else {
+    
+    // Get date labels from first branch (all branches have same dates now)
+    const firstBranchKey = Object.keys(branchesData)[0];
+    const dateLabels = branchesData[firstBranchKey].dates || [];
+    
+    console.log('Date labels:', dateLabels); // Debug log
+    console.log('Number of branches:', branchKeys.length); // Debug log
+
+    // 1. Revenue Comparison Chart
+    const revenueDatasets = [];
+    branchKeys.forEach((branchCode, index) => {
+        const data = branchesData[branchCode];
+        const color = branchColors[branchCode];
+        
+        console.log(`Branch ${branchCode}:`, {
+            name: data.name,
+            dataPoints: data.revenues.length,
+            color: color
+        }); // Debug log
+        
+        revenueDatasets.push({
+            label: data.name,
+            data: data.revenues || [],
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            tension: 0.4,
+            fill: false,
+            borderWidth: 2
+        });
+    });
+
+    const revenueComparisonCtx = document.getElementById('revenueComparisonChart').getContext('2d');
+    new Chart(revenueComparisonCtx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: revenueDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Daily Revenue by Branch (RM)'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'RM ' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Projection Comparison Chart
+    const projectionDatasets = [];
+    branchKeys.forEach((branchCode) => {
+        const data = branchesData[branchCode];
+        const color = branchColors[branchCode];
+        
+        projectionDatasets.push({
+            label: data.name + ' (Projected)',
+            data: Array(projectionDates.length).fill(data.avg_revenue || 0),
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            borderDash: [5, 5],
+            tension: 0,
+            fill: false,
+            borderWidth: 2
+        });
+    });
+
+    const projectionComparisonCtx = document.getElementById('projectionComparisonChart').getContext('2d');
+    new Chart(projectionComparisonCtx, {
+        type: 'line',
+        data: {
+            labels: projectionDates,
+            datasets: projectionDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Revenue Projection (Next 30 Days) - Based on 30-day Average'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return 'RM ' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. Customer Comparison Chart
+    const customerDatasets = [];
+    branchKeys.forEach((branchCode) => {
+        const data = branchesData[branchCode];
+        const color = branchColors[branchCode];
+        
+        customerDatasets.push({
+            label: data.name,
+            data: data.customers || [],
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            tension: 0.4,
+            fill: false,
+            borderWidth: 2
+        });
+    });
+
+    const customerComparisonCtx = document.getElementById('customerComparisonChart').getContext('2d');
+    new Chart(customerComparisonCtx, {
+        type: 'line',
+        data: {
+            labels: dateLabels,
+            datasets: customerDatasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Daily Customer Count by Branch'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+
+    // 4. Populate Branch Performance Table
+    const tableBody = document.getElementById('branchPerformanceTable');
+    branchKeys.forEach((branchCode) => {
+        const data = branchesData[branchCode];
+        const revenues = data.revenues || [];
+        const customers = data.customers || [];
+        
+        const totalRevenue = revenues.reduce((a, b) => a + b, 0);
+        const totalCustomers = customers.reduce((a, b) => a + b, 0);
+        
+        // Count only non-zero entries for average (days with actual reports)
+        const reportDays = revenues.filter(r => r > 0).length;
+        const avgRevenue = reportDays > 0 ? totalRevenue / reportDays : 0;
+        const avgCustomers = reportDays > 0 ? totalCustomers / reportDays : 0;
+        
+        const color = branchColors[branchCode];
+        
+        const row = `
+            <tr>
+                <td><span class="badge" style="background-color: ${color.border}; color: white;">${data.name}</span></td>
+                <td><strong>RM ${totalRevenue.toFixed(2)}</strong></td>
+                <td>RM ${avgRevenue.toFixed(2)}</td>
+                <td><strong>${totalCustomers}</strong></td>
+                <td>${avgCustomers.toFixed(1)}</td>
+                <td>${reportDays} days</td>
+            </tr>
+        `;
+        tableBody.innerHTML += row;
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Record Points - CatzoTeam{% endblock %}
+{% block page_title %}Record Today's Tasks{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Today's Summary -->
+        <div class="card mb-4 bg-primary text-white">
+            <div class="card-body text-center">
+                <h2>{{ daily_points.total_points }}</h2>
+                <p class="mb-0">Points Recorded Today ({{ today|date:"d M Y" }})</p>
+            </div>
+        </div>
+        
+        <!-- Record Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clipboard-check"></i> Record Completed Tasks</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Grooming -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-scissors"></i> Grooming Sessions (20 points each)
+                        </label>
+                        <input type="number" class="form-control" name="grooming_count" 
+                               value="{{ daily_points.grooming_count }}" min="0" max="50">
+                        <small class="text-muted">Number of grooming sessions completed today</small>
+                    </div>
+                    
+                    <!-- Services -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-gear"></i> Service Tasks (15 points each)
+                        </label>
+                        <input type="number" class="form-control" name="service_count" 
+                               value="{{ daily_points.service_count }}" min="0" max="50">
+                        <small class="text-muted">Cleaning, feeding, playtime, etc.</small>
+                    </div>
+                    
+                    <!-- Bookings -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-calendar-check"></i> Bookings Handled (15 points each)
+                        </label>
+                        <input type="number" class="form-control" name="booking_count" 
+                               value="{{ daily_points.booking_count }}" min="0" max="50">
+                        <small class="text-muted">Check-ins, check-outs completed today</small>
+                        {% if today_bookings > 0 %}
+                        <div class="alert alert-info mt-2 mb-0">
+                            <i class="bi bi-info-circle"></i> {{ today_bookings }} booking(s) completed today
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-save"></i> Save Points
+                        </button>
+                        <a href="{% url 'points_history' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-clock-history"></i> View History
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Guide -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0">Point Values</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Grooming:</strong> 20 points per session</li>
+                    <li><strong>Services:</strong> 15 points per task</li>
+                    <li><strong>Bookings:</strong> 15 points per booking handled</li>
+                </ul>
+                <hr>
+                <p class="mb-0"><strong>Daily Target:</strong> 50 points | <strong>Monthly Target:</strong> 1200 points</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

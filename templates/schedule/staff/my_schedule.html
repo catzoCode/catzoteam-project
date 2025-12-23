@@ -1,0 +1,365 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+
+{% block title %}My Schedule{% endblock %}
+
+{% block extra_css %}
+<style>
+    .schedule-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+    
+    .view-toggle {
+        background: rgba(255,255,255,0.2);
+        border-radius: 8px;
+        padding: 0.5rem;
+        display: inline-flex;
+        gap: 0.5rem;
+    }
+    
+    .view-toggle .btn {
+        border-radius: 6px;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        color: white;
+    }
+    
+    .view-toggle .btn.active {
+        background: white;
+        color: #10b981;
+    }
+    
+    .week-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .day-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: all 0.3s;
+        border: 2px solid transparent;
+    }
+    
+    .day-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+    
+    .day-card.today {
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+    }
+    
+    .day-header {
+        padding: 1rem;
+        text-align: center;
+        background: #f8f9fa;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .day-card.today .day-header {
+        background: #10b981;
+        color: white;
+    }
+    
+    .day-name {
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .day-date {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        margin: 0.25rem 0;
+    }
+    
+    .day-month {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+    
+    .day-body {
+        padding: 1.5rem;
+    }
+    
+    .shift-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-align: center;
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .shift-badge.morning { background: #3788d8; color: white; }
+    .shift-badge.afternoon { background: #f59e0b; color: white; }
+    .shift-badge.evening { background: #8b5cf6; color: white; }
+    .shift-badge.night { background: #1f2937; color: white; }
+    .shift-badge.full_day { background: #10b981; color: white; }
+    .shift-badge.off { background: #e5e7eb; color: #6b7280; }
+    
+    .shift-time {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+    
+    .shift-location {
+        text-align: center;
+        color: #6b7280;
+        font-size: 0.875rem;
+    }
+    
+    .no-schedule {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: #9ca3af;
+    }
+    
+    .quick-actions {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+    
+    .action-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 2px solid #e5e7eb;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .action-card.primary {
+        background: #eff6ff;
+        border-color: #3b82f6;
+    }
+    
+    .action-card.success {
+        background: #f0fdf4;
+        border-color: #10b981;
+    }
+    
+    .action-card.warning {
+        background: #fffbeb;
+        border-color: #f59e0b;
+    }
+    
+    .month-list {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .month-item {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .month-item:last-child {
+        border-bottom: none;
+    }
+    
+    .month-item:hover {
+        background: #f8f9fa;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Header -->
+    <div class="schedule-header">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h2 class="mb-0">
+                    <i class="bi bi-calendar-check"></i>
+                    My Schedule
+                </h2>
+                <p class="mb-0 mt-2 opacity-75">{{ request.user.get_full_name|default:request.user.username }}</p>
+            </div>
+            <div class="view-toggle">
+                <a href="?view=7day" class="btn {% if view_type == '7day' %}active{% endif %}">
+                    <i class="bi bi-calendar-week"></i> 7 Days
+                </a>
+                <a href="?view=month" class="btn {% if view_type == 'month' %}active{% endif %}">
+                    <i class="bi bi-calendar-month"></i> Month
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <h5 class="mb-3">Quick Actions</h5>
+        <div class="action-grid">
+            <a href="{% url 'schedule:staff_request_leave' %}" class="action-card primary">
+                <i class="bi bi-calendar-plus" style="font-size: 2rem; color: #3b82f6;"></i>
+                <div class="mt-2 fw-bold">Request Leave</div>
+                <small class="text-muted">Submit a leave request</small>
+            </a>
+            <a href="{% url 'schedule:staff_my_leaves' %}" class="action-card success">
+                <i class="bi bi-list-ul" style="font-size: 2rem; color: #10b981;"></i>
+                <div class="mt-2 fw-bold">My Leaves</div>
+                <small class="text-muted">View leave history</small>
+            </a>
+            <a href="{% url 'schedule:staff_request_swap' %}" class="action-card warning">
+                <i class="bi bi-arrow-left-right" style="font-size: 2rem; color: #f59e0b;"></i>
+                <div class="mt-2 fw-bold">Request Swap</div>
+                <small class="text-muted">Swap shifts with others</small>
+            </a>
+            <a href="{% url 'schedule:export_staff_pdf' %}?type=week" class="action-card" style="background: #fef2f2; border-color: #ef4444;">
+                <i class="bi bi-file-pdf" style="font-size: 2rem; color: #ef4444;"></i>
+                <div class="mt-2 fw-bold">Export PDF</div>
+                <small class="text-muted">Download schedule</small>
+            </a>
+        </div>
+    </div>
+
+    {% if view_type == '7day' %}
+    
+    <!-- 7-Day Card View -->
+    <h5 class="mb-3">Next 7 Days</h5>
+    <div class="week-cards">
+        {% for day_data in days_data %}
+        <div class="day-card {% if day_data.is_today %}today{% endif %}">
+            <div class="day-header">
+                <div class="day-name">{{ day_data.date|date:"l" }}</div>
+                <div class="day-date">{{ day_data.date|date:"d" }}</div>
+                <div class="day-month">{{ day_data.date|date:"M Y" }}</div>
+            </div>
+            <div class="day-body">
+                {% if day_data.schedule %}
+                    <div class="shift-badge {{ day_data.schedule.shift_type }}">
+                        {{ day_data.schedule.get_shift_type_display }}
+                    </div>
+                    {% if day_data.schedule.shift_type != 'off' %}
+                        <div class="shift-time">
+                            {{ day_data.schedule.start_time|time:"g:i A" }}<br>
+                            <small style="font-size: 0.875rem;">to</small><br>
+                            {{ day_data.schedule.end_time|time:"g:i A" }}
+                        </div>
+                        <div class="shift-location">
+                            <i class="bi bi-geo-alt"></i>
+                            {{ day_data.schedule.get_branch_display }}
+                        </div>
+                        {% if day_data.schedule.notes %}
+                        <div class="mt-2 text-muted" style="font-size: 0.875rem;">
+                            <i class="bi bi-sticky"></i> {{ day_data.schedule.notes }}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="shift-time" style="color: #9ca3af;">
+                            Rest Day
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="no-schedule">
+                        <i class="bi bi-calendar-x" style="font-size: 2rem;"></i>
+                        <div class="mt-2">No schedule</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+
+    <!-- Month List View -->
+    <h5 class="mb-3">{{ month_start|date:"F Y" }}</h5>
+    <div class="month-list">
+        {% for day_data in days_data %}
+        <div class="month-item {% if day_data.has_leave %}has-leave{% endif %}">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <div class="fw-bold">{{ day_data.date|date:"l, F d, Y" }}</div>
+
+            {% if day_data.has_leave %}
+                <div class="mt-2">
+                    <span class="badge" style="background: #f59e0b; color: white;">
+                        <i class="bi bi-calendar-x"></i>
+                        ON LEAVE - {{ day_data.leave_info.get_leave_type_display }}
+                    </span>
+                </div>
+                <div class="text-muted mt-1" style="font-size: 0.9rem;">
+                    <i class="bi bi-chat-left-text"></i> {{ day_data.leave_info.reason|truncatewords:15 }}
+                </div>
+
+            {% elif day_data.schedule %}
+                <div class="text-muted mt-1">
+                    <span class="badge" style="background: {{ day_data.schedule.shift_color }}; color: white;">
+                        {{ day_data.schedule.get_shift_type_display }}
+                    </span>
+                    {% if day_data.schedule.shift_type != 'off' %}
+                        {{ day_data.schedule.start_time|time:"g:i A" }} - {{ day_data.schedule.end_time|time:"g:i A" }}
+                    {% endif %}
+                    </div>
+
+                {% else %}
+                    <div class="text-muted mt-1">No schedule</div>
+                {% endif %}
+                </div>
+
+            <div class="text-end">
+            <div class="text-muted">
+                <i class="bi bi-geo-alt"></i>
+                {% if day_data.schedule %}
+                {{ day_data.schedule.branch }}
+                {% else %}
+                {{ request.user.branch }}
+                {% endif %}
+            </div>
+            </div>
+        </div>
+        </div>
+        {% empty %}
+        <div class="text-center p-5">
+        <i class="bi bi-calendar-x" style="font-size: 3rem; color: #9ca3af;"></i>
+        <p class="mt-3 text-muted">No schedules for this month</p>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% endif %}
+
+</div>
+{% endblock %}

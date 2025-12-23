@@ -1,0 +1,486 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Review Leave Request{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+    
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 2rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .staff-info-card {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        border: 2px solid #dee2e6;
+    }
+    
+    .staff-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .staff-details h4 {
+        margin-bottom: 0.5rem;
+        color: #1f2937;
+    }
+    
+    .staff-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        align-items: center;
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+    
+    .staff-meta i {
+        color: #3b82f6;
+    }
+    
+    .leave-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+    
+    .detail-box {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.25rem;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+        transition: all 0.3s;
+    }
+    
+    .detail-box:hover {
+        border-color: #3b82f6;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    }
+    
+    .detail-label {
+        font-size: 0.75rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .detail-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+    
+    .leave-reason-box {
+        background: #f8f9fa;
+        border-left: 4px solid #3b82f6;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+    }
+    
+    .leave-reason-box h6 {
+        color: #1f2937;
+        margin-bottom: 1rem;
+    }
+    
+    .leave-reason-box p {
+        color: #4b5563;
+        line-height: 1.6;
+    }
+    
+    .medical-proof {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+    
+    .medical-proof i {
+        font-size: 3rem;
+        color: #3b82f6;
+        margin-bottom: 1rem;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .status-badge.pending_manager { 
+        background: #fef3c7; 
+        color: #92400e; 
+    }
+    .status-badge.manager_approved { 
+        background: #dbeafe; 
+        color: #1e40af; 
+    }
+    .status-badge.approved { 
+        background: #d1fae5; 
+        color: #065f46; 
+    }
+    .status-badge.rejected { 
+        background: #fee2e2; 
+        color: #991b1b; 
+    }
+    
+    .manager-section {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid #f59e0b;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        border: 2px solid #fbbf24;
+    }
+    
+    .manager-section h6 {
+        color: #92400e;
+        margin-bottom: 1rem;
+    }
+    
+    .action-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+        border: 2px solid #dee2e6;
+    }
+    
+    .action-section h5 {
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-group-custom {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn-group-custom .btn-secondary {
+        grid-column: 1 / -1;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        border: none;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .btn-success {
+        background: #10b981;
+    }
+    
+    .btn-success:hover {
+        background: #059669;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-danger {
+        background: #ef4444;
+    }
+    
+    .btn-danger:hover {
+        background: #dc2626;
+        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+    }
+    
+    .btn-secondary {
+        background: #6b7280;
+    }
+    
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
+    
+    .btn-light {
+        background: white;
+        color: #3b82f6;
+        border: 2px solid white;
+    }
+    
+    .btn-light:hover {
+        background: rgba(255,255,255,0.9);
+        transform: translateY(-2px);
+    }
+    
+    .submission-info {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 2px dashed #dee2e6;
+        text-align: center;
+        color: #6b7280;
+    }
+    
+    .submission-info i {
+        color: #3b82f6;
+    }
+    
+    @media (max-width: 768px) {
+        .staff-info-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .leave-details-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+        
+        .btn-group-custom {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-group-custom .btn-secondary {
+            grid-column: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="mb-2">
+                    <i class="bi bi-clipboard-check"></i> Review Leave Request
+                </h2>
+                <p class="mb-0 opacity-75">
+                    {% if is_manager_leave %}
+                        <i class="bi bi-star-fill"></i> Manager Leave Application
+                    {% else %}
+                        <i class="bi bi-person"></i> Staff Leave Application
+                    {% endif %}
+                </p>
+            </div>
+            <a href="{% if request.user.role == 'admin' %}{% url 'schedule:admin_leave_requests' %}{% else %}{% url 'schedule:manager_leave_requests' %}{% endif %}" 
+               class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Review Card -->
+    <div class="review-card">
+        
+        <!-- Staff Info -->
+        <div class="staff-info-card">
+            <div class="staff-avatar">
+                {{ leave_request.staff.username|slice:":2"|upper }}
+            </div>
+            <div class="staff-details flex-grow-1">
+                <h4>{{ leave_request.staff.get_full_name|default:leave_request.staff.username }}</h4>
+                <div class="staff-meta">
+                    <span>
+                        <i class="bi bi-briefcase"></i> 
+                        {{ leave_request.staff.get_role_display }}
+                    </span>
+                    <span>
+                        <i class="bi bi-geo-alt"></i> 
+                        {{ leave_request.staff.get_branch_display }}
+                    </span>
+                    <span>
+                        <i class="bi bi-person-badge"></i> 
+                        {{ leave_request.staff.username }}
+                    </span>
+                </div>
+                <div class="mt-2">
+                    <span class="status-badge {{ leave_request.status }}">
+                        <i class="bi bi-info-circle"></i>
+                        {{ leave_request.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leave Details -->
+        <h5 class="mb-3">
+            <i class="bi bi-calendar-range"></i> Leave Details
+        </h5>
+        <div class="leave-details-grid">
+            <div class="detail-box">
+                <div class="detail-label">
+                    <i class="bi bi-tag"></i> Leave Type
+                </div>
+                <div class="detail-value">
+                    <span class="badge bg-primary" style="font-size: 0.9rem;">
+                        {{ leave_request.get_leave_type_display }}
+                    </span>
+                </div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">
+                    <i class="bi bi-calendar-event"></i> Start Date
+                </div>
+                <div class="detail-value">
+                    {{ leave_request.start_date|date:"M d, Y" }}
+                </div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">
+                    <i class="bi bi-calendar-check"></i> End Date
+                </div>
+                <div class="detail-value">
+                    {{ leave_request.end_date|date:"M d, Y" }}
+                </div>
+            </div>
+            <div class="detail-box">
+                <div class="detail-label">
+                    <i class="bi bi-hourglass-split"></i> Total Days
+                </div>
+                <div class="detail-value" style="color: #3b82f6;">
+                    {{ leave_request.total_days }} day{{ leave_request.total_days|pluralize }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="leave-reason-box">
+            <h6>
+                <i class="bi bi-chat-left-text"></i> Reason for Leave
+            </h6>
+            <p class="mb-0">{{ leave_request.reason }}</p>
+        </div>
+
+        <!-- Medical Proof -->
+        {% if leave_request.medical_proof %}
+        <div class="medical-proof">
+            <i class="bi bi-file-earmark-medical"></i>
+            <h6 class="mt-2 mb-3">Medical Certificate Attached</h6>
+            <a href="{{ leave_request.medical_proof.url }}" 
+               target="_blank" 
+               class="btn btn-primary">
+                <i class="bi bi-download"></i> View Medical Certificate
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Manager Approval Section -->
+        {% if leave_request.status == 'manager_approved' %}
+        <div class="manager-section">
+            <h6>
+                <i class="bi bi-check-circle-fill"></i> Manager Approval
+            </h6>
+            <div class="mt-3">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong><i class="bi bi-person-check"></i> Approved by:</strong><br>
+                        {% if leave_request.manager_approved_by %}
+                            {{ leave_request.manager_approved_by.get_full_name|default:leave_request.manager_approved_by.username }}
+                        {% else %}
+                            <em>System (Manager self-approval)</em>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong><i class="bi bi-clock"></i> Approved at:</strong><br>
+                        {% if leave_request.manager_approved_at %}
+                            {{ leave_request.manager_approved_at|date:"M d, Y g:i A" }}
+                        {% else %}
+                            {{ leave_request.created_at|date:"M d, Y g:i A" }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if leave_request.manager_notes %}
+                <div class="mt-3 p-3" style="background: rgba(255,255,255,0.5); border-radius: 8px;">
+                    <strong><i class="bi bi-sticky"></i> Manager Notes:</strong>
+                    <p class="mb-0 mt-2">{{ leave_request.manager_notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <h5>
+                <i class="bi bi-hand-thumbs-up"></i> 
+                {% if request.user.role == 'admin' %}Admin{% else %}Manager{% endif %} Decision
+            </h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-pencil-square"></i> Notes (Optional)
+                    </label>
+                    <textarea name="notes" 
+                              class="form-control" 
+                              rows="4" 
+                              placeholder="Add any comments or reasons for your decision..."
+                              style="border-radius: 8px; border: 2px solid #dee2e6;"></textarea>
+                    <small class="text-muted">
+                        This note will be visible to the staff member
+                    </small>
+                </div>
+                
+                <div class="btn-group-custom">
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="bi bi-check-circle-fill"></i> Approve Leave
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="bi bi-x-circle-fill"></i> Reject Leave
+                    </button>
+                    <a href="{% if request.user.role == 'admin' %}{% url 'schedule:admin_leave_requests' %}{% else %}{% url 'schedule:manager_leave_requests' %}{% endif %}" 
+                       class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancel & Go Back
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Submission Info -->
+        <div class="submission-info">
+            <i class="bi bi-clock-history"></i> 
+            Submitted <strong>{{ leave_request.created_at|timesince }}</strong> ago 
+            <br>
+            <small>({{ leave_request.created_at|date:"l, M d, Y \a\t g:i A" }})</small>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

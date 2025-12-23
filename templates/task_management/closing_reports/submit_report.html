@@ -1,0 +1,349 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Submit Closing Report - CatzoTeam{% endblock %}
+
+{% block page_title %}Daily Closing Checklist{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:manager_dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">Submit Closing Report</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            
+            <!-- Instructions -->
+            <div class="alert alert-info mb-4">
+                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Instructions</h5>
+                <p class="mb-0">Record the final customer and revenue numbers before ending the day.</p>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> Daily Closing Report - {{ branch }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    
+                    <form method="post" enctype="multipart/form-data" id="closingReportForm">
+                        {% csrf_token %}
+                        
+                        <!-- Closing Date -->
+                        <div class="mb-4">
+                            <label for="date" class="form-label fw-bold">Closing Date</label>
+                            <input 
+                                type="date" 
+                                class="form-control" 
+                                id="date" 
+                                name="date" 
+                                value="{{ today|date:'Y-m-d' }}"
+                                max="{{ today|date:'Y-m-d' }}"
+                                required
+                            >
+                            <small class="text-muted">Select the date for this closing report</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Section A-C: Customer & Service Counts -->
+                        <h6 class="text-primary mb-3">Customer & Service Counts</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="grooming_count" class="form-label">
+                                    a. Numbers of cat grooming today
+                                </label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="grooming_count" 
+                                    name="grooming_count" 
+                                    min="0" 
+                                    value="0" 
+                                    required
+                                >
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="boarding_count" class="form-label">
+                                    b. Numbers of boarded room today
+                                </label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="boarding_count" 
+                                    name="boarding_count" 
+                                    min="0" 
+                                    value="0" 
+                                    required
+                                >
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label for="total_customers" class="form-label">
+                                    c. Numbers of customers today <br>
+                                    <small class="text-muted">(boarding + grooming)</small>
+                                </label>
+                                <input 
+                                    type="number" 
+                                    class="form-control" 
+                                    id="total_customers" 
+                                    name="total_customers" 
+                                    min="0" 
+                                    value="0" 
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Section D-E: Payment Information -->
+                        <h6 class="text-primary mb-3">Payment Information</h6>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="payment_record_amount" class="form-label">
+                                    d. Total payment record (RM)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">RM</span>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="payment_record_amount" 
+                                        name="payment_record_amount" 
+                                        step="0.01" 
+                                        min="0" 
+                                        value="0.00" 
+                                        required
+                                    >
+                                </div>
+                                <small class="text-muted">Amount from system records</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="payment_receipt_amount" class="form-label">
+                                    e. Total payment receipt (RM)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">RM</span>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="payment_receipt_amount" 
+                                        name="payment_receipt_amount" 
+                                        step="0.01" 
+                                        min="0" 
+                                        value="0.00" 
+                                        required
+                                    >
+                                </div>
+                                <small class="text-muted">Actual cash/receipts received</small>
+                            </div>
+                        </div>
+
+                        <!-- Payment Difference Alert -->
+                        <div id="paymentDifferenceAlert" class="alert alert-warning" style="display: none;">
+                            <i class="bi bi-exclamation-triangle"></i> 
+                            <strong>Difference detected:</strong> 
+                            <span id="differenceAmount"></span>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Photo Upload -->
+                        <h6 class="text-primary mb-3">Payment Proof</h6>
+                        
+                        <div class="mb-3">
+                            <label for="payment_proof_photo" class="form-label">
+                                Upload a clear photo or screenshot of the payment record
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="file" 
+                                class="form-control" 
+                                id="payment_proof_photo" 
+                                name="payment_proof_photo" 
+                                accept="image/*"
+                                required
+                            >
+                            <small class="text-muted">Accepted formats: JPG, PNG, PDF (Max 5MB)</small>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <div id="imagePreview" style="display: none;" class="mb-3">
+                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Section F: Compliance Checks -->
+                        <h6 class="text-primary mb-3">f. Compliance checks (answer with Yes or No)</h6>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                f.i Do all customers are registered and paid through system <br>
+                                <small class="text-muted">(no cash payment or outside payment)?</small>
+                            </label>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    name="compliance_all_paid_through_system" 
+                                    id="compliance_yes" 
+                                    value="yes" 
+                                    required
+                                    checked
+                                >
+                                <label class="form-check-label" for="compliance_yes">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    name="compliance_all_paid_through_system" 
+                                    id="compliance_no" 
+                                    value="no"
+                                >
+                                <label class="form-check-label text-danger" for="compliance_no">
+                                    No
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                f.ii Is there any service with no payment today <br>
+                                <small class="text-muted">(combo redemption, free services)?</small>
+                            </label>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    name="compliance_free_services_today" 
+                                    id="free_yes" 
+                                    value="yes" 
+                                    required
+                                >
+                                <label class="form-check-label" for="free_yes">
+                                    Yes
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    name="compliance_free_services_today" 
+                                    id="free_no" 
+                                    value="no"
+                                    checked
+                                >
+                                <label class="form-check-label" for="free_no">
+                                    No
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Notes (Optional) -->
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Notes (optional)</label>
+                            <textarea 
+                                class="form-control" 
+                                id="notes" 
+                                name="notes" 
+                                rows="3" 
+                                placeholder="Any additional notes or comments..."
+                            ></textarea>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle"></i> Save Closing Report
+                            </button>
+                            <a href="{% url 'task_management:my_closing_reports' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview
+document.getElementById('payment_proof_photo').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImg').src = e.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Calculate payment difference
+function calculateDifference() {
+    const record = parseFloat(document.getElementById('payment_record_amount').value) || 0;
+    const receipt = parseFloat(document.getElementById('payment_receipt_amount').value) || 0;
+    const difference = Math.abs(record - receipt);
+    
+    if (difference > 0) {
+        document.getElementById('paymentDifferenceAlert').style.display = 'block';
+        document.getElementById('differenceAmount').textContent = `RM ${difference.toFixed(2)}`;
+    } else {
+        document.getElementById('paymentDifferenceAlert').style.display = 'none';
+    }
+}
+
+document.getElementById('payment_record_amount').addEventListener('input', calculateDifference);
+document.getElementById('payment_receipt_amount').addEventListener('input', calculateDifference);
+
+// Auto-calculate total customers
+function calculateTotalCustomers() {
+    const grooming = parseInt(document.getElementById('grooming_count').value) || 0;
+    const boarding = parseInt(document.getElementById('boarding_count').value) || 0;
+    document.getElementById('total_customers').value = grooming + boarding;
+}
+
+document.getElementById('grooming_count').addEventListener('input', calculateTotalCustomers);
+document.getElementById('boarding_count').addEventListener('input', calculateTotalCustomers);
+
+// Form validation
+document.getElementById('closingReportForm').addEventListener('submit', function(e) {
+    const photo = document.getElementById('payment_proof_photo').files[0];
+    
+    if (!photo) {
+        e.preventDefault();
+        alert('Please upload a payment proof photo!');
+        return false;
+    }
+    
+    // Confirm submission
+    if (!confirm('Are you sure you want to submit this closing report? It cannot be edited after submission.')) {
+        e.preventDefault();
+        return false;
+    }
+});
+</script>
+{% endblock %}

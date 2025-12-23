@@ -1,0 +1,300 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}Approve Shift Swap - CatzoTeam Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+    
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 2.5rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .swap-visual {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+        margin: 2rem 0;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+    
+    .staff-box {
+        flex: 1;
+        text-align: center;
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .staff-avatar-large {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0 auto 1rem;
+    }
+    
+    .swap-arrow-large {
+        font-size: 3rem;
+        color: #8b5cf6;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+    
+    .schedule-details-box {
+        background: #eff6ff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #dbeafe;
+    }
+    
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+    
+    .reason-section {
+        background: #f8f9fa;
+        border-left: 4px solid #8b5cf6;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+    
+    .agreement-box {
+        background: #d1fae5;
+        border: 2px solid #10b981;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+    }
+    
+    .warning-box {
+        background: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin: 2rem 0;
+    }
+    
+    .action-section {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .btn-group-custom {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .btn {
+        flex: 1;
+        border-radius: 8px;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-2">
+                    <i class="bi bi-arrow-repeat"></i> Review Shift Swap
+                </h2>
+                <p class="mb-0 opacity-75">
+                    Approve or reject shift swap request
+                </p>
+            </div>
+            <a href="{% url 'schedule:admin_swap_requests' %}" class="btn btn-light">
+                <i class="bi bi-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Review Card -->
+    <div class="review-card">
+        
+        <!-- Swap Visual -->
+        <div class="swap-visual">
+            <!-- Requester -->
+            <div class="staff-box">
+                <div class="staff-avatar-large">
+                    {{ swap_request.requester.username|slice:":2"|upper }}
+                </div>
+                <h5 class="mb-1">{{ swap_request.requester.get_full_name|default:swap_request.requester.username }}</h5>
+                <div class="text-muted mb-3">
+                    <i class="bi bi-briefcase"></i> {{ swap_request.requester.get_role_display }}<br>
+                    <i class="bi bi-geo-alt"></i> {{ swap_request.requester.get_branch_display }}
+                </div>
+                
+                <div class="schedule-details-box">
+                    <h6 class="text-primary mb-3">Current Schedule</h6>
+                    <div class="detail-row">
+                        <span>Date:</span>
+                        <strong>{{ swap_request.requester_schedule.date|date:"l, M d" }}</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Shift:</span>
+                        <span class="badge bg-primary">{{ swap_request.requester_schedule.get_shift_type_display }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Time:</span>
+                        <strong>
+                            {{ swap_request.requester_schedule.start_time|time:"g:i A" }} - 
+                            {{ swap_request.requester_schedule.end_time|time:"g:i A" }}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Swap Arrow -->
+            <div class="swap-arrow-large">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+
+            <!-- Counterpart -->
+            <div class="staff-box">
+                <div class="staff-avatar-large" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    {{ swap_request.counterpart.username|slice:":2"|upper }}
+                </div>
+                <h5 class="mb-1">{{ swap_request.counterpart.get_full_name|default:swap_request.counterpart.username }}</h5>
+                <div class="text-muted mb-3">
+                    <i class="bi bi-briefcase"></i> {{ swap_request.counterpart.get_role_display }}<br>
+                    <i class="bi bi-geo-alt"></i> {{ swap_request.counterpart.get_branch_display }}
+                </div>
+                
+                <div class="schedule-details-box">
+                    <h6 class="text-primary mb-3">Current Schedule</h6>
+                    <div class="detail-row">
+                        <span>Date:</span>
+                        <strong>{{ swap_request.counterpart_schedule.date|date:"l, M d" }}</strong>
+                    </div>
+                    <div class="detail-row">
+                        <span>Shift:</span>
+                        <span class="badge bg-success">{{ swap_request.counterpart_schedule.get_shift_type_display }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Time:</span>
+                        <strong>
+                            {{ swap_request.counterpart_schedule.start_time|time:"g:i A" }} - 
+                            {{ swap_request.counterpart_schedule.end_time|time:"g:i A" }}
+                        </strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="reason-section">
+            <h6 class="mb-2"><i class="bi bi-chat-left-text"></i> Reason for Swap</h6>
+            <p class="mb-0">{{ swap_request.reason }}</p>
+        </div>
+
+        <!-- Agreement Status -->
+        {% if swap_request.counterpart_agreed %}
+        <div class="agreement-box">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-check-circle-fill" style="font-size: 2rem; color: #10b981;"></i>
+                <div>
+                    <strong>Both Parties Agreed</strong>
+                    <br><small>{{ swap_request.counterpart.get_full_name|default:swap_request.counterpart.username }} 
+                    agreed on {{ swap_request.counterpart_agreed_at|date:"M d, Y g:i A" }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Warning -->
+        <div class="warning-box">
+            <div class="d-flex align-items-start gap-2">
+                <i class="bi bi-exclamation-triangle" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                <div>
+                    <strong>Important:</strong> Approving this swap will immediately exchange the shifts between both staff members. 
+                    Make sure both schedules are compatible and this swap won't cause conflicts.
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Section -->
+        <div class="action-section">
+            <h5 class="mb-3">
+                <i class="bi bi-hand-thumbs-up"></i> Your Decision
+            </h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Notes (Optional)</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Add any comments about your decision..."></textarea>
+                </div>
+                
+                <div class="btn-group-custom">
+                    <button type="submit" name="action" value="approve" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Approve Swap
+                    </button>
+                    <button type="submit" name="action" value="reject" class="btn btn-danger">
+                        <i class="bi bi-x-circle"></i> Reject Swap
+                    </button>
+                    <a href="{% url 'schedule:admin_swap_requests' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Back
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Request Info -->
+        <div class="mt-4 text-center text-muted">
+            <small>
+                <i class="bi bi-clock-history"></i> 
+                Requested {{ swap_request.created_at|timesince }} ago 
+                ({{ swap_request.created_at|date:"M d, Y g:i A" }})
+            </small>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

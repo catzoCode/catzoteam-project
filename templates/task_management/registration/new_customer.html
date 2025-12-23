@@ -1,0 +1,139 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Register New Customer{% endblock %}
+
+{% block page_title %}Register New Customer{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'task_management:register_step1' %}">Register Service</a></li>
+<li class="breadcrumb-item active">New Customer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Not Found Alert -->
+        <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Customer not found!</strong> No customer matching "{{ search_query }}" in our system.
+            Please register a new customer below.
+        </div>
+
+        <!-- Registration Form -->
+        <div class="card shadow-lg">
+            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h4 class="text-white mb-0">
+                    <i class="bi bi-person-plus-fill"></i> Customer Registration
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'task_management:register_step1_create' %}">
+                    {% csrf_token %}
+
+                    <!-- Employee ID Verification -->
+                    <div class="alert alert-warning border-warning">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <strong>Employee Verification Required</strong>
+                        <div class="mt-2">
+                            <label class="form-label fw-bold">Your Employee ID:</label>
+                            <input type="text" 
+                                   name="employee_id" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="CTZ001" 
+                                   value="{{ user.employee_id }}"
+                                   required>
+                            <small class="text-muted">Enter your employee ID to verify this registration</small>
+                        </div>
+                    </div>
+
+                    <h5 class="mb-3 text-primary">
+                        <i class="bi bi-1-circle-fill"></i> Customer Information
+                    </h5>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="name" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Mrs. Lee" 
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                IC Number <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="ic_number" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="123456-12-1234" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Phone Number <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" 
+                                   name="phone" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="012-345-6789" 
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   name="email" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="customer@email.com" 
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Address <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="address" 
+                                  class="form-control" 
+                                  rows="3" 
+                                  placeholder="123 Jalan Petaling Jaya, Selangor" 
+                                  required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Emergency Contact Number</label>
+                        <input type="tel" 
+                               name="emergency_contact" 
+                               class="form-control form-control-lg" 
+                               placeholder="013-987-6543">
+                        <small class="text-muted">Optional - In case we need to reach an alternate contact</small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{% url 'task_management:register_step1' %}" 
+                               class="btn btn-outline-secondary btn-lg w-100">
+                                <i class="bi bi-arrow-left"></i> Back to Search
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="bi bi-check-circle"></i> Register Customer
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

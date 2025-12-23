@@ -1,0 +1,758 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Manage Tasks - CatzoTeam Admin{% endblock %}
+{% block page_title %}Manage Task Types & Groups{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">Manage Tasks</li>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .manage-tasks-layout {
+        display: flex;
+        gap: 20px;
+        min-height: 600px;
+    }
+    
+    .groups-sidebar {
+        width: 30%;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .types-main {
+        width: 70%;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .group-item {
+        border: 2px solid #e9ecef;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    
+    .group-item:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+    
+    .group-item.selected {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+    
+    .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .group-name {
+        font-weight: 600;
+        font-size: 16px;
+        outline: none;
+        border: 1px dashed transparent;
+        padding: 2px 4px;
+        border-radius: 3px;
+        flex: 1;
+    }
+    
+    .group-name:hover, .group-name:focus {
+        border-color: #007bff;
+        background: white;
+    }
+    
+    .group-desc {
+        color: #6c757d;
+        font-size: 13px;
+        outline: none;
+        border: 1px dashed transparent;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .group-desc:hover, .group-desc:focus {
+        border-color: #007bff;
+        background: white;
+    }
+    
+    .group-actions {
+        display: flex;
+        gap: 5px;
+        margin-top: 10px;
+    }
+    
+    .btn-icon {
+        padding: 4px 8px;
+        font-size: 12px;
+        border-radius: 4px;
+    }
+    
+    .editable-cell {
+        outline: none;
+        border: 1px dashed transparent;
+        padding: 4px;
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+    
+    .editable-cell:hover, .editable-cell:focus {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+    
+    .advanced-settings {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 10px;
+    }
+    
+    .advanced-settings label {
+        display: inline-block;
+        margin-right: 15px;
+        font-size: 13px;
+    }
+    
+    .badge-usage {
+        background: #6c757d;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.show {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+    }
+    
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 99999;
+        display: none;
+        min-width: 250px;
+    }
+    
+    .toast.show {
+        display: block;
+        animation: slideIn 0.3s;
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(400px); }
+        to { transform: translateX(0); }
+    }
+    
+    .toast.success {
+        border-left: 4px solid #28a745;
+    }
+    
+    .toast.error {
+        border-left: 4px solid #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <strong id="toast-title">Success</strong>
+        <p id="toast-message" class="mb-0 mt-1"></p>
+    </div>
+    
+    <!-- Header Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12 d-flex justify-content-between align-items-center">
+            <div>
+                <p class="text-muted mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    Click any field to edit inline. Changes save automatically.
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Layout -->
+    <div class="manage-tasks-layout">
+        
+        <!-- GROUPS SIDEBAR -->
+        <div class="groups-sidebar">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="bi bi-folder"></i> Task Groups</h5>
+                <button class="btn btn-sm btn-primary" onclick="showAddGroupModal()">
+                    <i class="bi bi-plus"></i> Add
+                </button>
+            </div>
+            
+            <!-- All Groups Option -->
+            <div class="group-item {% if selected_group == 'all' %}selected{% endif %}" 
+                 onclick="filterByGroup('all')">
+                <div class="group-header">
+                    <span class="fw-bold">📋 All Task Types</span>
+                </div>
+                <small class="text-muted">View all</small>
+            </div>
+            
+            <!-- Groups List -->
+            {% for group in groups %}
+            <div class="group-item {% if selected_group == group.group_id %}selected{% endif %}" 
+                 data-group-id="{{ group.group_id }}"
+                 onclick="filterByGroup('{{ group.group_id }}')">
+                
+                <div class="group-header">
+                    <span class="group-name" 
+                          contenteditable="true" 
+                          onclick="event.stopPropagation();"
+                          onblur="updateGroup('{{ group.group_id }}', 'name', this.innerText)"
+                          onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ group.name }}</span>
+                    <span class="badge bg-secondary">{{ group.task_count }}</span>
+                </div>
+                
+                <div class="group-desc" 
+                     contenteditable="true"
+                     onclick="event.stopPropagation();"
+                     onblur="updateGroup('{{ group.group_id }}', 'description', this.innerText)"
+                     onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ group.description|default:"No description" }}</div>
+                
+                <div class="group-actions" onclick="event.stopPropagation();">
+                    <button class="btn btn-sm btn-outline-secondary btn-icon" 
+                            onclick="reorderGroup('{{ group.group_id }}', 'up')" 
+                            title="Move Up">▲</button>
+                    <button class="btn btn-sm btn-outline-secondary btn-icon" 
+                            onclick="reorderGroup('{{ group.group_id }}', 'down')" 
+                            title="Move Down">▼</button>
+                    <button class="btn btn-sm btn-outline-danger btn-icon" 
+                            onclick="deleteGroup('{{ group.group_id }}', '{{ group.name }}')" 
+                            title="Delete">🗑</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- TASK TYPES MAIN AREA -->
+        <div class="types-main">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check"></i> 
+                    Task Types
+                    {% if selected_group != 'all' %}
+                    - {{ selected_group_name }}
+                    {% endif %}
+                </h5>
+                <button class="btn btn-sm btn-success" onclick="showAddTypeModal()">
+                    <i class="bi bi-plus-circle"></i> Add Task Type
+                </button>
+            </div>
+            
+            {% if task_types %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="25%">Name</th>
+                            <th width="15%">Group</th>
+                            <th width="10%">Points</th>
+                            <th width="10%">Price</th>
+                            <th width="10%">Status</th>
+                            <th width="15%">Usage</th>
+                            <th width="15%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for type in task_types %}
+                        <tr data-type-id="{{ type.task_type_id }}">
+                            <td>
+                                <span class="editable-cell" 
+                                      contenteditable="true"
+                                      onblur="updateType('{{ type.task_type_id }}', 'name', this.innerText)"
+                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.name }}</span>
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm" 
+                                        onchange="updateType('{{ type.task_type_id }}', 'group', this.value)">
+                                    {% for g in groups %}
+                                    <option value="{{ g.group_id }}" {% if g.group_id == type.group.group_id %}selected{% endif %}>
+                                        {{ g.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <span class="editable-cell" 
+                                      contenteditable="true"
+                                      onblur="updateType('{{ type.task_type_id }}', 'points', this.innerText)"
+                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.points }}</span>
+                            </td>
+                            <td>
+                                <span class="editable-cell" 
+                                      contenteditable="true"
+                                      onblur="updateType('{{ type.task_type_id }}', 'price', this.innerText)"
+                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.price|default:"-" }}</span>
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           {% if type.is_active %}checked{% endif %}
+                                           onchange="updateType('{{ type.task_type_id }}', 'is_active', this.checked)">
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-usage">Used in {{ type.usage_count }} task(s)</span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-secondary" 
+                                        onclick="reorderType('{{ type.task_type_id }}', 'up')" 
+                                        title="Move Up">▲</button>
+                                <button class="btn btn-sm btn-outline-secondary" 
+                                        onclick="reorderType('{{ type.task_type_id }}', 'down')" 
+                                        title="Move Down">▼</button>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="toggleAdvanced('{{ type.task_type_id }}')"
+                                        title="Advanced Settings">⚙️</button>
+                                <button class="btn btn-sm btn-outline-danger" 
+                                        onclick="deleteType('{{ type.task_type_id }}', '{{ type.name }}', {{ type.usage_count }})"
+                                        title="Delete">🗑</button>
+                            </td>
+                        </tr>
+                        <!-- Advanced Settings Row -->
+                        <tr id="advanced-{{ type.task_type_id }}" style="display:none;">
+                            <td colspan="7">
+                                <div class="advanced-settings">
+                                    <h6 class="mb-3"><i class="bi bi-gear"></i> Advanced Settings</h6>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label>
+                                                <input type="checkbox" 
+                                                       {% if type.requires_evidence %}checked{% endif %}
+                                                       onchange="updateType('{{ type.task_type_id }}', 'requires_evidence', this.checked)">
+                                                Requires Evidence
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>
+                                                <input type="checkbox" 
+                                                       {% if type.requires_approval %}checked{% endif %}
+                                                       onchange="updateType('{{ type.task_type_id }}', 'requires_approval', this.checked)">
+                                                Requires Approval
+                                            </label>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label>
+                                                <input type="checkbox" 
+                                                       {% if type.auto_complete %}checked{% endif %}
+                                                       onchange="updateType('{{ type.task_type_id }}', 'auto_complete', this.checked)">
+                                                Auto Complete
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-md-12">
+                                            <label>Description:</label>
+                                            <textarea class="form-control form-control-sm" 
+                                                      rows="2"
+                                                      onblur="updateType('{{ type.task_type_id }}', 'description', this.value)">{{ type.description }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No task types found</p>
+                <button class="btn btn-primary" onclick="showAddTypeModal()">
+                    <i class="bi bi-plus"></i> Add Your First Task Type
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+    </div>
+    
+</div>
+
+<!-- Add Group Modal -->
+<div id="addGroupModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Add New Task Group</h4>
+        <form id="addGroupForm" onsubmit="submitAddGroup(event)">
+            <div class="form-group">
+                <label>Group Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addGroupModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Group</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Task Type Modal -->
+<div id="addTypeModal" class="modal">
+    <div class="modal-content">
+        <h4 class="mb-4">Add New Task Type</h4>
+        <form id="addTypeForm" onsubmit="submitAddType(event)">
+            <div class="form-group">
+                <label>Task Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Group <span class="text-danger">*</span></label>
+                <select name="group" class="form-control" required>
+                    <option value="">Select Group</option>
+                    {% for g in groups %}
+                    <option value="{{ g.group_id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Points <span class="text-danger">*</span></label>
+                        <input type="number" name="points" class="form-control" value="0" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Price (RM)</label>
+                        <input type="number" step="0.01" name="price" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea name="description" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <input type="text" name="category" class="form-control" placeholder="e.g. Grooming, Boarding">
+            </div>
+            <div class="form-check">
+                <input type="checkbox" name="is_active" class="form-check-input" id="isActiveCheck" checked>
+                <label class="form-check-label" for="isActiveCheck">Active</label>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('addTypeModal')">Cancel</button>
+                <button type="submit" class="btn btn-success">Create Task Type</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// Toast Notification
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    const title = document.getElementById('toast-title');
+    const msg = document.getElementById('toast-message');
+    
+    title.textContent = type === 'success' ? 'Success' : 'Error';
+    msg.textContent = message;
+    toast.className = `toast show ${type}`;
+    
+    setTimeout(() => {
+        toast.className = 'toast';
+    }, 3000);
+}
+
+// Modal Functions
+function showAddGroupModal() {
+    document.getElementById('addGroupModal').classList.add('show');
+}
+
+function showAddTypeModal() {
+    document.getElementById('addTypeModal').classList.add('show');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('show');
+}
+
+// Filter by Group
+function filterByGroup(groupId) {
+    window.location.href = `?group=${groupId}`;
+}
+
+// GROUP OPERATIONS
+function updateGroup(groupId, field, value) {
+    fetch(`{% url 'task_management:ajax_update_task_group' 'GROUPID' %}`.replace('GROUPID', groupId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ [field]: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Group updated');
+        } else {
+            showToast(data.error, 'error');
+        }
+    })
+    .catch(err => showToast('Network error', 'error'));
+}
+
+function reorderGroup(groupId, direction) {
+    fetch(`{% url 'task_management:ajax_reorder_group' 'GROUPID' %}`.replace('GROUPID', groupId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ direction: direction })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function deleteGroup(groupId, groupName) {
+    if (confirm(`Delete group "${groupName}"? Task types will be moved to Uncategorized.`)) {
+        fetch(`{% url 'task_management:ajax_delete_task_group' 'GROUPID' %}`.replace('GROUPID', groupId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error, 'error');
+            }
+        });
+    }
+}
+
+function submitAddGroup(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+    
+    fetch('{% url "task_management:ajax_create_task_group" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Group created successfully');
+            closeModal('addGroupModal');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.error, 'error');
+        }
+    });
+}
+
+// TASK TYPE OPERATIONS
+function updateType(typeId, field, value) {
+    fetch(`{% url 'task_management:ajax_update_task_type' 'TYPEID' %}`.replace('TYPEID', typeId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ [field]: value })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Task type updated');
+        } else {
+            showToast(data.error, 'error');
+        }
+    });
+}
+
+function reorderType(typeId, direction) {
+    fetch(`{% url 'task_management:ajax_reorder_task_type' 'TYPEID' %}`.replace('TYPEID', typeId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ direction: direction })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+function deleteType(typeId, typeName, usageCount) {
+    if (usageCount > 0) {
+        alert(`Cannot delete "${typeName}":\nThis task type is used in ${usageCount} task(s).\n\nTo delete it, first reassign or remove all tasks using this type.`);
+        return;
+    }
+    
+    if (confirm(`Delete task type "${typeName}"?`)) {
+        fetch(`{% url 'task_management:ajax_delete_task_type' 'TYPEID' %}`.replace('TYPEID', typeId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.error, 'error');
+            }
+        });
+    }
+}
+
+function toggleAdvanced(typeId) {
+    const row = document.getElementById(`advanced-${typeId}`);
+    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+}
+
+function submitAddType(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData);
+    data.is_active = formData.has('is_active');
+    
+    console.log('Submitting task type:', data);
+    
+    fetch('{% url "task_management:ajax_create_task_type" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            showToast('Task type created successfully');
+            closeModal('addTypeModal');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showToast(data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Network error: ' + error.message, 'error');
+    });
+}
+</script>
+{% endblock %}

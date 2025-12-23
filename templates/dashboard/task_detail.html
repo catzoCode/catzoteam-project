@@ -1,0 +1,170 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Task - CatzoTeam</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .task-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        .points-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .points-display h1 {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 0;
+        }
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="task-container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="bi bi-clipboard-check"></i> Complete Task</h2>
+            <a href="{% url 'task_management:staff_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <!-- Points Display -->
+        <div class="points-display">
+            <i class="bi bi-trophy-fill" style="font-size: 3rem;"></i>
+            <h1>{{ task.points }}</h1>
+            <p class="mb-0">Points you'll earn</p>
+        </div>
+
+        <!-- Task Information -->
+        <div class="info-card">
+            <h5><i class="bi bi-info-circle"></i> Task Information</h5>
+            <table class="table table-borderless mb-0">
+                <tr>
+                    <td><strong>Task:</strong></td>
+                    <td>{{ task.task_type.name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Customer:</strong></td>
+                    <td>{{ task.package.cat.owner.name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Cat:</strong></td>
+                    <td>{{ task.package.cat.name }} ({{ task.package.cat.breed }})</td>
+                </tr>
+                <tr>
+                    <td><strong>Scheduled:</strong></td>
+                    <td>{{ task.scheduled_date }} at {{ task.scheduled_time }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Package ID:</strong></td>
+                    <td>{{ task.package.package_id }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Task Description -->
+        {% if task.task_type.description %}
+        <div class="info-card">
+            <h6><i class="bi bi-file-text"></i> Description</h6>
+            <p class="mb-0">{{ task.task_type.description }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Task Notes -->
+        {% if task.notes %}
+        <div class="info-card">
+            <h6><i class="bi bi-sticky"></i> Task Notes</h6>
+            <p class="mb-0">{{ task.notes }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Requirements -->
+        <div class="alert alert-info">
+            <h6><i class="bi bi-exclamation-circle"></i> Requirements</h6>
+            <ul class="mb-0">
+                {% if task.task_type.requires_evidence %}
+                    <li><strong>Photo Evidence Required</strong> - You must upload a photo</li>
+                {% endif %}
+                {% if task.task_type.requires_approval %}
+                    <li><strong>Manager Approval Required</strong> - Points awarded after approval</li>
+                {% else %}
+                    <li><strong>Auto-Complete</strong> - Points awarded immediately</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Completion Form -->
+        <form method="POST" action="{% url 'task_management:complete_task' task.task_id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Evidence Photo -->
+            {% if task.task_type.requires_evidence %}
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-camera"></i> Upload Photo Evidence <span class="text-danger">*</span>
+                </label>
+                <input type="file" class="form-control" name="evidence_photo" accept="image/*" required>
+                <small class="text-muted">Required for this task</small>
+            </div>
+            {% else %}
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="bi bi-camera"></i> Upload Photo (Optional)
+                </label>
+                <input type="file" class="form-control" name="evidence_photo" accept="image/*">
+            </div>
+            {% endif %}
+
+            <!-- Completion Notes -->
+            <div class="mb-4">
+                <label class="form-label">
+                    <i class="bi bi-pencil"></i> Completion Notes
+                </label>
+                <textarea class="form-control" name="completion_notes" rows="4" 
+                          placeholder="Any notes about completing this task..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2">
+                {% if task.task_type.requires_approval %}
+                    <button type="submit" class="btn btn-warning btn-lg">
+                        <i class="bi bi-send"></i> Submit for Approval
+                    </button>
+                {% else %}
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle"></i> Complete Task & Earn {{ task.points }} Points
+                    </button>
+                {% endif %}
+                <a href="{% url 'task_management:staff_dashboard' %}" class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

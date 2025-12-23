@@ -1,0 +1,536 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}All Branch Closing Reports{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #eef0f3;
+    }
+
+    .stat-card.revenue { border-left: 6px solid #10b981; }
+    .stat-card.customers { border-left: 6px solid #3b82f6; }
+    .stat-card.reports { border-left: 6px solid #8b5cf6; }
+    .stat-card.balanced { border-left: 6px solid #f59e0b; }
+
+    .stat-label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b7280;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.1;
+    }
+
+    .stat-icon {
+        font-size: 40px;
+        opacity: 0.15;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 24px;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .table-card-header {
+        padding: 20px 24px;
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .table-responsive {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 10;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding: 16px 12px;
+        white-space: nowrap;
+    }
+
+    .table tbody tr { transition: background-color 0.15s; }
+    .table tbody tr:hover { background-color: #f8f9fa; }
+
+    .table tbody td {
+        vertical-align: middle;
+        padding: 16px 12px;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        font-weight: 500;
+        font-size: 12px;
+    }
+
+    .badge.balanced-yes { background: #28a745; }
+    .badge.balanced-no { background: #ffc107; color: #000; }
+    .badge.compliance-yes { background: #28a745; }
+    .badge.compliance-no { background: #dc3545; }
+
+    /* IMPORTANT: Do NOT override Bootstrap modal display */
+    /* (Removed .modal { display:none } which can fight Bootstrap) */
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+
+    .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
+
+    .modal-header {
+        border-bottom: 2px solid rgba(255,255,255,0.2);
+        padding: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .modal-body { padding: 32px; }
+
+    .info-section {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .info-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .info-item label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6c757d;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .info-item .value {
+        font-weight: 600;
+        color: #212529;
+        font-size: 15px;
+    }
+
+    .payment-table {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .payment-table tr:last-child {
+        background: #f8f9fa;
+        font-weight: 700;
+    }
+
+    .payment-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .payment-table tr:last-child td { border-bottom: none; }
+
+    .proof-image {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        max-width: 100%;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .proof-image:hover { transform: scale(1.02); }
+
+    .alert-warning {
+        border-left: 4px solid #ffc107;
+        background: #fff3cd;
+        border-radius: 8px;
+    }
+
+    .notes-box {
+        background: #f8f9fa;
+        border-left: 4px solid #007bff;
+        padding: 16px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .btn-view {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .btn-view:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state i {
+        font-size: 80px;
+        color: #dee2e6;
+        margin-bottom: 20px;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        font-size: 16px;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid { grid-template-columns: 1fr; }
+        .info-row { grid-template-columns: 1fr; }
+        .action-buttons { flex-direction: column; }
+        .action-buttons .btn { width: 100%; }
+        .table-card-header { flex-direction: column; align-items: stretch; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{% url 'task_management:admin_analytics_dashboard' %}" class="btn btn-success">
+            <i class="bi bi-graph-up"></i> Analytics Dashboard
+        </a>
+        <a href="{% url 'task_management:export_reports_excel' %}?{{ request.GET.urlencode }}" class="btn btn-primary">
+            <i class="bi bi-file-earmark-excel"></i> Export to Excel
+        </a>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card revenue">
+            <div class="stat-icon">💰</div>
+            <div class="stat-label">Total Revenue (30d)</div>
+            <div class="stat-value">RM {{ totals.total_revenue|floatformat:2|default:"0.00" }}</div>
+        </div>
+
+        <div class="stat-card customers">
+            <div class="stat-icon">👥</div>
+            <div class="stat-label">Total Customers (30d)</div>
+            <div class="stat-value">{{ totals.total_customers|default:0 }}</div>
+        </div>
+
+        <div class="stat-card reports">
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">Reports Submitted (30d)</div>
+            <div class="stat-value">{{ totals.total_reports|default:0 }}</div>
+        </div>
+
+        <div class="stat-card balanced">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">Balanced Reports (30d)</div>
+            <div class="stat-value">{{ totals.balanced_reports|default:0 }}</div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-card">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Branch</label>
+                <select name="branch" class="form-select">
+                    <option value="">All Branches</option>
+                    {% for b in branches %}
+                        <option value="{{ b.value }}" {% if request.GET.branch == b.value %}selected{% endif %}>
+                            {{ b.label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">From Date</label>
+                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-bold">To Date</label>
+                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button class="btn btn-dark flex-fill" type="submit">
+                    <i class="bi bi-funnel"></i> Apply
+                </button>
+                <a class="btn btn-outline-secondary flex-fill" href="?">
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="fw-bold">
+                <i class="bi bi-clipboard-data"></i> All Branch Closing Reports
+            </div>
+            <div class="text-muted small">
+                Showing {{ reports|length }} record{{ reports|length|pluralize }}
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>Report ID</th>
+                        <th>Date</th>
+                        <th>Branch</th>
+                        <th>Submitted By</th>
+                        <th class="text-end">Revenue</th>
+                        <th class="text-center">Balanced</th>
+                        <th class="text-center">Compliance</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for report in reports %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ report.report_id }}</span></td>
+                        <td>{{ report.date|date:"M d, Y" }}</td>
+                        <td>{{ report.get_branch_display }}</td>
+                        <td>
+                            <div class="fw-bold">{{ report.submitted_by.username }}</div>
+                            <div class="text-muted small">{{ report.submitted_at|date:"M d, Y H:i" }}</div>
+                        </td>
+                        <td class="text-end fw-bold">RM {{ report.revenue_total|floatformat:2 }}</td>
+                        <td class="text-center">
+                            {% if report.is_balanced %}
+                                <span class="badge balanced-yes">Yes</span>
+                            {% else %}
+                                <span class="badge balanced-no">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if report.is_compliant %}
+                                <span class="badge compliance-yes">Yes</span>
+                            {% else %}
+                                <span class="badge compliance-no">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button type="button"
+                                    class="btn btn-outline-dark btn-view"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#reportModal{{ report.id }}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <i class="bi bi-inboxes"></i>
+                                <p class="mb-0">No reports found for your filters.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ✅ Modals MUST be OUTSIDE the table -->
+{% for report in reports %}
+<div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-white">
+                    <i class="bi bi-file-text"></i> {{ report.report_id }} - {{ report.get_branch_display }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <!-- Basic Info -->
+                <div class="info-section">
+                    <div class="info-row">
+                        <div class="info-item">
+                            <label>Report Date</label>
+                            <div class="value">{{ report.date|date:"F d, Y" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Branch</label>
+                            <div class="value">{{ report.get_branch_display }}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Submitted By</label>
+                            <div class="value">{{ report.submitted_by.username }}</div>
+                            <small class="text-muted">{{ report.submitted_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <div class="info-item">
+                            <label>Report ID</label>
+                            <div class="value"><span class="badge bg-secondary">{{ report.report_id }}</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Left Column -->
+                    <div class="col-lg-6">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-people"></i> Customer & Service Counts
+                        </h6>
+                        <table class="table table-sm payment-table">
+                            <tr>
+                                <td>Cat Grooming:</td>
+                                <td class="text-end"><strong>{{ report.grooming_count }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Boarded Rooms:</td>
+                                <td class="text-end"><strong>{{ report.boarding_count }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total Customers:</strong></td>
+                                <td class="text-end"><strong>{{ report.total_customers }}</strong></td>
+                            </tr>
+                        </table>
+
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="bi bi-cash-stack"></i> Payment Information
+                        </h6>
+                        <table class="table table-sm payment-table">
+                            <tr>
+                                <td>Payment Record:</td>
+                                <td class="text-end"><strong>RM {{ report.payment_record_amount|floatformat:2 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Payment Receipt:</td>
+                                <td class="text-end"><strong>RM {{ report.payment_receipt_amount|floatformat:2 }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Revenue Total:</strong></td>
+                                <td class="text-end"><strong>RM {{ report.revenue_total|floatformat:2 }}</strong></td>
+                            </tr>
+                        </table>
+
+                        {% if not report.is_balanced %}
+                        <div class="alert alert-warning mt-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Payment Difference:</strong> RM {{ report.payment_difference|floatformat:2 }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-lg-6">
+                        <h6 class="text-primary mb-3">
+                            <i class="bi bi-check-circle"></i> Compliance
+                        </h6>
+
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   {% if report.compliance_all_paid_through_system %}checked{% endif %} disabled>
+                            <label class="form-check-label">All paid through system</label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox"
+                                   {% if report.compliance_free_services_today %}checked{% endif %} disabled>
+                            <label class="form-check-label">Free services today</label>
+                        </div>
+
+                        <h6 class="text-primary mb-3 mt-4">
+                            <i class="bi bi-image"></i> Payment Proof
+                        </h6>
+
+                        {% if report.payment_proof_photo %}
+                            <img src="{{ report.payment_proof_photo.url }}" class="proof-image" alt="Payment Proof">
+                        {% else %}
+                            <div class="text-muted">No payment proof uploaded.</div>
+                        {% endif %}
+
+
+                        {% if report.notes %}
+                        <div class="notes-box">
+                            <div class="fw-bold mb-1"><i class="bi bi-journal-text"></i> Notes</div>
+                            <div class="text-muted">{{ report.notes }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

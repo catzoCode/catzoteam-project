@@ -1,0 +1,245 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}My Closing Reports - {{ branch }} - CatzoTeam{% endblock %}
+
+{% block page_title %}My Closing Reports - {{ branch }}{% endblock %}
+
+{% block breadcrumbs %}
+<li class="breadcrumb-item"><a href="{% url 'dashboard:manager_dashboard' %}">Dashboard</a></li>
+<li class="breadcrumb-item active">My Closing Reports</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Header Actions -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <a href="{% url 'task_management:submit_closing_report' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Submit New Closing Report
+            </a>
+            <a href="{% url 'task_management:manager_analytics_dashboard' %}" class="btn btn-success">
+                <i class="bi bi-graph-up"></i> View Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Total Revenue (30d)</h6>
+                    <h2 class="mb-0 mt-1">RM {{ stats.total_revenue|floatformat:2|default:"0.00" }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-success text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Total Customers (30d)</h6>
+                    <h2 class="mb-0 mt-1">{{ stats.total_customers|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-info text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Reports Submitted</h6>
+                    <h2 class="mb-0 mt-1">{{ stats.report_count|default:0 }}</h2>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm bg-warning text-white">
+                <div class="card-body">
+                    <h6 class="mb-0">Avg Transaction</h6>
+                    <h2 class="mb-0 mt-1">RM {{ stats.avg_transaction|floatformat:2|default:"0.00" }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> Closing Reports - Last 30 Days</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if reports %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Date</th>
+                            <th>Customers</th>
+                            <th>Grooming</th>
+                            <th>Boarding</th>
+                            <th>Revenue</th>
+                            <th>Balanced</th>
+                            <th>Compliance</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td><span class="badge bg-secondary">{{ report.report_id }}</span></td>
+                            <td>{{ report.date|date:"M d, Y" }}</td>
+                            <td>{{ report.total_customers }}</td>
+                            <td>{{ report.grooming_count }}</td>
+                            <td>{{ report.boarding_count }}</td>
+                            <td><strong>RM {{ report.revenue_total|floatformat:2 }}</strong></td>
+                            <td>
+                                {% if report.is_balanced %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                {% else %}
+                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> No</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if report.compliance_all_paid_through_system %}
+                                <span class="badge bg-success">✓</span>
+                                {% else %}
+                                <span class="badge bg-danger">✗</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button 
+                                    class="btn btn-sm btn-outline-primary" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#reportModal{{ report.id }}"
+                                >
+                                    <i class="bi bi-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- Detail Modal -->
+                        <div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">
+                                            <i class="bi bi-file-text"></i> {{ report.report_id }} - {{ report.date|date:"F d, Y" }}
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <label class="text-muted small">Branch</label>
+                                                <div class="fw-bold">{{ report.get_branch_display }}</div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="text-muted small">Submitted By</label>
+                                                <div>{{ report.submitted_by.username }}</div>
+                                                <small class="text-muted">{{ report.submitted_at|date:"M d, Y H:i" }}</small>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <h6 class="text-primary">Customer & Service Counts</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Cat Grooming</label>
+                                                <div class="fs-5">{{ report.grooming_count }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Boarded Rooms</label>
+                                                <div class="fs-5">{{ report.boarding_count }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Total Customers</label>
+                                                <div class="fs-5">{{ report.total_customers }}</div>
+                                            </div>
+                                        </div>
+
+                                        <hr>
+
+                                        <h6 class="text-primary">Payment Information</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Payment Record</label>
+                                                <div class="fs-5">RM {{ report.payment_record_amount|floatformat:2 }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Payment Receipt</label>
+                                                <div class="fs-5">RM {{ report.payment_receipt_amount|floatformat:2 }}</div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="text-muted small">Revenue Total</label>
+                                                <div class="fs-5 fw-bold">RM {{ report.revenue_total|floatformat:2 }}</div>
+                                            </div>
+                                        </div>
+
+                                        {% if not report.is_balanced %}
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> 
+                                            <strong>Payment Difference:</strong> RM {{ report.payment_difference|floatformat:2 }}
+                                        </div>
+                                        {% endif %}
+
+                                        <hr>
+
+                                        <h6 class="text-primary">Payment Proof</h6>
+                                        <div class="mb-3">
+                                            <img src="{{ report.payment_proof_photo.url }}" alt="Payment Proof" class="img-fluid rounded" style="max-width: 100%;">
+                                        </div>
+
+                                        <hr>
+
+                                        <h6 class="text-primary">Compliance Checks</h6>
+                                        <div class="mb-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" {% if report.compliance_all_paid_through_system %}checked{% endif %} disabled>
+                                                <label class="form-check-label">
+                                                    All customers paid through system
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" {% if report.compliance_free_services_today %}checked{% endif %} disabled>
+                                                <label class="form-check-label">
+                                                    Service with no payment today (combo/free)
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        {% if report.notes %}
+                                        <hr>
+                                        <h6 class="text-primary">Notes</h6>
+                                        <div class="p-3 bg-light rounded">
+                                            {{ report.notes|linebreaks }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox display-1 text-muted"></i>
+                <p class="text-muted mt-3">No closing reports submitted yet</p>
+                <a href="{% url 'task_management:submit_closing_report' %}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> Submit Your First Report
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
