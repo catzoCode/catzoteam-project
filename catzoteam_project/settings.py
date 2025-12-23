@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'dashboard',
     'performance',
     'schedule',
-    'leave',
     'task_management',
     'registration_portal',
 ]
