@@ -22,12 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here')
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-local-dev-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+# ALLOWED_HOSTS - Allow Render's domain
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*', cast=Csv())
 
 
 # Application definition
@@ -92,18 +93,31 @@ WSGI_APPLICATION = 'catzoteam_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Railway provides DATABASE_URL, but also individual variables
-# We'll use the individual variables for flexibility
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('PGDATABASE', default=config('DATABASE_NAME', default='')),
-        'USER': config('PGUSER', default=config('DATABASE_USER', default='')),
-        'PASSWORD': config('PGPASSWORD', default=config('DATABASE_PASSWORD', default='')),
-        'HOST': config('PGHOST', default=config('DATABASE_HOST', default='localhost')),
-        'PORT': config('PGPORT', default=config('DATABASE_PORT', default='5432')),
+# Use DATABASE_URL if available (Render), otherwise use individual variables (local)
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Production (Render) - Parse DATABASE_URL
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    # Local development - Use individual variables
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DATABASE_NAME', default='catzoteam_db'),
+            'USER': config('DATABASE_USER', default='catzoteam_user'),
+            'PASSWORD': config('DATABASE_PASSWORD', default=''),
+            'HOST': config('DATABASE_HOST', default='localhost'),
+            'PORT': config('DATABASE_PORT', default='5432'),
+        }
+    }
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -143,7 +157,10 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Only add STATICFILES_DIRS if the static directory exists
+if os.path.isdir(BASE_DIR / 'static'):
+    STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # Media files
 MEDIA_URL = '/media/'
