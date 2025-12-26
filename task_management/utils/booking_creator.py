@@ -98,12 +98,22 @@ Date: {email_data.get('date', 'N/A')}
             
             scheduled_time = parsed_data.get('preferred_time', '09:00')
             
+            # Process each service - FLEXIBLE MATCHING (NO HARD-CODED MAPPING)
             for service_name in parsed_data.get('services', []):
-                # Try to find matching TaskType
+                service_name_clean = service_name.strip()
+                
+                # Try exact match first (case-insensitive)
                 task_type = TaskType.objects.filter(
-                    name__icontains=service_name,
+                    name__iexact=service_name_clean,
                     is_active=True
                 ).first()
+                
+                # If not found, try partial match (contains)
+                if not task_type:
+                    task_type = TaskType.objects.filter(
+                        name__icontains=service_name_clean,
+                        is_active=True
+                    ).first()
                 
                 if task_type:
                     Task.objects.create(
