@@ -235,23 +235,22 @@ def get_task_suggestions(user, daily_points_required):
 
 @login_required
 def manager_dashboard(request):
-    """MANAGER DASHBOARD - PostgreSQL Optimized + Personal Progress"""
+    """MANAGER DASHBOARD - Branch-Specific View"""
     if request.user.role != 'manager':
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
     
     user = request.user
     today = date.today()
+    manager_branch = user.branch  # CRITICAL: Get manager's branch
     
-    # ============ MANAGER'S PERSONAL PROGRESS (Same as Staff) ============
-    # Get or create today's points
+    # ============ MANAGER'S PERSONAL PROGRESS (Same as before) ============
     today_points, created = DailyPoints.objects.get_or_create(
         user=user,
         date=today,
         defaults={'points': Decimal('0.00')}
     )
     
-    # Calculate week stats
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     
@@ -268,7 +267,6 @@ def manager_dashboard(request):
     week_average = (week_total / week_days_worked) if week_days_worked > 0 else Decimal('0.00')
     week_target = Decimal('50.00') * 5
     
-    # Calculate month stats
     month_start = today.replace(day=1)
     days_in_month = monthrange(today.year, today.month)[1]
     
@@ -286,7 +284,6 @@ def manager_dashboard(request):
     month_average = month_points['average'] or Decimal('0.00')
     month_days_worked = month_points['days_worked'] or 0
     
-    # Projections
     days_elapsed = today.day
     days_remaining = days_in_month - today.day
     
@@ -297,7 +294,6 @@ def manager_dashboard(request):
         daily_average = Decimal('0.00')
         projected_total = Decimal('0.00')
     
-    # Calculate points needed
     monthly_target = Decimal('1200.00')
     points_needed = max(monthly_target - month_total, 0)
     
@@ -306,10 +302,8 @@ def manager_dashboard(request):
     else:
         daily_points_required = Decimal('0.00')
     
-    # Status checks
     on_track = projected_total >= monthly_target
     
-    # Manager's tasks
     manager_tasks_today = Task.objects.filter(
         assigned_staff=user,
         status__in=['assigned', 'in_progress']
@@ -325,31 +319,37 @@ def manager_dashboard(request):
         total=Sum('points')
     )['total'] or 0
     
-    # ============ TEAM MANAGEMENT DATA ============
-    # PENDING TASK PACKAGES
+    # ============ TEAM MANAGEMENT DATA - BRANCH FILTERED ============
+    
+    # PENDING TASK PACKAGES - All pending (will be assigned by this manager)
     pending_packages = TaskPackage.objects.filter(
         status='pending'
     ).prefetch_related('tasks').order_by('-id')[:10]
     
-    # ACTIVE TASK PACKAGES
+    # ACTIVE TASK PACKAGES - Only with tasks assigned to branch staff
     active_packages = TaskPackage.objects.filter(
-        status__in=['assigned', 'in_progress']
-    ).prefetch_related('tasks').order_by('-id')[:10]
+        status__in=['assigned', 'in_progress'],
+        tasks__assigned_staff__branch=manager_branch
+    ).distinct().prefetch_related('tasks').order_by('-id')[:10]
     
-    # TASKS PENDING APPROVAL
+    # TASKS PENDING APPROVAL - Only from branch staff
     pending_approval = Task.objects.filter(
-        status='submitted'
+        status='submitted',
+        assigned_staff__branch=manager_branch
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:15]
     
-    # TODAY'S COMPLETED TASKS (TEAM)
+    # TODAY'S COMPLETED TASKS - Only from branch staff
     completed_today = Task.objects.filter(
-        status='completed'
+        status='completed',
+        completed_at__date=today,
+        assigned_staff__branch=manager_branch
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:20]
     
-    # STAFF AVAILABILITY
+    # STAFF AVAILABILITY - Only staff from manager's branch
     staff_members_base = User.objects.filter(
         is_active=True,
-        role='staff'
+        role='staff',
+        branch=manager_branch
     ).order_by('username')
     
     staff_list = []
@@ -397,7 +397,7 @@ def manager_dashboard(request):
         
         staff_list.append(staff)
     
-    # STATISTICS
+    # STATISTICS - Branch specific
     stats = {
         'pending_packages': pending_packages.count(),
         'active_packages': active_packages.count(),
@@ -412,7 +412,7 @@ def manager_dashboard(request):
     }
     
     context = {
-        # Team Management
+        # Team Management - Branch Specific
         'pending_packages': pending_packages,
         'active_packages': active_packages,
         'pending_approval': pending_approval,
@@ -420,6 +420,7 @@ def manager_dashboard(request):
         'staff_members': staff_list,
         'stats': stats,
         'today': today,
+        'manager_branch': manager_branch,  # Add this for debugging
         
         # Manager's Personal Progress
         'user': user,
@@ -463,6 +464,7 @@ def assign_task_package(request, package_id):
         return redirect('dashboard:staff_dashboard')
     
     package = get_object_or_404(TaskPackage, package_id=package_id)
+    manager_branch = request.user.branch  # Get manager's branch
     
     if request.method == 'POST':
         try:
@@ -471,9 +473,10 @@ def assign_task_package(request, package_id):
             for task in package.tasks.all():
                 staff_id = request.POST.get(f'task_{task.id}')
                 if staff_id:
-                    staff = User.objects.get(id=staff_id)
+                    staff = User.objects.get(id=staff_id, branch=manager_branch)  # Ensure staff is from same branch
                     task.assigned_staff = staff
                     task.assigned_at = timezone.now()
+                    task.assigned_by = request.user  # Track who assigned
                     task.status = 'assigned'
                     task.save()
                     assigned_count += 1
@@ -496,9 +499,12 @@ def assign_task_package(request, package_id):
             return redirect('assign_tasks', package_id=package_id)
     
     tasks = package.tasks.all().select_related('task_type')
+    
+    # CRITICAL: Only show staff from manager's branch
     staff_list = User.objects.filter(
         is_active=True,
-        role__in=['staff', 'manager']
+        role__in=['staff', 'manager'],
+        branch=manager_branch  # Filter by branch
     ).annotate(
         active_tasks=Count(
             'tm_assigned_tasks',
@@ -512,6 +518,7 @@ def assign_task_package(request, package_id):
         'tasks': tasks,
         'staff_list': staff_list,
         'current_user': request.user,
+        'manager_branch': manager_branch,  # For debugging
     }
 
     return render(request, 'dashboard/assign_tasks.html', context)
