@@ -1,1 +1,0 @@
-git add accounts/management/commands/createdefaultsu.py
