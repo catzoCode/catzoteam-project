@@ -244,7 +244,7 @@ def manager_dashboard(request):
     today = date.today()
     manager_branch = user.branch  # CRITICAL: Get manager's branch
     
-    # ============ MANAGER'S PERSONAL PROGRESS (Same as before) ============
+    # ============ MANAGER'S PERSONAL PROGRESS ============
     today_points, created = DailyPoints.objects.get_or_create(
         user=user,
         date=today,
@@ -321,35 +321,36 @@ def manager_dashboard(request):
     
     # ============ TEAM MANAGEMENT DATA - BRANCH FILTERED ============
     
-    # PENDING TASK PACKAGES - All pending (will be assigned by this manager)
+    # PENDING TASK PACKAGES - Only from manager's branch
     pending_packages = TaskPackage.objects.filter(
-        status='pending'
+        status='pending',
+        branch=manager_branch  # FILTER BY BRANCH
     ).prefetch_related('tasks').order_by('-id')[:10]
     
-    # ACTIVE TASK PACKAGES - Only with tasks assigned to branch staff
+    # ACTIVE TASK PACKAGES - Only from manager's branch
     active_packages = TaskPackage.objects.filter(
         status__in=['assigned', 'in_progress'],
-        tasks__assigned_staff__branch=manager_branch
+        branch=manager_branch  # FILTER BY BRANCH
     ).distinct().prefetch_related('tasks').order_by('-id')[:10]
     
     # TASKS PENDING APPROVAL - Only from branch staff
     pending_approval = Task.objects.filter(
         status='submitted',
-        assigned_staff__branch=manager_branch
+        assigned_staff__branch=manager_branch  # FILTER BY BRANCH
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:15]
     
     # TODAY'S COMPLETED TASKS - Only from branch staff
     completed_today = Task.objects.filter(
         status='completed',
         completed_at__date=today,
-        assigned_staff__branch=manager_branch
+        assigned_staff__branch=manager_branch  # FILTER BY BRANCH
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:20]
     
     # STAFF AVAILABILITY - Only staff from manager's branch
     staff_members_base = User.objects.filter(
         is_active=True,
         role='staff',
-        branch=manager_branch
+        branch=manager_branch  # FILTER BY BRANCH
     ).order_by('username')
     
     staff_list = []
@@ -399,8 +400,14 @@ def manager_dashboard(request):
     
     # STATISTICS - Branch specific
     stats = {
-        'pending_packages': pending_packages.count(),
-        'active_packages': active_packages.count(),
+        'pending_packages': TaskPackage.objects.filter(
+            status='pending',
+            branch=manager_branch  # FILTER BY BRANCH
+        ).count(),
+        'active_packages': TaskPackage.objects.filter(
+            status__in=['assigned', 'in_progress'],
+            branch=manager_branch  # FILTER BY BRANCH
+        ).count(),
         'pending_approval': pending_approval.count(),
         'completed_today': completed_today.count(),
         'total_points_today': sum(
@@ -420,7 +427,7 @@ def manager_dashboard(request):
         'staff_members': staff_list,
         'stats': stats,
         'today': today,
-        'manager_branch': manager_branch,  # Add this for debugging
+        'manager_branch': manager_branch,  # For debugging
         
         # Manager's Personal Progress
         'user': user,
@@ -458,7 +465,7 @@ def manager_dashboard(request):
 
 @login_required
 def assign_task_package(request, package_id):
-    """MANAGER ONLY - Assign tasks to staff"""
+    """MANAGER ONLY - Assign tasks to staff from same branch"""
     if request.user.role != 'manager':
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
@@ -473,10 +480,15 @@ def assign_task_package(request, package_id):
             for task in package.tasks.all():
                 staff_id = request.POST.get(f'task_{task.id}')
                 if staff_id:
-                    staff = User.objects.get(id=staff_id, branch=manager_branch)  # Ensure staff is from same branch
+                    # Ensure staff is from same branch
+                    staff = User.objects.get(
+                        id=staff_id,
+                        branch=manager_branch,
+                        is_active=True
+                    )
                     task.assigned_staff = staff
                     task.assigned_at = timezone.now()
-                    task.assigned_by = request.user  # Track who assigned
+                    task.assigned_by = request.user
                     task.status = 'assigned'
                     task.save()
                     assigned_count += 1
@@ -494,9 +506,12 @@ def assign_task_package(request, package_id):
             
             return redirect('dashboard:manager_dashboard')
             
+        except User.DoesNotExist:
+            messages.error(request, 'Error: Staff member not found or not from your branch.')
+            return redirect('dashboard:assign_tasks', package_id=package_id)
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
-            return redirect('assign_tasks', package_id=package_id)
+            return redirect('dashboard:assign_tasks', package_id=package_id)
     
     tasks = package.tasks.all().select_related('task_type')
     
@@ -504,7 +519,7 @@ def assign_task_package(request, package_id):
     staff_list = User.objects.filter(
         is_active=True,
         role__in=['staff', 'manager'],
-        branch=manager_branch  # Filter by branch
+        branch=manager_branch  # FILTER BY BRANCH
     ).annotate(
         active_tasks=Count(
             'tm_assigned_tasks',

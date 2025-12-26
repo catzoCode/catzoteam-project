@@ -70,12 +70,13 @@ def create_booking_from_email(email_data, parsed_data):
             )
             
             result['cat_id'] = cat.cat_id
-            
+            branch = parsed_data.get('branch', 'Damansara_Perdana')
             # 3. Create TaskPackage
             package = TaskPackage.objects.create(
                 cat=cat,
                 created_by=None,  # System-generated
                 status='pending',
+                branch=branch,
                 notes=f"""Email Booking
 Order ID: {parsed_data.get('order_id', 'N/A')}
 From: {email_data.get('from_email', 'N/A')}
