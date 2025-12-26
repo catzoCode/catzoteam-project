@@ -52,6 +52,7 @@ def parse_booking_email(subject, body):
             'siamese': 'siamese',
             'maine coon': 'maine_coon',
             'british shorthair': 'british_shorthair',
+            'british': 'british_shorthair',
             'ragdoll': 'ragdoll',
             'bengal': 'bengal',
             'mixed': 'mixed',
@@ -92,21 +93,76 @@ def parse_booking_email(subject, body):
     if time_match:
         data['preferred_time'] = time_match.group(1)
     
-    # Extract Branch
+    # Extract Branch - UPDATED WITH CORRECT MAPPING
     branch_match = re.search(r'Branch:?\s*(.+?)(?:\n|$)', body, re.IGNORECASE)
     if branch_match:
         branch_name = branch_match.group(1).strip().lower()
+        
+        # Map email branch names to database branch codes
         branch_map = {
-            'petaling jaya': 'pj',
-            'pj': 'pj',
-            'damansara': 'dam',
-            'subang jaya': 'sub',
-            'subang': 'sub',
-            'shah alam': 'shah',
-            'kuala lumpur': 'kl',
-            'kl': 'kl',
+            # Damansara Perdana
+            'damansara perdana': 'damansara_perdana',
+            'damansara': 'damansara_perdana',
+            'perdana': 'damansara_perdana',
+            'dp': 'damansara_perdana',
+            
+            # Wangsa Maju
+            'wangsa maju': 'wangsa_maju',
+            'wangsa': 'wangsa_maju',
+            'wm': 'wangsa_maju',
+            
+            # Shah Alam
+            'shah alam': 'shah_alam',
+            'shah': 'shah_alam',
+            'sa': 'shah_alam',
+            
+            # Bangi
+            'bangi': 'bangi',
+            
+            # Cheng, Melaka
+            'cheng': 'cheng_melaka',
+            'melaka': 'cheng_melaka',
+            'cheng melaka': 'cheng_melaka',
+            'malacca': 'cheng_melaka',
+            
+            # Johor Bahru
+            'johor bahru': 'johor_bahru',
+            'johor': 'johor_bahru',
+            'jb': 'johor_bahru',
+            
+            # Seremban 2
+            'seremban': 'seremban',
+            'seremban 2': 'seremban',
+            's2': 'seremban',
+            
+            # Seri Kembangan
+            'seri kembangan': 'seri_kembangan',
+            'kembangan': 'seri_kembangan',
+            'sk': 'seri_kembangan',
+            
+            # USJ 21
+            'usj 21': 'usj21',
+            'usj21': 'usj21',
+            'usj': 'usj21',
+            'subang': 'usj21',
+            'subang jaya': 'usj21',
+            
+            # Ipoh
+            'ipoh': 'ipoh',
+            
+            # Legacy/Old names (in case Collar App uses old names)
+            'petaling jaya': 'seri_kembangan',  # If PJ is now SK
+            'pj': 'seri_kembangan',
         }
-        data['branch'] = branch_map.get(branch_name, 'pj')
+        
+        mapped_branch = branch_map.get(branch_name)
+        
+        if mapped_branch:
+            data['branch'] = mapped_branch
+        else:
+            # Log unmapped branch for debugging
+            print(f"⚠️ Unknown branch name: '{branch_name}'")
+            data['branch'] = None
     
     # Extract Special Notes
     notes_match = re.search(

@@ -131,20 +131,48 @@ Date: {email_data.get('date', 'N/A')}
             # Calculate points
             package.calculate_total_points()
             
-            # 5. Notify managers
-            branch = parsed_data.get('branch', 'pj')
-            managers = User.objects.filter(
-                role__in=['manager', 'admin'],
-                branch=branch,
-                is_active=True
-            )
+            # 5. Notify managers - ONLY FOR CORRECT BRANCH
+            branch = parsed_data.get('branch')
             
-            for manager in managers:
-                Notification.objects.create(
-                    user=manager,
-                    notification_type='package_created',
-                    title=f'📧 Email Booking - {customer.name}',
-                    message=f'''New booking from email!
+            # Debug logging
+            print(f"\n{'='*60}")
+            print(f"📍 BRANCH DETECTION:")
+            print(f"   Branch from email: {branch}")
+            
+            if not branch:
+                print(f"❌ ERROR: No branch detected in email!")
+                print(f"💡 Package {package.package_id} created but no manager notified")
+                print(f"   Manager must manually find this package")
+                result['errors'].append("No branch detected - manager notification skipped")
+            else:
+                # Find managers for THIS SPECIFIC BRANCH ONLY
+                managers = User.objects.filter(
+                    role__in=['manager', 'admin'],
+                    branch=branch,  # CRITICAL: Must match exactly
+                    is_active=True
+                )
+                
+                print(f"   Searching for managers in branch: '{branch}'")
+                print(f"   Found {managers.count()} manager(s):")
+                
+                for manager in managers:
+                    print(f"      ✓ {manager.username} (Branch: {manager.branch}, Role: {manager.get_role_display()})")
+                
+                if managers.count() == 0:
+                    print(f"❌ WARNING: No active managers found for branch '{branch}'!")
+                    print(f"💡 Available branches in system:")
+                    all_branches = User.objects.values_list('branch', flat=True).distinct()
+                    for b in all_branches:
+                        print(f"      - {b}")
+                    result['errors'].append(f"No managers found for branch '{branch}'")
+                else:
+                    # Notify each manager
+                    for manager in managers:
+                        Notification.objects.create(
+                            user=manager,
+                            notification_type='package_created',
+                            title=f'📧 Email Booking - {customer.name}',
+                            message=f'''New booking from email!
 
 Package: {package.package_id}
 Customer: {customer.name} ({customer.phone})
@@ -153,8 +181,11 @@ Services: {result['tasks_created']} task(s) created
 Branch: {branch.upper()}
 
 Please assign tasks to staff.''',
-                    link='/task-management/unassigned/'
-                )
+                            link='/task-management/unassigned/'
+                        )
+                        print(f"   📧 Notification sent to: {manager.username}")
+            
+            print(f"{'='*60}\n")
             
             result['success'] = True
             result['message'] = f"Package {package.package_id} created successfully!"
