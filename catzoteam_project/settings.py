@@ -180,3 +180,17 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+
+# Email Configuration (for sending emails)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='catzo.code@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL = 'CatzoTeam <catzo.code@gmail.com>'
+
+# Gmail Booking Automation (for receiving emails)
+GMAIL_USER = config('GMAIL_USER', default='')
+GMAIL_APP_PASSWORD = config('GMAIL_APP_PASSWORD', default='')
