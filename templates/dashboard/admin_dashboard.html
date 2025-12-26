@@ -2,104 +2,338 @@
 
 {% block title %}Admin Dashboard - CatzoTeam{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+    
+    .modern-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Summary Stat Boxes */
+    .stat-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-summary-box {
+        background: white;
+        border-radius: 8px;
+        padding: 25px 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        position: relative;
+        min-height: 140px;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    
+    .stat-summary-box:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .stat-summary-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .stat-summary-box.primary::before { background: var(--corporate-primary); }
+    .stat-summary-box.success::before { background: var(--corporate-success); }
+    .stat-summary-box.warning::before { background: var(--corporate-warning); }
+    .stat-summary-box.danger::before { background: var(--corporate-danger); }
+    
+    .stat-summary-box .icon {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 2rem;
+        opacity: 0.1;
+        color: var(--corporate-dark);
+    }
+    
+    .stat-summary-box .label {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        margin-bottom: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-summary-box .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 5px;
+        line-height: 1;
+    }
+    
+    .stat-summary-box .sublabel {
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+    }
+
+    /* Section Header */
+    .section-header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-header h5 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin: 0;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-header h5 i {
+        color: var(--corporate-accent);
+    }
+
+    /* Page Header */
+    .page-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .page-header h2 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-header h2 i {
+        color: var(--corporate-accent);
+    }
+
+    .page-header p {
+        color: var(--corporate-secondary);
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    /* Table Styling */
+    .table-corporate {
+        margin: 0;
+    }
+
+    .table-corporate thead th {
+        background: var(--corporate-light);
+        color: var(--corporate-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 15px 12px;
+    }
+
+    .table-corporate tbody td {
+        padding: 15px 12px;
+        vertical-align: middle;
+        color: var(--corporate-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-corporate tbody tr:hover {
+        background: var(--corporate-light);
+    }
+
+    .table-corporate tbody td strong {
+        color: var(--corporate-dark);
+        font-weight: 600;
+    }
+
+    /* Badge */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Progress Bar */
+    .progress-corporate {
+        height: 25px;
+        border-radius: 6px;
+        background: #e2e8f0;
+        overflow: hidden;
+        display: flex;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .progress-corporate .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: white;
+        height: 100%;
+        transition: width 0.6s ease;
+    }
+
+    @media (max-width: 1200px) {
+        .stat-summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stat-summary-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-summary-box .value {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">
-            <i class="bi bi-bar-chart"></i> Admin Analytics Dashboard
-        </h1>
-        <p class="lead">Overview of all staff performance across branches</p>
-    </div>
+<!-- Page Header -->
+<div class="page-header">
+    <h2>
+        <i class="bi bi-bar-chart"></i> Admin Analytics Dashboard
+    </h2>
+    <p>Comprehensive overview of staff performance across all branches</p>
 </div>
 
 <!-- Summary Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h6>Total Staff</h6>
-                <h2>{{ stats.total_staff|default:0 }}</h2>
-            </div>
+<div class="stat-summary-grid">
+    <div class="stat-summary-box primary">
+        <div>
+            <div class="label">Total Staff</div>
+            <div class="value">{{ stats.total_staff|default:0 }}</div>
+            <div class="sublabel">across all branches</div>
         </div>
+        <i class="bi bi-people icon"></i>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h6>On Track</h6>
-                <h2>{{ stats.on_track_count|default:0 }}</h2>
-            </div>
+
+    <div class="stat-summary-box success">
+        <div>
+            <div class="label">On Track</div>
+            <div class="value">{{ stats.on_track_count|default:0 }}</div>
+            <div class="sublabel">meeting targets</div>
         </div>
+        <i class="bi bi-check-circle icon"></i>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-warning text-white">
-            <div class="card-body">
-                <h6>Needs Improvement</h6>
-                <h2>{{ stats.needs_improvement_count|default:0 }}</h2>
-            </div>
+
+    <div class="stat-summary-box warning">
+        <div>
+            <div class="label">Needs Improvement</div>
+            <div class="value">{{ stats.needs_improvement_count|default:0 }}</div>
+            <div class="sublabel">below target pace</div>
         </div>
+        <i class="bi bi-exclamation-circle icon"></i>
     </div>
-    <div class="col-md-3">
-        <div class="card bg-danger text-white">
-            <div class="card-body">
-                <h6>Warning Zone</h6>
-                <h2>{{ stats.warning_count|default:0 }}</h2>
-            </div>
+
+    <div class="stat-summary-box danger">
+        <div>
+            <div class="label">Warning Zone</div>
+            <div class="value">{{ stats.warning_count|default:0 }}</div>
+            <div class="sublabel">requires attention</div>
         </div>
+        <i class="bi bi-exclamation-triangle icon"></i>
     </div>
 </div>
-
-
 
 <!-- Branch Comparison -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-building"></i> Branch Performance Comparison</h5>
+        <div class="modern-card">
+            <div class="section-header">
+                <h5><i class="bi bi-building"></i> Branch Performance Comparison</h5>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Branch</th>
-                                <th>Staff Count</th>
-                                <th>Total Points</th>
-                                <th>Average Points</th>
-                                <th>On Track</th>
-                                <th>Warnings</th>
-                                <th>Performance</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for branch in branch_stats %}
-                            <tr>
-                                <td><strong>{{ branch.name }}</strong></td>
-                                <td>{{ branch.staff_count }}</td>
-                                <td>{{ branch.total_points|floatformat:2 }}</td>
-                                <td>{{ branch.average_points|floatformat:2 }}</td>
-                                <td><span class="badge bg-success">{{ branch.on_track_count }}</span></td>
-                                <td>
-                                    {% if branch.warning_count > 0 %}
-                                    <span class="badge bg-danger">{{ branch.warning_count }}</span>
-                                    {% else %}
-                                    <span class="badge bg-secondary">0</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% widthratio branch.on_track_count branch.staff_count 100 as performance %}
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar {% if performance >= 75 %}bg-success{% elif performance >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
-                                             style="width: {{ performance }}%;">
-                                            {{ performance }}%
-                                        </div>
+            <div class="table-responsive">
+                <table class="table table-corporate">
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>Staff Count</th>
+                            <th>Total Points</th>
+                            <th>Average Points</th>
+                            <th>On Track</th>
+                            <th>Warnings</th>
+                            <th>Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for branch in branch_stats %}
+                        <tr>
+                            <td><strong>{{ branch.name }}</strong></td>
+                            <td>{{ branch.staff_count }}</td>
+                            <td><strong>{{ branch.total_points|floatformat:0 }}</strong></td>
+                            <td>{{ branch.average_points|floatformat:1 }}</td>
+                            <td><span class="badge bg-success">{{ branch.on_track_count }}</span></td>
+                            <td>
+                                {% if branch.warning_count > 0 %}
+                                <span class="badge bg-danger">{{ branch.warning_count }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% widthratio branch.on_track_count branch.staff_count 100 as performance %}
+                                <div class="progress-corporate">
+                                    <div class="progress-bar bg-success" 
+                                         style="width: {{ performance }}%;">
+                                        {{ performance }}%
                                     </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -108,123 +342,69 @@
 <!-- Individual Staff Performance -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0"><i class="bi bi-people"></i> Individual Staff Performance</h5>
+        <div class="modern-card">
+            <div class="section-header">
+                <h5><i class="bi bi-people"></i> Individual Staff Performance</h5>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Employee</th>
-                                <th>Branch</th>
-                                <th>Current Points</th>
-                                <th>Daily Average</th>
-                                <th>Days Worked</th>
-                                <th>Projected Total</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for staff in staff_performance %}
-                            <tr>
-                                <td>
-                                    <strong>{{ staff.user.username }}</strong><br>
-                                    <small class="text-muted">{{ staff.user.employee_id }}</small>
-                                </td>
-                                <td>{{ staff.user.get_branch_display }}</td>
-                                <td>{{ staff.current_points|floatformat:2 }}</td>
-                                <td>{{ staff.daily_average|floatformat:2 }}</td>
-                                <td>{{ staff.days_worked }}</td>
-                                <td><strong>{{ staff.projected_total|floatformat:2 }}</strong></td>
-                                <td>
-                                    <span class="badge bg-{{ staff.status_class }}">
-                                        {{ staff.status_label }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="7" class="text-center">No staff data available</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+            <div class="table-responsive">
+                <table class="table table-corporate">
+                    <thead>
+                        <tr>
+                            <th>Employee</th>
+                            <th>Branch</th>
+                            <th>Current Points</th>
+                            <th>Daily Average</th>
+                            <th>Days Worked</th>
+                            <th>Projected Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for staff in staff_performance %}
+                        <tr>
+                            <td>
+                                <strong>{{ staff.user.username }}</strong><br>
+                                <small>{{ staff.user.employee_id }}</small>
+                            </td>
+                            <td>{{ staff.user.get_branch_display }}</td>
+                            <td><strong>{{ staff.current_points|floatformat:0 }}</strong></td>
+                            <td>{{ staff.daily_average|floatformat:1 }}</td>
+                            <td>{{ staff.days_worked }}</td>
+                            <td><strong>{{ staff.projected_total|floatformat:0 }}</strong></td>
+                            <td>
+                                <span class="badge bg-{{ staff.status_class }}">
+                                    {{ staff.status_label }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center" style="color: var(--corporate-secondary); font-weight: 600;">
+                                No staff data available
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Performance Distribution Chart -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Performance Distribution</h5>
-            </div>
-            <div class="card-body">
-                {% with on_track=0 warning=0 needs_improvement=0 %}
-                    {% for staff in staff_performance %}
-                        {% if staff.status == 'on_track' %}
-                            {% with on_track=on_track|add:1 %}{% endwith %}
-                        {% elif staff.status == 'warning' %}
-                            {% with warning=warning|add:1 %}{% endwith %}
-                        {% else %}
-                            {% with needs_improvement=needs_improvement|add:1 %}{% endwith %}
-                        {% endif %}
-                    {% endfor %}
-                    
-                    <div class="row text-center">
-                        <div class="col-4">
-                            <h1 class="text-success">{{ on_track }}</h1>
-                            <p>On Track</p>
-                        </div>
-                        <div class="col-4">
-                            <h1 class="text-warning">{{ needs_improvement }}</h1>
-                            <p>Needs Work</p>
-                        </div>
-                        <div class="col-4">
-                            <h1 class="text-danger">{{ warning }}</h1>
-                            <p>Warning</p>
-                        </div>
-                    </div>
-                {% endwith %}
-            </div>
-        </div>
-    </div>
+<script>
+// Animate progress bars on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressBars = document.querySelectorAll('.progress-bar');
     
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Action Items</h5>
-            </div>
-            <div class="card-body">
-                <h6>Staff Needing Attention:</h6>
-                <ul class="list-group">
-                    {% for staff in staff_performance %}
-                        {% if staff.status == 'warning' or staff.status == 'needs_improvement' %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>{{ staff.user.username }}</strong>
-                                <br><small>{{ staff.user.get_branch_display }}</small>
-                            </div>
-                            <div class="text-end">
-                                <div>{{ staff.projected_total|floatformat:0 }} pts</div>
-                                <small class="text-muted">Daily avg: {{ staff.daily_average|floatformat:1 }}</small>
-                            </div>
-                        </li>
-                        {% endif %}
-                    {% empty %}
-                    <li class="list-group-item text-success">
-                        <i class="bi bi-check-circle"></i> All staff performing well!
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+    });
+});
+</script>
 
 {% endblock %}

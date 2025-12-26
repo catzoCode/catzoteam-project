@@ -6,88 +6,89 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
     /* Modern Card Design */
     .modern-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 8px;
         padding: 30px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
-        border: none;
     }
     
     .modern-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     
-    /* Gradient Cards */
-    .gradient-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 20px;
+    /* Progress Cards - Corporate */
+    .progress-card {
+        background: white;
+        border-radius: 8px;
         padding: 30px;
-        box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
         height: 100%;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
     }
-    
-    .gradient-card::before {
+
+    .progress-card::before {
         content: '';
         position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: shimmer 3s infinite;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--corporate-primary);
+    }
+
+    .progress-card.success::before {
+        background: var(--corporate-success);
     }
     
-    @keyframes shimmer {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(-10%, -10%); }
+    .progress-card.info::before {
+        background: var(--corporate-info);
     }
     
-    .gradient-card.success {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-        box-shadow: 0 4px 20px rgba(17, 153, 142, 0.3);
+    .progress-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
     }
     
-    .gradient-card.warning {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        box-shadow: 0 4px 20px rgba(240, 147, 251, 0.3);
+    .progress-card h5 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--corporate-secondary);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .progress-card h5 i {
+        color: var(--corporate-accent);
     }
     
-    .gradient-card.info {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        box-shadow: 0 4px 20px rgba(79, 172, 254, 0.3);
-    }
-    
-    .gradient-card h5 {
-        font-size: 1.1rem;
-        margin-bottom: 25px !important;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .gradient-card h6 {
-        font-size: 0.95rem;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .gradient-card h4 {
-        font-size: 1.5rem;
-        position: relative;
-        z-index: 1;
-    }
-    
-    /* BEAUTIFUL Circular Progress */
+    /* Circular Progress - Clean Corporate */
     .circular-progress-container {
         position: relative;
-        width: 160px;
-        height: 160px;
+        width: 140px;
+        height: 140px;
         margin: 0 auto 20px;
     }
     
@@ -96,102 +97,87 @@
     }
     
     .progress-ring-circle {
-        transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         stroke-linecap: round;
-        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
     }
     
-    /* Outer glow ring */
-    .progress-ring-glow {
-        stroke-width: 3;
-        opacity: 0.3;
-        filter: blur(4px);
-    }
-    
-    /* Center content */
     .progress-center {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         text-align: center;
-        z-index: 2;
     }
     
     .progress-value {
-        font-size: 2.5rem;
-        font-weight: 900;
+        font-size: 2rem;
+        font-weight: 700;
         line-height: 1;
-        color: white;
-        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        color: var(--corporate-dark);
         display: block;
         margin-bottom: 5px;
     }
     
     .progress-label {
-        font-size: 0.85rem;
-        color: rgba(255, 255, 255, 0.95);
-        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
     }
     
-    /* Target achieved animation */
-    .target-achieved .progress-ring-circle {
-        stroke: url(#gradient-gold);
-        animation: victory-pulse 2s ease-in-out infinite;
+    .progress-info {
+        font-size: 0.95rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        line-height: 1.6;
     }
     
-    .target-achieved .progress-center {
-        animation: victory-bounce 1s ease-in-out infinite;
+    .progress-info strong {
+        font-weight: 700;
+        color: var(--corporate-dark);
     }
     
-    @keyframes victory-pulse {
-        0%, 100% {
-            filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
-        }
-        50% {
-            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1));
-        }
+    /* Mini stats under circles */
+    .mini-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
     }
     
-    @keyframes victory-bounce {
-        0%, 100% {
-            transform: translate(-50%, -50%) scale(1);
-        }
-        50% {
-            transform: translate(-50%, -50%) scale(1.05);
-        }
+    .mini-stat {
+        text-align: center;
     }
     
-    /* Mobile scaling */
+    .mini-stat h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--corporate-dark);
+    }
+    
+    .mini-stat small {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
     @media (max-width: 768px) {
-        .circular-progress-container {
-            width: 140px;
-            height: 140px;
-        }
-        
-        .progress-value {
-            font-size: 2.2rem;
-        }
-        
-        .progress-label {
-            font-size: 0.75rem;
-        }
-    }
-    
-    @media (max-width: 480px) {
         .circular-progress-container {
             width: 120px;
             height: 120px;
         }
         
         .progress-value {
-            font-size: 1.8rem;
+            font-size: 1.75rem;
         }
     }
     
-    /* Stats Grid */
+    /* Stats Grid - Professional */
     .stat-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -200,69 +186,69 @@
     }
     
     .stat-box {
-        border-radius: 20px;
-        padding: 30px 25px;
-        text-align: left;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
-        color: white;
+        background: white;
+        border-radius: 8px;
+        padding: 25px 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         position: relative;
-        overflow: hidden;
-        min-height: 160px;
+        min-height: 140px;
+        transition: all 0.3s ease;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
     }
     
     .stat-box:hover {
-        transform: translateY(-5px) scale(1.02);
-        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
     }
     
-    .stat-box.primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        border-radius: 8px 8px 0 0;
     }
     
-    .stat-box.success {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    }
-    
-    .stat-box.warning {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .stat-box.info {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
+    .stat-box.primary::before { background: var(--corporate-primary); }
+    .stat-box.success::before { background: var(--corporate-success); }
+    .stat-box.warning::before { background: var(--corporate-warning); }
+    .stat-box.info::before { background: var(--corporate-info); }
     
     .stat-box .icon {
         position: absolute;
         top: 20px;
         right: 20px;
-        font-size: 3rem;
-        opacity: 0.15;
+        font-size: 2rem;
+        opacity: 0.1;
+        color: var(--corporate-dark);
     }
     
     .stat-box .label {
-        font-size: 0.95rem;
-        color: white;
-        margin-bottom: 10px;
-        font-weight: 500;
-        opacity: 0.95;
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        margin-bottom: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     .stat-box .value {
-        font-size: 2.5rem;
-        font-weight: 800;
-        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
         margin-bottom: 5px;
         line-height: 1;
     }
     
     .stat-box .sublabel {
         font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.85);
-        font-weight: 400;
+        color: var(--corporate-secondary);
+        font-weight: 600;
     }
     
     @media (max-width: 1200px) {
@@ -277,56 +263,23 @@
         }
         
         .stat-box {
-            min-height: 140px;
-            padding: 25px 20px;
+            min-height: 120px;
+            padding: 20px;
         }
         
         .stat-box .value {
-            font-size: 2rem;
+            font-size: 1.75rem;
         }
     }
     
-    /* Alert Banner */
-    .alert-banner {
-        border-radius: 20px;
-        border: none;
-        padding: 25px 30px;
-        margin-bottom: 30px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        border-left: 5px solid;
-    }
-    
-    .alert-banner.alert-danger {
-        border-left-color: #e74c3c;
-        background: linear-gradient(135deg, #fff 0%, #ffe5e5 100%);
-    }
-    
-    .alert-banner.alert-warning {
-        border-left-color: #f39c12;
-        background: linear-gradient(135deg, #fff 0%, #fff8e5 100%);
-    }
-    
-    .alert-banner.alert-success {
-        border-left-color: #27ae60;
-        background: linear-gradient(135deg, #fff 0%, #e8f8f0 100%);
-    }
-    
-    .alert-banner h4 {
-        margin-bottom: 12px;
-        font-weight: 700;
-    }
-    
-    /* BEAUTIFUL Progress Bar */
+    /* Progress Bar - Corporate */
     .progress-modern {
         height: 35px;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e8ebf0 100%);
-        overflow: visible;
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
-        position: relative;
+        border-radius: 6px;
+        background: #e2e8f0;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
         margin-bottom: 15px;
-
-        /* FIX: make it behave like a real progress container so the bar aligns */
         display: flex;
         align-items: stretch;
     }
@@ -336,73 +289,51 @@
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        font-size: 0.9rem;
-        border-radius: 20px;
+        font-size: 0.875rem;
+        border-radius: 6px;
         transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-
-        /* FIX: ensure the bar fills the container height */
         height: 100%;
-    }
-    
-    .progress-modern .progress-bar::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        animation: shimmer-progress 2s infinite;
-    }
-    
-    @keyframes shimmer-progress {
-        0% {
-            left: -100%;
-        }
-        100% {
-            left: 100%;
-        }
+        color: white;
     }
     
     .progress-modern .progress-bar.bg-success {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background: var(--corporate-success);
     }
     
     .progress-modern .progress-bar.bg-warning {
-        background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+        background: var(--corporate-warning);
     }
     
     .progress-modern .progress-bar.bg-danger {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        background: var(--corporate-danger);
     }
     
-    /* Task Card */
+    /* Task Card - Corporate */
     .task-card {
         background: white;
-        border-radius: 15px;
+        border-radius: 6px;
         padding: 20px;
         margin-bottom: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
-        border-left: 4px solid #667eea;
     }
     
     .task-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-color: var(--corporate-accent);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .task-card.urgent {
-        border-left-color: #e74c3c;
-        background: linear-gradient(to right, rgba(231, 76, 60, 0.05), white);
+        border-left: 3px solid var(--corporate-danger);
     }
     
     .task-card.completed {
-        border-left-color: #27ae60;
-        opacity: 0.8;
+        border-left: 3px solid var(--corporate-success);
+        opacity: 0.85;
+    }
+    
+    .task-card:not(.urgent):not(.completed) {
+        border-left: 3px solid var(--corporate-accent);
     }
     
     .task-card .task-header {
@@ -413,26 +344,31 @@
     }
     
     .task-card .task-title {
-        font-weight: 700;
-        font-size: 1.1rem;
-        color: #2c3e50;
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--corporate-dark);
         margin-bottom: 5px;
     }
     
     .task-card .task-points {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--corporate-primary);
         color: white;
         padding: 6px 16px;
-        border-radius: 25px;
+        border-radius: 6px;
         font-weight: 700;
+        font-size: 0.875rem;
         white-space: nowrap;
-        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .task-card.completed .task-points {
+        background: var(--corporate-success);
     }
     
     .task-card .task-info {
-        color: #7f8c8d;
-        font-size: 0.9rem;
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
         margin-top: 10px;
+        font-weight: 500;
     }
     
     .task-card .task-info i {
@@ -444,23 +380,16 @@
         gap: 15px;
         flex-wrap: wrap;
         margin-top: 8px;
-    }
-    
-    /* Badge Modern */
-    .badge-modern {
-        padding: 10px 18px;
-        border-radius: 25px;
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
         font-weight: 600;
-        font-size: 0.9rem;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
     
-    /* Section Header */
+    /* Section Header - Corporate */
     .section-header {
         margin-bottom: 25px;
         padding-bottom: 15px;
-        border-bottom: 3px solid #ecf0f1;
+        border-bottom: 2px solid #e2e8f0;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -468,78 +397,105 @@
     
     .section-header h5 {
         font-weight: 700;
-        color: #2c3e50;
+        color: var(--corporate-dark);
         margin: 0;
-        font-size: 1.3rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-header h5 i {
+        color: var(--corporate-accent);
     }
     
     .section-header .badge {
-        font-size: 0.9rem;
-        padding: 8px 15px;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        font-weight: 700;
     }
     
     /* Empty State */
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #95a5a6;
+        color: var(--corporate-secondary);
     }
     
     .empty-state i {
-        font-size: 4rem;
+        font-size: 3rem;
         margin-bottom: 20px;
-        opacity: 0.3;
+        opacity: 0.2;
     }
     
     .empty-state p {
-        font-size: 1.1rem;
+        font-size: 1rem;
         margin: 0;
+        font-weight: 500;
     }
     
     /* Action Button */
     .btn-complete {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background: var(--corporate-success);
         border: none;
         color: white;
         padding: 8px 20px;
-        border-radius: 25px;
+        border-radius: 6px;
         font-weight: 600;
+        font-size: 0.875rem;
         transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(17, 153, 142, 0.3);
     }
     
     .btn-complete:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        background: #047857;
         color: white;
+        box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
     }
     
-    /* Mini stats under circles */
-    .mini-stats {
-        display: flex;
-        justify-content: space-around;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-        position: relative;
-        z-index: 1;
+    /* Badge Modern */
+    .badge-modern {
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        letter-spacing: 0.5px;
+    }
+
+    /* Badge */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
-    .mini-stat {
-        text-align: center;
+    /* Page Header */
+    .page-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
     }
-    
-    .mini-stat h4 {
-        font-size: 1.6rem;
-        font-weight: 800;
+
+    .page-header h2 {
+        font-weight: 700;
+        color: var(--corporate-dark);
         margin-bottom: 5px;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
-    
-    .mini-stat small {
-        font-size: 0.85rem;
-        opacity: 0.95;
-        font-weight: 500;
+
+    .page-header h2 i {
+        color: var(--corporate-accent);
+    }
+
+    .page-header p {
+        color: var(--corporate-secondary);
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
     }
 </style>
 {% endblock %}
@@ -548,46 +504,44 @@
 <!-- SVG Gradients -->
 <svg width="0" height="0" style="position: absolute;">
     <defs>
-        <!-- White gradient -->
-        <linearGradient id="gradient-white" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
+        <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
         </linearGradient>
         
-        <!-- Gold gradient for achievements -->
-        <linearGradient id="gradient-gold" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#ffd700;stop-opacity:1" />
-            <stop offset="50%" style="stop-color:#ffed4e;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#ffd700;stop-opacity:1" />
+        <linearGradient id="gradient-success" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+        </linearGradient>
+
+        <linearGradient id="gradient-info" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:1" />
         </linearGradient>
     </defs>
 </svg>
 
 <!-- Welcome Section -->
-<div class="row mb-4">
-    <div class="col-12">
-        <h2 class="mb-1">
-            <i class="bi bi-hand-wave" style="color: #ffc107;"></i> Welcome back, {{ user.first_name|default:user.username }}!
-        </h2>
-        <p class="text-muted">{{ user.get_role_display }} - {{ user.get_branch_display }}</p>
-    </div>
+<div class="page-header">
+    <h2>
+        <i class="bi bi-house-door"></i> Welcome, {{ user.first_name|default:user.username }}!
+    </h2>
+    <p>{{ user.get_role_display }} • {{ user.get_branch_display }}</p>
 </div>
 
 <!-- Main Progress Cards -->
 <div class="row mb-4">
     <!-- Today's Progress -->
-    <div class="col-lg-4 mb-4">
-        <div class="gradient-card">
+    <div class="col-lg-4 mb-3">
+        <div class="progress-card">
             <h5><i class="bi bi-calendar-day"></i> Today's Progress</h5>
             
-            <div class="circular-progress-container {% if today_progress >= 100 %}target-achieved{% endif %}" data-progress="{{ today_progress }}" data-max="50" data-current="{{ today_points.points|floatformat:0 }}">
-                <svg class="progress-ring" width="160" height="160">
-                    <!-- Background circle -->
-                    <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.2)" stroke-width="14" fill="none"/>
-                    <!-- Glow circle -->
-                    <circle class="progress-ring-glow" cx="80" cy="80" r="68" stroke="white" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
-                    <!-- Progress circle -->
-                    <circle class="progress-ring-circle" cx="80" cy="80" r="68" stroke="url(#gradient-white)" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
+            <div class="circular-progress-container" data-progress="{{ today_progress }}">
+                <svg class="progress-ring" width="140" height="140">
+                    <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                    <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                            stroke="url(#gradient-primary)" stroke-width="12" fill="none" 
+                            stroke-dasharray="377" stroke-dashoffset="377"/>
                 </svg>
                 <div class="progress-center">
                     <span class="progress-value">{{ today_points.points|floatformat:0 }}</span>
@@ -595,11 +549,15 @@
                 </div>
             </div>
             
-            <div class="text-center" style="position: relative; z-index: 1;">
+            <div class="text-center">
                 {% if today_points_needed > 0 %}
-                <h6 class="mb-0">{{ today_points_needed|floatformat:0 }} points to reach target!</h6>
+                <p class="mb-0" style="color: var(--corporate-secondary); font-size: 0.95rem; font-weight: 600;">
+                    <strong style="font-weight: 700; color: var(--corporate-dark);">{{ today_points_needed|floatformat:0 }}</strong> points remaining
+                </p>
                 {% else %}
-                <h6 class="mb-0"><i class="bi bi-check-circle-fill"></i> Daily target achieved!</h6>
+                <p class="mb-0" style="color: var(--corporate-success); font-size: 0.95rem; font-weight: 700;">
+                    <i class="bi bi-check-circle-fill"></i> Target achieved
+                </p>
                 {% endif %}
             </div>
             
@@ -621,15 +579,16 @@
     </div>
     
     <!-- Week Progress -->
-    <div class="col-lg-4 mb-4">
-        <div class="gradient-card info">
+    <div class="col-lg-4 mb-3">
+        <div class="progress-card info">
             <h5><i class="bi bi-calendar-week"></i> This Week</h5>
             
-            <div class="circular-progress-container {% if week_progress >= 100 %}target-achieved{% endif %}" data-progress="{{ week_progress }}" data-max="{{ week_target|floatformat:0 }}" data-current="{{ week_total|floatformat:0 }}">
-                <svg class="progress-ring" width="160" height="160">
-                    <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.2)" stroke-width="14" fill="none"/>
-                    <circle class="progress-ring-glow" cx="80" cy="80" r="68" stroke="white" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
-                    <circle class="progress-ring-circle" cx="80" cy="80" r="68" stroke="url(#gradient-white)" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
+            <div class="circular-progress-container" data-progress="{{ week_progress }}">
+                <svg class="progress-ring" width="140" height="140">
+                    <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                    <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                            stroke="url(#gradient-info)" stroke-width="12" fill="none" 
+                            stroke-dasharray="377" stroke-dashoffset="377"/>
                 </svg>
                 <div class="progress-center">
                     <span class="progress-value">{{ week_total|floatformat:0 }}</span>
@@ -637,23 +596,24 @@
                 </div>
             </div>
             
-            <div class="text-center" style="position: relative; z-index: 1;">
-                <h6 class="mb-2">Days worked: {{ week_days_worked }} / 5</h6>
-                <h6 class="mb-0">Average: {{ week_average|floatformat:0 }} pts/day</h6>
+            <div class="text-center progress-info">
+                <p class="mb-1">Days worked: <strong>{{ week_days_worked }} / 5</strong></p>
+                <p class="mb-0">Average: <strong>{{ week_average|floatformat:0 }}</strong> pts/day</p>
             </div>
         </div>
     </div>
     
     <!-- Monthly Progress -->
-    <div class="col-lg-4 mb-4">
-        <div class="gradient-card success">
+    <div class="col-lg-4 mb-3">
+        <div class="progress-card success">
             <h5><i class="bi bi-calendar3"></i> This Month</h5>
             
-            <div class="circular-progress-container {% if month_progress >= 100 %}target-achieved{% endif %}" data-progress="{{ month_progress }}" data-max="1200" data-current="{{ month_total|floatformat:0 }}">
-                <svg class="progress-ring" width="160" height="160">
-                    <circle cx="80" cy="80" r="68" stroke="rgba(255,255,255,0.2)" stroke-width="14" fill="none"/>
-                    <circle class="progress-ring-glow" cx="80" cy="80" r="68" stroke="white" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
-                    <circle class="progress-ring-circle" cx="80" cy="80" r="68" stroke="url(#gradient-white)" stroke-width="14" fill="none" stroke-dasharray="427" stroke-dashoffset="427"/>
+            <div class="circular-progress-container" data-progress="{{ month_progress }}">
+                <svg class="progress-ring" width="140" height="140">
+                    <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                    <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                            stroke="url(#gradient-success)" stroke-width="12" fill="none" 
+                            stroke-dasharray="377" stroke-dashoffset="377"/>
                 </svg>
                 <div class="progress-center">
                     <span class="progress-value">{{ month_total|floatformat:0 }}</span>
@@ -661,9 +621,9 @@
                 </div>
             </div>
             
-            <div class="text-center" style="position: relative; z-index: 1;">
-                <h6 class="mb-2">Daily avg: {{ month_average|floatformat:1 }} pts</h6>
-                <h6 class="mb-0">Days worked: {{ month_days_worked }}</h6>
+            <div class="text-center progress-info">
+                <p class="mb-1">Daily avg: <strong>{{ month_average|floatformat:1 }}</strong> pts</p>
+                <p class="mb-0">Days worked: <strong>{{ month_days_worked }}</strong></p>
             </div>
         </div>
     </div>
@@ -700,26 +660,25 @@
     
     <div class="stat-box info">
         <div>
-            <div class="label">Days Left</div>
+            <div class="label">Days Remaining</div>
             <div class="value">{{ days_remaining }}</div>
-            <div class="sublabel">days to go</div>
+            <div class="sublabel">working days left</div>
         </div>
         <i class="bi bi-calendar-event icon"></i>
     </div>
 </div>
-
 
 <!-- Performance Projection -->
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="modern-card">
             <div class="section-header">
-                <h5><i class="bi bi-lightbulb-fill"></i> Performance Projection</h5>
+                <h5><i class="bi bi-bar-chart-line"></i> Performance Projection</h5>
             </div>
             
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <h6 class="mb-3"><strong>Current Status</strong></h6>
+                    <h6 class="mb-3" style="font-weight: 700; color: var(--corporate-dark);">Current Status</h6>
                     <div class="progress-modern">
                         <div class="progress-bar {% if on_track %}bg-success{% elif projected_total >= 850 %}bg-warning{% else %}bg-danger{% endif %}" 
                              style="width: 0%;" data-width="{{ month_progress|floatformat:0 }}">
@@ -727,9 +686,9 @@
                         </div>
                     </div>
                     
-                    <p class="mb-3">
+                    <p class="mb-3" style="font-size: 0.95rem; font-weight: 600; color: var(--corporate-secondary);">
                         <i class="bi bi-trophy"></i>
-                        <strong>Projection:</strong> {{ projected_total|floatformat:0 }} points by month end
+                        <strong style="color: var(--corporate-dark);">Projection:</strong> {{ projected_total|floatformat:0 }} points by month end
                     </p>
                     
                     <span class="badge-modern {% if on_track %}bg-success{% elif projected_total >= 850 %}bg-warning text-dark{% else %}bg-danger{% endif %}">
@@ -744,19 +703,19 @@
                 </div>
                 
                 <div class="col-md-6">
-                    <h6 class="mb-3"><strong>What You Need</strong></h6>
-                    <ul class="list-unstyled">
+                    <h6 class="mb-3" style="font-weight: 700; color: var(--corporate-dark);">What You Need</h6>
+                    <ul class="list-unstyled" style="font-size: 0.95rem; font-weight: 600; color: var(--corporate-secondary);">
                         <li class="mb-3">
-                            <i class="bi bi-arrow-right-circle-fill text-primary"></i>
-                            <strong>{{ daily_points_required|floatformat:1 }} points per day</strong> for remaining {{ days_remaining }} days
+                            <i class="bi bi-arrow-right-circle-fill" style="color: var(--corporate-primary);"></i>
+                            <strong style="color: var(--corporate-dark);">{{ daily_points_required|floatformat:1 }} points per day</strong> for remaining {{ days_remaining }} days
                         </li>
                         <li class="mb-3">
-                            <i class="bi bi-arrow-right-circle-fill text-success"></i>
-                            Total still needed: <strong>{{ points_needed|floatformat:0 }} points</strong>
+                            <i class="bi bi-arrow-right-circle-fill" style="color: var(--corporate-success);"></i>
+                            Total still needed: <strong style="color: var(--corporate-dark);">{{ points_needed|floatformat:0 }} points</strong>
                         </li>
                         <li class="mb-3">
-                            <i class="bi bi-arrow-right-circle-fill text-info"></i>
-                            At current pace: <strong>{{ projected_total|floatformat:0 }} points</strong> projected
+                            <i class="bi bi-arrow-right-circle-fill" style="color: var(--corporate-info);"></i>
+                            At current pace: <strong style="color: var(--corporate-dark);">{{ projected_total|floatformat:0 }} points</strong> projected
                         </li>
                     </ul>
                 </div>
@@ -764,7 +723,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Today's Tasks Section -->
 <div class="row mb-4">
@@ -783,7 +741,7 @@
                             <div class="task-title">{{ task.task_type.name }}</div>
                             <div class="task-meta">
                                 <span>
-                                    <i class="bi bi-clock-fill text-primary"></i>
+                                    <i class="bi bi-clock-fill" style="color: var(--corporate-primary);"></i>
                                     <strong>{{ task.scheduled_time|time:"H:i" }}</strong>
                                 </span>
                                 <span>
@@ -791,7 +749,7 @@
                                     {{ task.package.cat.owner.name }}
                                 </span>
                                 <span>
-                                    <i class="bi bi-heart-fill" style="color: #e74c3c;"></i>
+                                    <i class="bi bi-heart-fill" style="color: var(--corporate-danger);"></i>
                                     {{ task.package.cat.name }}
                                 </span>
                             </div>
@@ -816,7 +774,6 @@
                 <div class="empty-state">
                     <i class="bi bi-calendar-check"></i>
                     <p>No tasks scheduled for today</p>
-                    <small class="text-muted">Enjoy your free time or check upcoming tasks!</small>
                 </div>
             {% endif %}
         </div>
@@ -829,7 +786,7 @@
     <div class="col-12">
         <div class="modern-card">
             <div class="section-header">
-                <h5><i class="bi bi-check-circle-fill text-success"></i> Completed Today</h5>
+                <h5><i class="bi bi-check-circle-fill" style="color: var(--corporate-success);"></i> Completed Today</h5>
                 <span class="badge bg-success">{{ tasks_count.completed }} tasks</span>
             </div>
             
@@ -838,12 +795,12 @@
                 <div class="task-header">
                     <div style="flex: 1;">
                         <div class="task-title">
-                            <i class="bi bi-check-circle-fill text-success"></i>
+                            <i class="bi bi-check-circle-fill" style="color: var(--corporate-success);"></i>
                             {{ task.task_type.name }}
                         </div>
                         <div class="task-meta">
                             <span>
-                                <i class="bi bi-heart-fill" style="color: #e74c3c;"></i>
+                                <i class="bi bi-heart-fill" style="color: var(--corporate-danger);"></i>
                                 {{ task.package.cat.name }}
                             </span>
                             <span>
@@ -852,7 +809,7 @@
                             </span>
                         </div>
                     </div>
-                    <div class="task-points" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+                    <div class="task-points">
                         <i class="bi bi-star-fill"></i> {{ task.points }} pts
                     </div>
                 </div>
@@ -888,7 +845,7 @@
                                 {{ task.scheduled_time|time:"H:i" }}
                             </span>
                             <span>
-                                <i class="bi bi-heart-fill" style="color: #e74c3c;"></i>
+                                <i class="bi bi-heart-fill" style="color: var(--corporate-danger);"></i>
                                 {{ task.package.cat.name }}
                             </span>
                         </div>
@@ -903,6 +860,7 @@
     </div>
 </div>
 {% endif %}
+
 <script>
 // Animate circular progress on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -912,26 +870,21 @@ document.addEventListener('DOMContentLoaded', function() {
     circles.forEach(container => {
         const progress = parseFloat(container.dataset.progress) || 0;
         const progressCircle = container.querySelector('.progress-ring-circle');
-        const glowCircle = container.querySelector('.progress-ring-glow');
         
         if (progressCircle) {
-            const circumference = 2 * Math.PI * 68; // 427 for r=68
+            const circumference = 2 * Math.PI * 60; // 377 for r=60
             const offset = circumference - (Math.min(progress, 100) / 100) * circumference;
             
             setTimeout(() => {
                 progressCircle.style.strokeDashoffset = offset;
-                if (glowCircle) {
-                    glowCircle.style.strokeDashoffset = offset;
-                }
-            }, 200);
+            }, 300);
         }
     });
     
-    // Animate progress bars - FIXED ALIGNMENT
+    // Animate progress bars
     const progressBars = document.querySelectorAll('.progress-bar[data-width]');
     progressBars.forEach(bar => {
         const width = parseFloat(bar.dataset.width);
-        // Ensure width doesn't exceed 100%
         const finalWidth = Math.min(width, 100);
         setTimeout(() => {
             bar.style.width = finalWidth + '%';

@@ -7,7 +7,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 from calendar import monthrange
 
-# ← ADD THE 4 NEW LINES HERE:
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
@@ -64,17 +63,17 @@ def staff_dashboard(request):
     week_average = (week_total / week_days_worked) if week_days_worked > 0 else Decimal('0.00')
     week_target = Decimal('50.00') * 5
     
-    # TODAY'S ASSIGNED TASKS - FIXED: Show all assigned to this staff
+    # TODAY'S ASSIGNED TASKS
     today_tasks = Task.objects.filter(
         assigned_staff=user,
-        status__in=['assigned', 'in_progress']  # Show assigned and in-progress
+        status__in=['assigned', 'in_progress']
     ).select_related(
         'task_type',
         'package__cat',
         'package__cat__owner'
-    ).order_by('-id')[:10]  # Most recent first
+    ).order_by('-id')[:10]
     
-    # UPCOMING TASKS - Any assigned tasks
+    # UPCOMING TASKS
     upcoming_tasks = Task.objects.filter(
         assigned_staff=user,
         status__in=['assigned', 'pending']
@@ -232,15 +231,101 @@ def get_task_suggestions(user, daily_points_required):
         })
     
     return suggestions
+
+
 @login_required
 def manager_dashboard(request):
-    """MANAGER DASHBOARD - PostgreSQL Optimized"""
+    """MANAGER DASHBOARD - PostgreSQL Optimized + Personal Progress"""
     if request.user.role != 'manager':
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
     
+    user = request.user
     today = date.today()
     
+    # ============ MANAGER'S PERSONAL PROGRESS (Same as Staff) ============
+    # Get or create today's points
+    today_points, created = DailyPoints.objects.get_or_create(
+        user=user,
+        date=today,
+        defaults={'points': Decimal('0.00')}
+    )
+    
+    # Calculate week stats
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    week_points = DailyPoints.objects.filter(
+        user=user,
+        date__range=[week_start, week_end]
+    ).aggregate(
+        total=Sum('points'),
+        days_worked=Count('id')
+    )
+    
+    week_total = week_points['total'] or Decimal('0.00')
+    week_days_worked = week_points['days_worked'] or 0
+    week_average = (week_total / week_days_worked) if week_days_worked > 0 else Decimal('0.00')
+    week_target = Decimal('50.00') * 5
+    
+    # Calculate month stats
+    month_start = today.replace(day=1)
+    days_in_month = monthrange(today.year, today.month)[1]
+    
+    month_points = DailyPoints.objects.filter(
+        user=user,
+        date__year=today.year,
+        date__month=today.month
+    ).aggregate(
+        total=Sum('points'),
+        average=Avg('points'),
+        days_worked=Count('id')
+    )
+    
+    month_total = month_points['total'] or Decimal('0.00')
+    month_average = month_points['average'] or Decimal('0.00')
+    month_days_worked = month_points['days_worked'] or 0
+    
+    # Projections
+    days_elapsed = today.day
+    days_remaining = days_in_month - today.day
+    
+    if month_days_worked > 0:
+        daily_average = month_total / month_days_worked
+        projected_total = daily_average * days_in_month
+    else:
+        daily_average = Decimal('0.00')
+        projected_total = Decimal('0.00')
+    
+    # Calculate points needed
+    monthly_target = Decimal('1200.00')
+    points_needed = max(monthly_target - month_total, 0)
+    
+    if days_remaining > 0:
+        daily_points_required = points_needed / days_remaining
+    else:
+        daily_points_required = Decimal('0.00')
+    
+    # Status checks
+    on_track = projected_total >= monthly_target
+    
+    # Manager's tasks
+    manager_tasks_today = Task.objects.filter(
+        assigned_staff=user,
+        status__in=['assigned', 'in_progress']
+    ).select_related('task_type', 'package__cat').order_by('-id')[:10]
+    
+    manager_completed_today = Task.objects.filter(
+        assigned_staff=user,
+        completed_at__date=today,
+        status='completed'
+    ).select_related('task_type', 'package__cat').order_by('-completed_at')[:10]
+    
+    task_points_today = manager_completed_today.aggregate(
+        total=Sum('points')
+    )['total'] or 0
+    
+    # ============ TEAM MANAGEMENT DATA ============
     # PENDING TASK PACKAGES
     pending_packages = TaskPackage.objects.filter(
         status='pending'
@@ -256,24 +341,22 @@ def manager_dashboard(request):
         status='submitted'
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:15]
     
-    # TODAY'S COMPLETED TASKS
+    # TODAY'S COMPLETED TASKS (TEAM)
     completed_today = Task.objects.filter(
         status='completed'
     ).select_related('task_type', 'assigned_staff', 'package__cat').order_by('-id')[:20]
     
-    # STAFF AVAILABILITY - PostgreSQL Simple Approach
+    # STAFF AVAILABILITY
     staff_members_base = User.objects.filter(
         is_active=True,
         role='staff'
     ).order_by('username')
     
-    # Calculate stats in Python (most reliable for PostgreSQL)
     staff_list = []
     available_count = 0
     busy_count = 0
     
     for staff in staff_members_base[:20]:
-        # Simple count queries - always work
         pending = Task.objects.filter(
             assigned_staff=staff,
             status__in=['pending', 'assigned']
@@ -286,7 +369,6 @@ def manager_dashboard(request):
         
         total = pending + completed
         
-        # Calculate points
         completed_tasks = Task.objects.filter(
             assigned_staff=staff,
             status='completed'
@@ -297,20 +379,17 @@ def manager_dashboard(request):
             if hasattr(t, 'task_type') and hasattr(t.task_type, 'points'):
                 points += t.task_type.points
         
-        # Add calculated fields to staff object
         staff.pending_tasks = pending
         staff.completed_tasks = completed
         staff.total_tasks_count = total
         staff.points_value = points
         
-        # Generate initials
         if staff.get_full_name():
             names = staff.get_full_name().split()
             staff.initials = ''.join([n[0].upper() for n in names[:2]])
         else:
             staff.initials = staff.username[0].upper()
         
-        # Count availability
         if pending <= 5:
             available_count += 1
         else:
@@ -333,6 +412,7 @@ def manager_dashboard(request):
     }
     
     context = {
+        # Team Management
         'pending_packages': pending_packages,
         'active_packages': active_packages,
         'pending_approval': pending_approval,
@@ -340,6 +420,36 @@ def manager_dashboard(request):
         'staff_members': staff_list,
         'stats': stats,
         'today': today,
+        
+        # Manager's Personal Progress
+        'user': user,
+        'today_points': today_points,
+        'today_progress': (today_points.points / Decimal('50.00')) * 100 if today_points.points else 0,
+        'today_points_needed': max(Decimal('50.00') - today_points.points, 0),
+        'week_total': week_total,
+        'week_target': week_target,
+        'week_progress': (week_total / week_target * 100) if week_target > 0 else 0,
+        'week_average': week_average,
+        'week_days_worked': week_days_worked,
+        'month_total': month_total,
+        'month_average': month_average,
+        'month_days_worked': month_days_worked,
+        'monthly_target': monthly_target,
+        'month_progress': (month_total / monthly_target * 100) if monthly_target > 0 else 0,
+        'days_elapsed': days_elapsed,
+        'days_remaining': days_remaining,
+        'daily_average': daily_average,
+        'projected_total': projected_total,
+        'points_needed': points_needed,
+        'daily_points_required': daily_points_required,
+        'on_track': on_track,
+        'manager_tasks_today': manager_tasks_today,
+        'manager_completed_today': manager_completed_today,
+        'task_points_today': task_points_today,
+        'tasks_count': {
+            'today': manager_tasks_today.count(),
+            'completed': manager_completed_today.count(),
+        },
     }
     
     return render(request, 'dashboard/manager_dashboard.html', context)
@@ -352,7 +462,6 @@ def assign_task_package(request, package_id):
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
     
-    # Use package_id field (string), not id (integer)
     package = get_object_or_404(TaskPackage, package_id=package_id)
     
     if request.method == 'POST':
@@ -386,13 +495,10 @@ def assign_task_package(request, package_id):
             messages.error(request, f'Error: {str(e)}')
             return redirect('assign_tasks', package_id=package_id)
     
-    # GET - Show assignment form
     tasks = package.tasks.all().select_related('task_type')
-
-    # FIXED: Include both staff and managers
     staff_list = User.objects.filter(
         is_active=True,
-        role__in=['staff', 'manager']  
+        role__in=['staff', 'manager']
     ).annotate(
         active_tasks=Count(
             'tm_assigned_tasks',
@@ -405,7 +511,7 @@ def assign_task_package(request, package_id):
         'package': package,
         'tasks': tasks,
         'staff_list': staff_list,
-        'current_user': request.user,  
+        'current_user': request.user,
     }
 
     return render(request, 'dashboard/assign_tasks.html', context)
@@ -428,7 +534,6 @@ def approve_task(request, task_id):
             task.approved_at = timezone.now()
             task.save()
             
-            # Award points
             award_points_to_staff(task)
             
             messages.success(
@@ -440,7 +545,6 @@ def approve_task(request, task_id):
             task.status = 'assigned'
             rejection_reason = request.POST.get('rejection_reason', '')
             
-            # Add rejection note
             if task.notes:
                 task.notes = f'{task.notes}\n\n[REJECTED]: {rejection_reason}'
             else:
@@ -463,13 +567,11 @@ def award_points_to_staff(task):
     today = timezone.now().date()
     user = task.assigned_staff
     
-    # Get points from task_type
     if hasattr(task, 'task_type') and hasattr(task.task_type, 'points'):
         points = Decimal(str(task.task_type.points))
     else:
         points = Decimal('0.00')
     
-    # Update DailyPoints
     daily_points, created = DailyPoints.objects.get_or_create(
         user=user,
         date=today,
@@ -482,7 +584,6 @@ def award_points_to_staff(task):
         }
     )
     
-    # Add to appropriate category if field exists
     if hasattr(task.task_type, 'category'):
         category = task.task_type.category
         if category == 'grooming' and hasattr(daily_points, 'grooming_points'):
@@ -499,7 +600,6 @@ def award_points_to_staff(task):
             if hasattr(daily_points, 'cat_service_count'):
                 daily_points.cat_service_count += 1
     
-    # Update total points
     total = Decimal('0.00')
     if hasattr(daily_points, 'grooming_points'):
         total += daily_points.grooming_points
@@ -513,7 +613,6 @@ def award_points_to_staff(task):
     daily_points.points = total
     daily_points.save()
     
-    # Update MonthlyIncentive
     from performance.models import MonthlyIncentive
     first_day = today.replace(day=1)
     monthly_incentive, created = MonthlyIncentive.objects.get_or_create(
@@ -524,7 +623,6 @@ def award_points_to_staff(task):
     
     monthly_incentive.total_points += points
     
-    # Calculate incentive if method exists
     if hasattr(monthly_incentive, 'calculate_incentive'):
         monthly_incentive.calculate_incentive()
     
@@ -541,17 +639,14 @@ def admin_dashboard(request):
     month_start = today.replace(day=1)
     days_in_month = monthrange(today.year, today.month)[1]
     
-    # Get all staff members
     staff_members = User.objects.filter(role='staff', is_active=True)
     
-    # Branch statistics
     branches = [
         'hq', 'damansara_perdana', 'wangsa_maju', 'shah_alam', 'bangi', 'cheng_melaka',
         'johor_bahru', 'seremban', 'seri_kembangan', 'usj21', 'ipoh'
     ]
     branch_stats = []
     
-    # Overall counters
     total_on_track = 0
     total_needs_improvement = 0
     total_warning = 0
@@ -601,7 +696,6 @@ def admin_dashboard(request):
                     else:
                         warning_count += 1
             
-            # Add to overall totals
             total_on_track += on_track_count
             total_needs_improvement += needs_improvement_count
             total_warning += warning_count
@@ -617,7 +711,6 @@ def admin_dashboard(request):
                 'warning_count': warning_count,
             })
     
-    # Individual staff performance
     staff_performance = []
     
     for staff in staff_members:
@@ -666,7 +759,6 @@ def admin_dashboard(request):
     
     staff_performance.sort(key=lambda x: x['projected_total'], reverse=True)
     
-    # Create stats dictionary
     stats = {
         'on_track_count': total_on_track,
         'needs_improvement_count': total_needs_improvement,
@@ -679,7 +771,7 @@ def admin_dashboard(request):
         'branch_stats': branch_stats,
         'staff_performance': staff_performance,
         'total_staff': staff_members.count(),
-        'stats': stats,  # ← ADD THIS
+        'stats': stats,
     }
     
     return render(request, 'dashboard/admin_dashboard.html', context)
@@ -725,7 +817,6 @@ def projection_calculator(request):
     return render(request, 'dashboard/projection_calculator.html', context)
 
 
-
 @login_required
 def admin_manage_tasks(request):
     """Admin page to manage all tasks"""
@@ -733,15 +824,13 @@ def admin_manage_tasks(request):
         messages.error(request, 'Access denied. Admin role required.')
         return redirect('dashboard:admin_dashboard')
     
-    # Get all tasks
     all_tasks = Task.objects.all().select_related(
         'package__cat',
         'package__cat__owner',
         'assigned_staff',
         'task_type'
-    ).order_by('-scheduled_date')[:100]  # Last 100 tasks
+    ).order_by('-scheduled_date')[:100]
     
-    # Statistics
     task_stats = Task.objects.aggregate(
         total=Count('id'),
         assigned=Count('id', filter=Q(status='assigned')),
@@ -750,7 +839,6 @@ def admin_manage_tasks(request):
         completed=Count('id', filter=Q(status='completed'))
     )
     
-    # Tasks by branch
     branch_task_stats = Task.objects.values('assigned_staff__branch').annotate(
         count=Count('id')
     )
@@ -770,16 +858,13 @@ def admin_manage_staff_page(request):
         messages.error(request, 'Access denied. Admin only.')
         return redirect('dashboard:admin_dashboard')
     
-    # Get filters
     search_query = request.GET.get('search', '').strip()
     role_filter = request.GET.get('role', 'all')
     branch_filter = request.GET.get('branch', 'all')
     status_filter = request.GET.get('status', 'all')
     
-    # Base queryset
     staff = User.objects.all().order_by('-date_joined')
     
-    # Apply search
     if search_query:
         staff = staff.filter(
             Q(username__icontains=search_query) |
@@ -790,7 +875,6 @@ def admin_manage_staff_page(request):
             Q(phone_number__icontains=search_query)
         )
     
-    # Apply filters
     if role_filter != 'all':
         staff = staff.filter(role=role_filter)
     
@@ -802,7 +886,6 @@ def admin_manage_staff_page(request):
     elif status_filter == 'inactive':
         staff = staff.filter(is_active=False)
     
-    # Get statistics
     stats = {
         'total': User.objects.count(),
         'active': User.objects.filter(is_active=True).count(),
@@ -812,7 +895,6 @@ def admin_manage_staff_page(request):
         'admins': User.objects.filter(role='admin').count(),
     }
     
-    # Pagination (50 per page)
     from django.core.paginator import Paginator
     paginator = Paginator(staff, 50)
     page_number = request.GET.get('page')
@@ -841,7 +923,6 @@ def ajax_create_staff(request):
     try:
         data = json.loads(request.body)
         
-        # Required fields
         username = data.get('username', '').strip()
         email = data.get('email', '').strip()
         role = data.get('role')
@@ -853,21 +934,18 @@ def ajax_create_staff(request):
                 'error': 'Username, email, role, and branch are required'
             }, status=400)
         
-        # Check if username exists
         if User.objects.filter(username=username).exists():
             return JsonResponse({
                 'success': False,
                 'error': 'Username already exists'
             }, status=400)
         
-        # Check if email exists
         if User.objects.filter(email=email).exists():
             return JsonResponse({
                 'success': False,
                 'error': 'Email already exists'
             }, status=400)
         
-        # Generate employee_id
         today = date.today()
         prefix = f"EMP{today.strftime('%y')}"
         last_emp = User.objects.filter(
@@ -882,11 +960,8 @@ def ajax_create_staff(request):
         
         employee_id = f"{prefix}{new_num:04d}"
         
-        # Generate random password
-        # Generate random password
         password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
 
-        # Create user using create_user() method for proper password hashing
         user = User.objects.create(
             username=username,
             email=email,
@@ -900,11 +975,9 @@ def ajax_create_staff(request):
             is_staff=True if role == 'admin' else False,
         )
 
-        # Set password AFTER creation
         user.set_password(password)
         user.save()
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -922,7 +995,6 @@ def ajax_create_staff(request):
             request=request
         )
         
-        # Send email with credentials (optional)
         try:
             send_mail(
                 subject='CatzoTeam Account Created',
@@ -951,7 +1023,7 @@ def ajax_create_staff(request):
             'success': True,
             'message': f'Staff created successfully!',
             'employee_id': employee_id,
-            'password': password,  # Show to admin once
+            'password': password,
             'user': {
                 'id': user.id,
                 'username': username,
@@ -984,14 +1056,12 @@ def ajax_update_staff(request, user_id):
             'email': user.email
         }
         
-        # Update fields
         if 'first_name' in data:
             user.first_name = data['first_name'].strip()
         if 'last_name' in data:
             user.last_name = data['last_name'].strip()
         if 'email' in data:
             email = data['email'].strip()
-            # Check if email exists for other users
             if User.objects.filter(email=email).exclude(id=user_id).exists():
                 return JsonResponse({
                     'success': False,
@@ -1011,7 +1081,6 @@ def ajax_update_staff(request, user_id):
         
         user.save()
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -1039,7 +1108,6 @@ def ajax_soft_delete_staff(request, user_id):
     try:
         user = get_object_or_404(User, id=user_id)
         
-        # Prevent self-deletion
         if user.id == request.user.id:
             return JsonResponse({
                 'success': False,
@@ -1049,7 +1117,6 @@ def ajax_soft_delete_staff(request, user_id):
         user.is_active = False
         user.save()
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -1079,7 +1146,6 @@ def ajax_activate_staff(request, user_id):
         user.is_active = True
         user.save()
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -1106,13 +1172,11 @@ def ajax_reset_staff_password(request, user_id):
     try:
         user = get_object_or_404(User, id=user_id)
         
-        # Generate new random password
         new_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
         
         user.password = make_password(new_password)
         user.save()
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -1123,7 +1187,6 @@ def ajax_reset_staff_password(request, user_id):
             request=request
         )
         
-        # Send email
         try:
             send_mail(
                 subject='CatzoTeam Password Reset',
@@ -1149,7 +1212,7 @@ CatzoTeam Admin
         return JsonResponse({
             'success': True,
             'message': 'Password reset successfully',
-            'new_password': new_password  # Show to admin
+            'new_password': new_password
         })
     
     except Exception as e:
@@ -1165,25 +1228,21 @@ def ajax_staff_performance(request, user_id):
     try:
         user = get_object_or_404(User, id=user_id)
         
-        # Get performance data
         from performance.models import DailyPoints, MonthlyIncentive
         from task_management.models import Task
         
-        # Last 30 days points
         thirty_days_ago = date.today() - timedelta(days=30)
         daily_points = DailyPoints.objects.filter(
             user=user,
             date__gte=thirty_days_ago
         ).order_by('-date')[:30]
         
-        # Current month
         first_day = date.today().replace(day=1)
         monthly = MonthlyIncentive.objects.filter(
             user=user,
             month=first_day
         ).first()
         
-        # Task statistics
         task_stats = {
             'total': Task.objects.filter(assigned_staff=user).count(),
             'completed': Task.objects.filter(assigned_staff=user, status='completed').count(),
@@ -1191,7 +1250,6 @@ def ajax_staff_performance(request, user_id):
             'pending': Task.objects.filter(assigned_staff=user, status='assigned').count(),
         }
         
-        # Points breakdown
         points_data = {
             'dates': [dp.date.strftime('%Y-%m-%d') for dp in daily_points],
             'points': [float(dp.points) for dp in daily_points],
@@ -1231,7 +1289,6 @@ def ajax_reassign_tasks(request, user_id):
         
         to_user = get_object_or_404(User, id=to_user_id)
         
-        # Get all non-completed tasks
         tasks_to_reassign = Task.objects.filter(
             assigned_staff=from_user,
             status__in=['assigned', 'in_progress']
@@ -1240,7 +1297,6 @@ def ajax_reassign_tasks(request, user_id):
         count = tasks_to_reassign.count()
         tasks_to_reassign.update(assigned_staff=to_user)
         
-        # Log action
         from task_management.models import log_admin_action
         log_admin_action(
             user=request.user,
@@ -1263,4 +1319,3 @@ def ajax_reassign_tasks(request, user_id):
     
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
-

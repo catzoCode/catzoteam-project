@@ -4,13 +4,160 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
     .modern-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 8px;
         padding: 30px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
     }
     
+    /* ========== PROGRESS CARDS - CORPORATE STYLE ========== */
+    .progress-card {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        height: 100%;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--corporate-primary);
+    }
+
+    .progress-card.success::before {
+        background: var(--corporate-success);
+    }
+    
+    .progress-card.info::before {
+        background: var(--corporate-info);
+    }
+    
+    .progress-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .progress-card h5 {
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--corporate-secondary);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .progress-card h5 i {
+        color: var(--corporate-accent);
+    }
+    
+    /* CIRCULAR PROGRESS - CLEAN CORPORATE */
+    .circular-progress-container {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 20px;
+    }
+    
+    .progress-ring {
+        transform: rotate(-90deg);
+    }
+    
+    .progress-ring-circle {
+        transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+        stroke-linecap: round;
+    }
+    
+    .progress-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+    
+    .progress-value {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--corporate-dark);
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .progress-label {
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .progress-info {
+        font-size: 0.95rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        line-height: 1.6;
+    }
+    
+    .progress-info strong {
+        font-weight: 700;
+        color: var(--corporate-dark);
+    }
+    
+    .mini-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .mini-stat {
+        text-align: center;
+    }
+    
+    .mini-stat h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 5px;
+        color: var(--corporate-dark);
+    }
+    
+    .mini-stat small {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* STAT GRID - PROFESSIONAL */
     .stat-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -19,100 +166,172 @@
     }
     
     .stat-box {
-        border-radius: 20px;
-        padding: 30px 25px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        color: white;
+        background: white;
+        border-radius: 8px;
+        padding: 25px 20px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         position: relative;
-        min-height: 160px;
+        min-height: 140px;
         transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
     
     .stat-box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
     }
     
-    .stat-box.warning { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .stat-box.info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .stat-box.primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .stat-box.success { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .stat-box.warning::before { background: var(--corporate-warning); }
+    .stat-box.info::before { background: var(--corporate-info); }
+    .stat-box.primary::before { background: var(--corporate-primary); }
+    .stat-box.success::before { background: var(--corporate-success); }
     
     .stat-box .icon {
         position: absolute;
         top: 20px;
         right: 20px;
-        font-size: 3rem;
-        opacity: 0.15;
+        font-size: 2rem;
+        opacity: 0.1;
+        color: var(--corporate-dark);
+    }
+    
+    .stat-box .label {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        margin-bottom: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     .stat-box .value {
-        font-size: 2.5rem;
-        font-weight: 800;
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 5px;
+        line-height: 1;
     }
     
+    .stat-box .sublabel {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+    }
+    
+    /* SECTION HEADERS - CORPORATE */
+    .section-header {
+        margin-bottom: 25px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .section-header h4 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin: 0;
+        font-size: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header h4 i {
+        color: var(--corporate-accent);
+    }
+    
+    .section-header h5 {
+        font-weight: 600;
+        color: var(--corporate-dark);
+        margin: 0;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .section-header h5 i {
+        color: var(--corporate-accent);
+    }
+    
+    /* CARDS - CLEAN CORPORATE */
     .package-card {
         background: white;
-        border-radius: 15px;
+        border-radius: 6px;
         padding: 20px;
         margin-bottom: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-        border-left: 4px solid #f39c12;
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
     
     .package-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-color: var(--corporate-accent);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
-    /* IMPROVED STAFF CARD */
     .staff-card {
         background: white;
-        border-radius: 15px;
+        border-radius: 6px;
         padding: 20px;
         margin-bottom: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
-        border-left: 4px solid #27ae60;
+        border: 1px solid #e2e8f0;
         transition: all 0.3s ease;
     }
     
     .staff-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        border-color: var(--corporate-accent);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     
     .staff-card.busy {
-        border-left-color: #e74c3c;
+        border-left: 3px solid var(--corporate-danger);
     }
     
-    /* PROFILE PICTURE */
+    .staff-card:not(.busy) {
+        border-left: 3px solid var(--corporate-success);
+    }
+    
     .staff-avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
         object-fit: cover;
-        border: 3px solid #ecf0f1;
+        border: 1px solid #e2e8f0;
     }
     
     .staff-initials {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+        background: var(--corporate-primary);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 700;
-        font-size: 1.2rem;
-        border: 3px solid #ecf0f1;
+        font-weight: 600;
+        font-size: 1rem;
+        border: 1px solid #e2e8f0;
     }
     
     .staff-info {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
         margin-bottom: 15px;
     }
     
@@ -121,17 +340,20 @@
     }
     
     .staff-name {
-        font-weight: 700;
-        font-size: 1.1rem;
+        font-weight: 600;
+        font-size: 0.95rem;
         margin-bottom: 2px;
+        color: var(--corporate-dark);
     }
     
     .staff-id {
-        color: #95a5a6;
-        font-size: 0.85rem;
+        color: var(--corporate-secondary);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
     }
     
-    /* STAT BOXES IN STAFF CARD */
     .staff-stats {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -142,87 +364,135 @@
     .stat-item {
         text-align: center;
         padding: 10px;
-        background: #f8f9fa;
-        border-radius: 10px;
+        background: #f8fafc;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
     }
     
     .stat-item .number {
-        font-size: 1.5rem;
-        font-weight: 800;
+        font-size: 1.25rem;
+        font-weight: 700;
         display: block;
-        color: #2c3e50;
+        color: var(--corporate-dark);
     }
     
     .stat-item .label {
         font-size: 0.75rem;
-        color: #95a5a6;
+        color: var(--corporate-secondary);
         text-transform: uppercase;
         margin-top: 3px;
-    }
-    
-    .stat-item.pending .number { color: #f39c12; }
-    .stat-item.completed .number { color: #27ae60; }
-    .stat-item.points .number { color: #3498db; }
-    
-    .section-header {
-        margin-bottom: 25px;
-        padding-bottom: 15px;
-        border-bottom: 3px solid #ecf0f1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .section-header h5 {
         font-weight: 700;
-        color: #2c3e50;
-        margin: 0;
-        font-size: 1.3rem;
+        letter-spacing: 0.5px;
     }
     
+    .stat-item.pending .number { color: var(--corporate-warning); }
+    .stat-item.completed .number { color: var(--corporate-success); }
+    .stat-item.points .number { color: var(--corporate-accent); }
+    
+    /* BUTTONS - PROFESSIONAL */
     .btn-assign {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: var(--corporate-primary);
         border: none;
         color: white;
         padding: 8px 20px;
-        border-radius: 25px;
+        border-radius: 6px;
         font-weight: 600;
+        font-size: 0.875rem;
         transition: all 0.3s ease;
     }
     
     .btn-assign:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        background: #1e40af;
         color: white;
+        box-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
     }
     
     .btn-approve {
-        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        background: var(--corporate-success);
         border: none;
         color: white;
         padding: 6px 16px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .btn-approve:hover {
+        background: #047857;
     }
     
     .btn-reject {
-        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        background: var(--corporate-danger);
         border: none;
         color: white;
         padding: 6px 16px;
-        border-radius: 20px;
+        border-radius: 6px;
         font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .btn-reject:hover {
+        background: #b91c1c;
+    }
+    
+    /* BADGES - CORPORATE */
+    .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #95a5a6;
+        color: var(--corporate-secondary);
     }
     
     .empty-state i {
-        font-size: 4rem;
-        opacity: 0.3;
+        font-size: 3rem;
+        opacity: 0.2;
+        color: var(--corporate-secondary);
+    }
+    
+    /* Make all small text more readable */
+    small.text-muted {
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .package-card small,
+    .staff-card small {
+        font-weight: 600;
+    }
+    
+    /* PAGE HEADER */
+    .page-header {
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .page-header h2 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .page-header h2 i {
+        color: var(--corporate-accent);
+    }
+
+    .page-header p {
+        color: var(--corporate-secondary);
+        margin: 0;
+        font-size: 0.875rem;
+        font-weight: 500;
     }
     
     @media (max-width: 1200px) {
@@ -239,57 +509,249 @@
         .staff-stats {
             grid-template-columns: repeat(2, 1fr);
         }
+        
+        .circular-progress-container {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .progress-value {
+            font-size: 1.75rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
+<!-- SVG Gradients -->
+<svg width="0" height="0" style="position: absolute;">
+    <defs>
+        <linearGradient id="gradient-primary" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+        </linearGradient>
+        
+        <linearGradient id="gradient-success" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+        </linearGradient>
+
+        <linearGradient id="gradient-info" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0ea5e9;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+</svg>
+
 <!-- Header -->
+<div class="page-header">
+    <h2>
+        <i class="bi bi-clipboard-check"></i> Manager Dashboard
+    </h2>
+    <p>{{ user.get_full_name|default:user.username }} • Manager • {{ user.get_branch_display }}</p>
+</div>
+
+<!-- ========== PERSONAL PROGRESS SECTION ========== -->
 <div class="row mb-4">
     <div class="col-12">
-        <h2 class="mb-1">
-            <i class="bi bi-clipboard-check" style="color: #667eea;"></i> Manager Dashboard
-        </h2>
-        <p class="text-muted">{{ user.get_full_name|default:user.username }} - Manager</p>
+        <div class="modern-card">
+            <div class="section-header">
+                <h4>
+                    <i class="bi bi-person-badge"></i> Personal Performance
+                </h4>
+            </div>
+            
+            <!-- Progress Cards Row -->
+            <div class="row mb-4">
+                <!-- Today's Progress -->
+                <div class="col-lg-4 mb-3">
+                    <div class="progress-card">
+                        <h5><i class="bi bi-calendar-day"></i> Today's Progress</h5>
+                        
+                        <div class="circular-progress-container" data-progress="{{ today_progress }}">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                                <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                                        stroke="url(#gradient-primary)" stroke-width="12" fill="none" 
+                                        stroke-dasharray="377" stroke-dashoffset="377"/>
+                            </svg>
+                            <div class="progress-center">
+                                <span class="progress-value">{{ today_points.points|floatformat:0 }}</span>
+                                <span class="progress-label">of 50 points</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            {% if today_points_needed > 0 %}
+                            <p class="mb-0" style="color: var(--corporate-secondary); font-size: 0.95rem; font-weight: 600;">
+                                <strong style="font-weight: 700; color: var(--corporate-dark);">{{ today_points_needed|floatformat:0 }}</strong> points remaining
+                            </p>
+                            {% else %}
+                            <p class="mb-0" style="color: var(--corporate-success); font-size: 0.95rem; font-weight: 700;">
+                                <i class="bi bi-check-circle-fill"></i> Target achieved
+                            </p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mini-stats">
+                            <div class="mini-stat">
+                                <h4>{{ tasks_count.completed }}</h4>
+                                <small>Completed</small>
+                            </div>
+                            <div class="mini-stat">
+                                <h4>{{ tasks_count.today }}</h4>
+                                <small>Pending</small>
+                            </div>
+                            <div class="mini-stat">
+                                <h4>{{ task_points_today }}</h4>
+                                <small>Points</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Week Progress -->
+                <div class="col-lg-4 mb-3">
+                    <div class="progress-card info">
+                        <h5><i class="bi bi-calendar-week"></i> This Week</h5>
+                        
+                        <div class="circular-progress-container" data-progress="{{ week_progress }}">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                                <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                                        stroke="url(#gradient-info)" stroke-width="12" fill="none" 
+                                        stroke-dasharray="377" stroke-dashoffset="377"/>
+                            </svg>
+                            <div class="progress-center">
+                                <span class="progress-value">{{ week_total|floatformat:0 }}</span>
+                                <span class="progress-label">of {{ week_target|floatformat:0 }} pts</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center progress-info">
+                            <p class="mb-1">Days worked: <strong>{{ week_days_worked }} / 5</strong></p>
+                            <p class="mb-0">Average: <strong>{{ week_average|floatformat:0 }}</strong> pts/day</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Progress -->
+                <div class="col-lg-4 mb-3">
+                    <div class="progress-card success">
+                        <h5><i class="bi bi-calendar3"></i> This Month</h5>
+                        
+                        <div class="circular-progress-container" data-progress="{{ month_progress }}">
+                            <svg class="progress-ring" width="140" height="140">
+                                <circle cx="70" cy="70" r="60" stroke="#e2e8f0" stroke-width="12" fill="none"/>
+                                <circle class="progress-ring-circle" cx="70" cy="70" r="60" 
+                                        stroke="url(#gradient-success)" stroke-width="12" fill="none" 
+                                        stroke-dasharray="377" stroke-dashoffset="377"/>
+                            </svg>
+                            <div class="progress-center">
+                                <span class="progress-value">{{ month_total|floatformat:0 }}</span>
+                                <span class="progress-label">of 1,200 pts</span>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center progress-info">
+                            <p class="mb-1">Daily avg: <strong>{{ month_average|floatformat:1 }}</strong> pts</p>
+                            <p class="mb-0">Days worked: <strong>{{ month_days_worked }}</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Grid -->
+            <div class="stat-grid">
+                <div class="stat-box primary">
+                    <div>
+                        <div class="label">Projected Total</div>
+                        <div class="value">{{ projected_total|floatformat:0 }}</div>
+                        <div class="sublabel">points by month end</div>
+                    </div>
+                    <i class="bi bi-graph-up-arrow icon"></i>
+                </div>
+                
+                <div class="stat-box success">
+                    <div>
+                        <div class="label">Daily Average</div>
+                        <div class="value">{{ daily_average|floatformat:1 }}</div>
+                        <div class="sublabel">points per day</div>
+                    </div>
+                    <i class="bi bi-speedometer2 icon"></i>
+                </div>
+                
+                <div class="stat-box warning">
+                    <div>
+                        <div class="label">Points Needed</div>
+                        <div class="value">{{ points_needed|floatformat:0 }}</div>
+                        <div class="sublabel">to reach 1,200</div>
+                    </div>
+                    <i class="bi bi-target icon"></i>
+                </div>
+                
+                <div class="stat-box info">
+                    <div>
+                        <div class="label">Days Remaining</div>
+                        <div class="value">{{ days_remaining }}</div>
+                        <div class="sublabel">working days left</div>
+                    </div>
+                    <i class="bi bi-calendar-event icon"></i>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Statistics -->
-<div class="stat-grid">
-    <div class="stat-box warning">
-        <div>
-            <div class="label">Pending Assignment</div>
-            <div class="value">{{ stats.pending_packages }}</div>
-            <div class="sublabel">packages waiting</div>
+<!-- ========== TEAM MANAGEMENT SECTION ========== -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="modern-card">
+            <div class="section-header">
+                <h4>
+                    <i class="bi bi-people-fill"></i> Team Overview
+                </h4>
+            </div>
+
+            <!-- Team Statistics -->
+            <div class="stat-grid">
+                <div class="stat-box warning">
+                    <div>
+                        <div class="label">Pending Assignment</div>
+                        <div class="value">{{ stats.pending_packages }}</div>
+                        <div class="sublabel">packages waiting</div>
+                    </div>
+                    <i class="bi bi-hourglass-split icon"></i>
+                </div>
+                
+                <div class="stat-box info">
+                    <div>
+                        <div class="label">Active Tasks</div>
+                        <div class="value">{{ stats.active_packages }}</div>
+                        <div class="sublabel">in progress</div>
+                    </div>
+                    <i class="bi bi-play-circle icon"></i>
+                </div>
+                
+                <div class="stat-box primary">
+                    <div>
+                        <div class="label">Need Approval</div>
+                        <div class="value">{{ stats.pending_approval }}</div>
+                        <div class="sublabel">awaiting review</div>
+                    </div>
+                    <i class="bi bi-check-circle icon"></i>
+                </div>
+                
+                <div class="stat-box success">
+                    <div>
+                        <div class="label">Completed Today</div>
+                        <div class="value">{{ stats.completed_today }}</div>
+                        <div class="sublabel">{{ stats.total_points_today }} points earned</div>
+                    </div>
+                    <i class="bi bi-trophy icon"></i>
+                </div>
+            </div>
         </div>
-        <i class="bi bi-hourglass-split icon"></i>
-    </div>
-    
-    <div class="stat-box info">
-        <div>
-            <div class="label">Active Tasks</div>
-            <div class="value">{{ stats.active_packages }}</div>
-            <div class="sublabel">in progress</div>
-        </div>
-        <i class="bi bi-play-circle icon"></i>
-    </div>
-    
-    <div class="stat-box primary">
-        <div>
-            <div class="label">Need Approval</div>
-            <div class="value">{{ stats.pending_approval }}</div>
-            <div class="sublabel">tasks to review</div>
-        </div>
-        <i class="bi bi-check-circle icon"></i>
-    </div>
-    
-    <div class="stat-box success">
-        <div>
-            <div class="label">Completed Today</div>
-            <div class="value">{{ stats.completed_today }}</div>
-            <div class="sublabel">{{ stats.total_points_today }} points</div>
-        </div>
-        <i class="bi bi-trophy icon"></i>
     </div>
 </div>
 
@@ -308,9 +770,11 @@
                 <div class="package-card">
                     <div class="d-flex justify-content-between mb-2">
                         <div>
-                            <h6 class="mb-1"><i class="bi bi-box"></i> {{ package.package_id }}</h6>
+                            <h6 class="mb-1" style="font-weight: 600; color: var(--corporate-dark);">
+                                <i class="bi bi-box"></i> {{ package.package_id }}
+                            </h6>
                             <small class="text-muted">
-                                <i class="bi bi-person"></i> {{ package.cat.owner.name }} |
+                                <i class="bi bi-person"></i> {{ package.cat.owner.name }} •
                                 <i class="bi bi-heart-fill text-danger"></i> {{ package.cat.name }}
                             </small>
                         </div>
@@ -318,7 +782,7 @@
                     </div>
                     
                     <div class="mb-2">
-                        <small><strong>{{ package.tasks.count }} tasks</strong></small>
+                        <small style="color: var(--corporate-secondary);"><strong>{{ package.tasks.count }}</strong> tasks</small>
                     </div>
                     
                     <a href="/dashboard/packages/{{ package.package_id }}/assign/" class="btn btn-assign btn-sm">
@@ -348,9 +812,9 @@
                 <div class="package-card">
                     <div class="d-flex justify-content-between mb-2">
                         <div style="flex: 1;">
-                            <h6 class="mb-1">{{ task.task_type.name }}</h6>
+                            <h6 class="mb-1" style="font-weight: 600; color: var(--corporate-dark);">{{ task.task_type.name }}</h6>
                             <small class="text-muted">
-                                <i class="bi bi-person"></i> {{ task.assigned_staff.username }} |
+                                <i class="bi bi-person"></i> {{ task.assigned_staff.username }} •
                                 <i class="bi bi-heart-fill text-danger"></i> {{ task.package.cat.name }}
                             </small>
                         </div>
@@ -374,14 +838,14 @@
             {% else %}
                 <div class="empty-state">
                     <i class="bi bi-check-all"></i>
-                    <p>No tasks pending</p>
+                    <p>No tasks pending approval</p>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- IMPROVED STAFF AVAILABILITY -->
+<!-- STAFF AVAILABILITY -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="modern-card">
@@ -397,9 +861,7 @@
                 {% for staff in staff_members %}
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="staff-card {% if staff.pending_tasks > 5 %}busy{% endif %}">
-                        <!-- STAFF INFO WITH PROFILE PICTURE -->
                         <div class="staff-info">
-                            <!-- Profile Picture or Initials -->
                             {% if staff.profile_picture_url %}
                                 <img src="{{ staff.profile_picture_url }}" alt="{{ staff.get_full_name }}" class="staff-avatar">
                             {% else %}
@@ -416,7 +878,6 @@
                             </span>
                         </div>
                         
-                        <!-- IMPROVED STATS GRID -->
                         <div class="staff-stats">
                             <div class="stat-item">
                                 <span class="number">{{ staff.total_tasks_count }}</span>
@@ -455,11 +916,11 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="reject">
                 <div class="modal-body">
-                    <textarea class="form-control" name="rejection_reason" rows="3" placeholder="Reason..." required></textarea>
+                    <textarea class="form-control" name="rejection_reason" rows="3" placeholder="Reason for rejection..." required></textarea>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">Reject</button>
+                    <button type="submit" class="btn btn-danger">Reject Task</button>
                 </div>
             </form>
         </div>
@@ -467,6 +928,25 @@
 </div>
 
 <script>
+// Animate circular progress on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const circles = document.querySelectorAll('.circular-progress-container');
+    
+    circles.forEach(container => {
+        const progress = parseFloat(container.dataset.progress) || 0;
+        const progressCircle = container.querySelector('.progress-ring-circle');
+        
+        if (progressCircle) {
+            const circumference = 2 * Math.PI * 60; // 377 for r=60
+            const offset = circumference - (Math.min(progress, 100) / 100) * circumference;
+            
+            setTimeout(() => {
+                progressCircle.style.strokeDashoffset = offset;
+            }, 300);
+        }
+    });
+});
+
 function showReject(taskId) {
     document.getElementById('rejectForm').action = `/dashboard/tasks/${taskId}/approve/`;
     new bootstrap.Modal(document.getElementById('rejectModal')).show();

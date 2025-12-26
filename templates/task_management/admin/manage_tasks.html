@@ -11,129 +11,348 @@
 
 {% block extra_css %}
 <style>
-    .manage-tasks-layout {
-        display: flex;
-        gap: 20px;
-        min-height: 600px;
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
     }
-    
-    .groups-sidebar {
-        width: 30%;
+
+    .page-header {
+        margin-bottom: 25px;
+        padding: 20px;
         background: white;
         border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .types-main {
-        width: 70%;
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .group-item {
-        border: 2px solid #e9ecef;
-        border-radius: 6px;
-        padding: 15px;
-        margin-bottom: 10px;
-        transition: all 0.2s;
-        cursor: pointer;
-    }
-    
-    .group-item:hover {
-        border-color: #007bff;
-        background: #f8f9fa;
-    }
-    
-    .group-item.selected {
-        border-color: #007bff;
-        background: #e7f3ff;
-    }
-    
-    .group-header {
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 8px;
     }
-    
-    .group-name {
+
+    .page-header p {
+        margin: 0;
+        color: var(--corporate-secondary);
+        font-size: 0.9rem;
         font-weight: 600;
-        font-size: 16px;
-        outline: none;
-        border: 1px dashed transparent;
-        padding: 2px 4px;
-        border-radius: 3px;
-        flex: 1;
     }
-    
-    .group-name:hover, .group-name:focus {
-        border-color: #007bff;
+
+    /* Search Bar Container */
+    .search-container {
         background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
     }
-    
-    .group-desc {
-        color: #6c757d;
-        font-size: 13px;
-        outline: none;
-        border: 1px dashed transparent;
-        padding: 2px 4px;
-        border-radius: 3px;
-    }
-    
-    .group-desc:hover, .group-desc:focus {
-        border-color: #007bff;
-        background: white;
-    }
-    
-    .group-actions {
-        display: flex;
-        gap: 5px;
-        margin-top: 10px;
-    }
-    
-    .btn-icon {
-        padding: 4px 8px;
-        font-size: 12px;
-        border-radius: 4px;
-    }
-    
-    .editable-cell {
-        outline: none;
-        border: 1px dashed transparent;
-        padding: 4px;
-        border-radius: 3px;
+
+    .search-container input {
+        width: 100%;
+        padding: 14px 20px 14px 45px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 15px center;
         transition: all 0.2s;
     }
-    
-    .editable-cell:hover, .editable-cell:focus {
-        border-color: #007bff;
-        background: #f8f9fa;
+
+    .search-container input:focus {
+        outline: none;
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
-    
+
+    .search-container input::placeholder {
+        color: var(--corporate-secondary);
+        opacity: 0.6;
+    }
+
+    /* Tab Navigation */
+    .tabs-container {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        padding: 20px;
+    }
+
+    .tabs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .tabs-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tabs-header h5 i {
+        color: var(--corporate-accent);
+    }
+
+    .tabs-count {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--corporate-secondary);
+        background: var(--corporate-light);
+        padding: 4px 10px;
+        border-radius: 12px;
+    }
+
+    .tabs-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px;
+    }
+
+    .tab-item {
+        position: relative;
+        padding: 15px 12px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--corporate-dark);
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        opacity: 1;
+        transform: scale(1);
+        min-height: 52px;
+    }
+
+    .tab-item.hidden {
+        opacity: 0;
+        transform: scale(0.95);
+        pointer-events: none;
+    }
+
+    .tab-item.all-types {
+        background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        border-color: var(--corporate-secondary);
+    }
+
+    .tab-item.all-types:hover {
+        border-color: var(--corporate-dark);
+    }
+
+    .tab-item.all-types.active {
+        border-color: var(--corporate-dark);
+        background: linear-gradient(135deg, rgba(71, 85, 105, 0.05) 0%, rgba(71, 85, 105, 0.02) 100%);
+    }
+
+    .tab-item:hover {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        transform: translateY(-1px);
+    }
+
+    .tab-item.active {
+        border-color: var(--corporate-primary);
+        border-width: 3px;
+        border-bottom-width: 4px;
+        background: rgba(30, 58, 138, 0.03);
+        box-shadow: 0 3px 8px rgba(30, 58, 138, 0.15);
+    }
+
+    .tab-label {
+        flex: 1;
+        word-break: break-word;
+        line-height: 1.4;
+        padding-top: 2px;
+    }
+
+    .tab-badge {
+        background: var(--corporate-secondary);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 50%;
+        font-size: 0.75rem;
+        font-weight: 700;
+        min-width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .tab-item.active .tab-badge {
+        background: var(--corporate-primary);
+    }
+
+    .tab-actions {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+
+    .tab-btn {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        transition: all 0.2s;
+    }
+
+    .tab-btn:hover {
+        background: var(--corporate-light);
+        border-color: currentColor;
+    }
+
+    .tab-btn.edit {
+        color: var(--corporate-primary);
+    }
+
+    .tab-btn.edit:hover {
+        background: rgba(30, 58, 138, 0.1);
+    }
+
+    .tab-btn.delete {
+        color: var(--corporate-danger);
+    }
+
+    .tab-btn.delete:hover {
+        background: rgba(220, 38, 38, 0.1);
+    }
+
+    /* Content Area */
+    .content-card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .content-header {
+        padding: 20px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--corporate-light);
+    }
+
+    .content-header h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .content-header h5 i {
+        color: var(--corporate-accent);
+    }
+
+    .table-corporate {
+        margin: 0;
+    }
+
+    .table-corporate thead th {
+        background: var(--corporate-light);
+        color: var(--corporate-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 15px 12px;
+    }
+
+    .table-corporate tbody td {
+        padding: 15px 12px;
+        vertical-align: middle;
+        color: var(--corporate-secondary);
+        font-size: 0.9rem;
+        font-weight: 500;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .table-corporate tbody tr:hover {
+        background: var(--corporate-light);
+    }
+
+    .table-corporate tbody td strong {
+        color: var(--corporate-dark);
+        font-weight: 600;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-usage {
+        background: var(--corporate-secondary);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
+    .btn-icon {
+        padding: 5px 10px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+        margin-right: 3px;
+        font-weight: 600;
+    }
+
     .advanced-settings {
-        background: #f8f9fa;
-        padding: 15px;
+        background: var(--corporate-light);
+        padding: 20px;
         border-radius: 6px;
         margin-top: 10px;
+        border: 1px solid #e2e8f0;
     }
     
     .advanced-settings label {
         display: inline-block;
         margin-right: 15px;
-        font-size: 13px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--corporate-dark);
     }
-    
-    .badge-usage {
-        background: #6c757d;
-        color: white;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 11px;
-    }
-    
+
     .modal {
         display: none;
         position: fixed;
@@ -159,6 +378,13 @@
         width: 90%;
         max-height: 80vh;
         overflow-y: auto;
+        border: 1px solid #e2e8f0;
+    }
+
+    .modal-content h4 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
     }
     
     .form-group {
@@ -169,13 +395,34 @@
         display: block;
         margin-bottom: 5px;
         font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--corporate-dark);
     }
     
     .form-control {
         width: 100%;
         padding: 8px 12px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.9rem;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--corporate-accent);
+    }
+
+    .form-select {
+        padding: 6px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--corporate-accent);
     }
     
     .toast {
@@ -189,6 +436,7 @@
         z-index: 99999;
         display: none;
         min-width: 250px;
+        border: 1px solid #e2e8f0;
     }
     
     .toast.show {
@@ -202,11 +450,74 @@
     }
     
     .toast.success {
-        border-left: 4px solid #28a745;
+        border-left: 4px solid var(--corporate-success);
     }
     
     .toast.error {
-        border-left: 4px solid #dc3545;
+        border-left: 4px solid var(--corporate-danger);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--corporate-secondary);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        opacity: 0.2;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--corporate-success);
+        border-color: var(--corporate-success);
+    }
+
+    @media (max-width: 1200px) {
+        .tabs-nav {
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .tabs-nav {
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .tab-item {
+            padding: 12px 10px;
+            font-size: 0.85rem;
+            min-height: 48px;
+        }
+
+        .tab-badge {
+            min-width: 22px;
+            height: 22px;
+            font-size: 0.7rem;
+        }
+
+        .tab-btn {
+            width: 26px;
+            height: 26px;
+            font-size: 0.75rem;
+        }
+
+        .tab-label {
+            font-size: 0.85rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .tabs-nav {
+            grid-template-columns: 1fr;
+        }
+
+        .tab-item {
+            padding: 14px 12px;
+            min-height: auto;
+        }
     }
 </style>
 {% endblock %}
@@ -220,231 +531,246 @@
         <p id="toast-message" class="mb-0 mt-1"></p>
     </div>
     
-    <!-- Header Actions -->
-    <div class="row mb-4">
-        <div class="col-md-12 d-flex justify-content-between align-items-center">
-            <div>
-                <p class="text-muted mb-0">
-                    <i class="bi bi-info-circle"></i> 
-                    Click any field to edit inline. Changes save automatically.
-                </p>
-            </div>
-            <div>
-                <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Dashboard
-                </a>
-            </div>
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <p>
+                <i class="bi bi-info-circle"></i> 
+                Manage your task types and groups. Click Edit to modify entries.
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
         </div>
     </div>
+
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" 
+               id="globalSearch" 
+               class="form-control" 
+               placeholder="Search task types or groups..."
+               onkeyup="globalFilter()">
+    </div>
     
-    <!-- Main Layout -->
-    <div class="manage-tasks-layout">
+    <!-- Task Groups Tabs -->
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <h5>
+                <i class="bi bi-folder"></i> Task Groups
+                <span class="tabs-count">{{ groups|length }} group{{ groups|length|pluralize }}</span>
+            </h5>
+            <button class="btn btn-sm btn-primary" onclick="showAddGroupModal()">
+                <i class="bi bi-plus"></i> Add Group
+            </button>
+        </div>
         
-        <!-- GROUPS SIDEBAR -->
-        <div class="groups-sidebar">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0"><i class="bi bi-folder"></i> Task Groups</h5>
-                <button class="btn btn-sm btn-primary" onclick="showAddGroupModal()">
-                    <i class="bi bi-plus"></i> Add
-                </button>
-            </div>
-            
-            <!-- All Groups Option -->
-            <div class="group-item {% if selected_group == 'all' %}selected{% endif %}" 
+        <div class="tabs-nav">
+            <!-- All Task Types Tab -->
+            <div class="tab-item all-types {% if selected_group == 'all' %}active{% endif %}" 
                  onclick="filterByGroup('all')">
-                <div class="group-header">
-                    <span class="fw-bold">📋 All Task Types</span>
-                </div>
-                <small class="text-muted">View all</small>
+                <span class="tab-label">📋 All Task Types</span>
             </div>
             
-            <!-- Groups List -->
+            <!-- Dynamic Group Tabs -->
             {% for group in groups %}
-            <div class="group-item {% if selected_group == group.group_id %}selected{% endif %}" 
+            <div class="tab-item {% if selected_group == group.group_id %}active{% endif %}" 
                  data-group-id="{{ group.group_id }}"
                  onclick="filterByGroup('{{ group.group_id }}')">
-                
-                <div class="group-header">
-                    <span class="group-name" 
-                          contenteditable="true" 
-                          onclick="event.stopPropagation();"
-                          onblur="updateGroup('{{ group.group_id }}', 'name', this.innerText)"
-                          onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ group.name }}</span>
-                    <span class="badge bg-secondary">{{ group.task_count }}</span>
-                </div>
-                
-                <div class="group-desc" 
-                     contenteditable="true"
-                     onclick="event.stopPropagation();"
-                     onblur="updateGroup('{{ group.group_id }}', 'description', this.innerText)"
-                     onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ group.description|default:"No description" }}</div>
-                
-                <div class="group-actions" onclick="event.stopPropagation();">
-                    <button class="btn btn-sm btn-outline-secondary btn-icon" 
-                            onclick="reorderGroup('{{ group.group_id }}', 'up')" 
-                            title="Move Up">▲</button>
-                    <button class="btn btn-sm btn-outline-secondary btn-icon" 
-                            onclick="reorderGroup('{{ group.group_id }}', 'down')" 
-                            title="Move Down">▼</button>
-                    <button class="btn btn-sm btn-outline-danger btn-icon" 
-                            onclick="deleteGroup('{{ group.group_id }}', '{{ group.name }}')" 
-                            title="Delete">🗑</button>
+                <span class="tab-label">{{ group.name }}</span>
+                <span class="tab-badge">{{ group.task_count }}</span>
+                <div class="tab-actions" onclick="event.stopPropagation();">
+                    <button class="tab-btn edit" 
+                            onclick="editGroup('{{ group.group_id }}', '{{ group.name }}', '{{ group.description|default:"" }}')"
+                            title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="tab-btn delete" 
+                            onclick="deleteGroup('{{ group.group_id }}', '{{ group.name }}')"
+                            title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
             </div>
             {% endfor %}
         </div>
+    </div>
+    
+    <!-- Task Types Content -->
+    <div class="content-card">
+        <div class="content-header">
+            <h5>
+                <i class="bi bi-list-check"></i> 
+                Task Types
+                {% if selected_group != 'all' %}
+                - {{ selected_group_name }}
+                {% endif %}
+            </h5>
+            <button class="btn btn-sm btn-success" onclick="showAddTypeModal()">
+                <i class="bi bi-plus-circle"></i> Add Task Type
+            </button>
+        </div>
         
-        <!-- TASK TYPES MAIN AREA -->
-        <div class="types-main">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">
-                    <i class="bi bi-list-check"></i> 
-                    Task Types
-                    {% if selected_group != 'all' %}
-                    - {{ selected_group_name }}
-                    {% endif %}
-                </h5>
-                <button class="btn btn-sm btn-success" onclick="showAddTypeModal()">
-                    <i class="bi bi-plus-circle"></i> Add Task Type
-                </button>
-            </div>
-            
-            {% if task_types %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th width="25%">Name</th>
-                            <th width="15%">Group</th>
-                            <th width="10%">Points</th>
-                            <th width="10%">Price</th>
-                            <th width="10%">Status</th>
-                            <th width="15%">Usage</th>
-                            <th width="15%">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for type in task_types %}
-                        <tr data-type-id="{{ type.task_type_id }}">
-                            <td>
-                                <span class="editable-cell" 
-                                      contenteditable="true"
-                                      onblur="updateType('{{ type.task_type_id }}', 'name', this.innerText)"
-                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.name }}</span>
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm" 
-                                        onchange="updateType('{{ type.task_type_id }}', 'group', this.value)">
-                                    {% for g in groups %}
-                                    <option value="{{ g.group_id }}" {% if g.group_id == type.group.group_id %}selected{% endif %}>
-                                        {{ g.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            <td>
-                                <span class="editable-cell" 
-                                      contenteditable="true"
-                                      onblur="updateType('{{ type.task_type_id }}', 'points', this.innerText)"
-                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.points }}</span>
-                            </td>
-                            <td>
-                                <span class="editable-cell" 
-                                      contenteditable="true"
-                                      onblur="updateType('{{ type.task_type_id }}', 'price', this.innerText)"
-                                      onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}">{{ type.price|default:"-" }}</span>
-                            </td>
-                            <td>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" 
-                                           type="checkbox" 
-                                           {% if type.is_active %}checked{% endif %}
-                                           onchange="updateType('{{ type.task_type_id }}', 'is_active', this.checked)">
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge-usage">Used in {{ type.usage_count }} task(s)</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-secondary" 
-                                        onclick="reorderType('{{ type.task_type_id }}', 'up')" 
-                                        title="Move Up">▲</button>
-                                <button class="btn btn-sm btn-outline-secondary" 
-                                        onclick="reorderType('{{ type.task_type_id }}', 'down')" 
-                                        title="Move Down">▼</button>
-                                <button class="btn btn-sm btn-outline-primary" 
-                                        onclick="toggleAdvanced('{{ type.task_type_id }}')"
-                                        title="Advanced Settings">⚙️</button>
-                                <button class="btn btn-sm btn-outline-danger" 
-                                        onclick="deleteType('{{ type.task_type_id }}', '{{ type.name }}', {{ type.usage_count }})"
-                                        title="Delete">🗑</button>
-                            </td>
-                        </tr>
-                        <!-- Advanced Settings Row -->
-                        <tr id="advanced-{{ type.task_type_id }}" style="display:none;">
-                            <td colspan="7">
-                                <div class="advanced-settings">
-                                    <h6 class="mb-3"><i class="bi bi-gear"></i> Advanced Settings</h6>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <label>
-                                                <input type="checkbox" 
-                                                       {% if type.requires_evidence %}checked{% endif %}
-                                                       onchange="updateType('{{ type.task_type_id }}', 'requires_evidence', this.checked)">
+        {% if task_types %}
+        <div class="table-responsive">
+            <table class="table table-corporate">
+                <thead>
+                    <tr>
+                        <th width="30%">Name</th>
+                        <th width="18%">Group</th>
+                        <th width="10%">Points</th>
+                        <th width="10%">Price</th>
+                        <th width="10%">Status</th>
+                        <th width="12%">Usage</th>
+                        <th width="10%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="taskTypesTable">
+                    {% for type in task_types %}
+                    <tr data-type-id="{{ type.task_type_id }}" data-task-name="{{ type.name|lower }}" data-group-name="{{ type.group.name|lower }}">
+                        <td>
+                            <strong id="typename-{{ type.task_type_id }}">{{ type.name }}</strong>
+                        </td>
+                        <td id="typegroup-{{ type.task_type_id }}">
+                            {{ type.group.name }}
+                        </td>
+                        <td>
+                            <strong id="typepoints-{{ type.task_type_id }}">{{ type.points }}</strong>
+                        </td>
+                        <td id="typeprice-{{ type.task_type_id }}">
+                            {{ type.price|default:"-" }}
+                        </td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="active-{{ type.task_type_id }}"
+                                       {% if type.is_active %}checked{% endif %}
+                                       onchange="updateType('{{ type.task_type_id }}', 'is_active', this.checked)">
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge-usage">{{ type.usage_count }} task(s)</span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary btn-icon" 
+                                    onclick="editType('{{ type.task_type_id }}')"
+                                    title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-info btn-icon" 
+                                    onclick="toggleAdvanced('{{ type.task_type_id }}')"
+                                    title="Advanced Settings">
+                                <i class="bi bi-gear"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger btn-icon" 
+                                    onclick="deleteType('{{ type.task_type_id }}', '{{ type.name }}', {{ type.usage_count }})"
+                                    title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Advanced Settings Row -->
+                    <tr id="advanced-{{ type.task_type_id }}" style="display:none;">
+                        <td colspan="7">
+                            <div class="advanced-settings">
+                                <h6 class="mb-3" style="font-weight: 700; color: var(--corporate-dark);">
+                                    <i class="bi bi-gear"></i> Advanced Settings
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input"
+                                                   id="evidence-{{ type.task_type_id }}"
+                                                   {% if type.requires_evidence %}checked{% endif %}
+                                                   onchange="updateType('{{ type.task_type_id }}', 'requires_evidence', this.checked)">
+                                            <label class="form-check-label" for="evidence-{{ type.task_type_id }}">
                                                 Requires Evidence
                                             </label>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label>
-                                                <input type="checkbox" 
-                                                       {% if type.requires_approval %}checked{% endif %}
-                                                       onchange="updateType('{{ type.task_type_id }}', 'requires_approval', this.checked)">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input"
+                                                   id="approval-{{ type.task_type_id }}"
+                                                   {% if type.requires_approval %}checked{% endif %}
+                                                   onchange="updateType('{{ type.task_type_id }}', 'requires_approval', this.checked)">
+                                            <label class="form-check-label" for="approval-{{ type.task_type_id }}">
                                                 Requires Approval
                                             </label>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label>
-                                                <input type="checkbox" 
-                                                       {% if type.auto_complete %}checked{% endif %}
-                                                       onchange="updateType('{{ type.task_type_id }}', 'auto_complete', this.checked)">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                   class="form-check-input"
+                                                   id="autocomplete-{{ type.task_type_id }}"
+                                                   {% if type.auto_complete %}checked{% endif %}
+                                                   onchange="updateType('{{ type.task_type_id }}', 'auto_complete', this.checked)">
+                                            <label class="form-check-label" for="autocomplete-{{ type.task_type_id }}">
                                                 Auto Complete
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-12">
-                                            <label>Description:</label>
-                                            <textarea class="form-control form-control-sm" 
-                                                      rows="2"
-                                                      onblur="updateType('{{ type.task_type_id }}', 'description', this.value)">{{ type.description }}</textarea>
-                                        </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-md-12">
+                                        <label style="font-weight: 600;">Description:</label>
+                                        <textarea class="form-control" 
+                                                  rows="2"
+                                                  onblur="updateType('{{ type.task_type_id }}', 'description', this.value)">{{ type.description }}</textarea>
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-inbox display-1 text-muted"></i>
-                <p class="text-muted mt-3">No task types found</p>
-                <button class="btn btn-primary" onclick="showAddTypeModal()">
-                    <i class="bi bi-plus"></i> Add Your First Task Type
-                </button>
-            </div>
-            {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-        
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No task types found</p>
+            <button class="btn btn-primary mt-2" onclick="showAddTypeModal()">
+                <i class="bi bi-plus"></i> Add Your First Task Type
+            </button>
+        </div>
+        {% endif %}
     </div>
     
+</div>
+
+<!-- Edit Group Modal -->
+<div id="editGroupModal" class="modal">
+    <div class="modal-content">
+        <h4>Edit Task Group</h4>
+        <form id="editGroupForm" onsubmit="submitEditGroup(event)">
+            <input type="hidden" id="edit_group_id">
+            <div class="form-group">
+                <label>Group Name <span class="text-danger">*</span></label>
+                <input type="text" id="edit_group_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="edit_group_desc" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editGroupModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Add Group Modal -->
 <div id="addGroupModal" class="modal">
     <div class="modal-content">
-        <h4 class="mb-4">Add New Task Group</h4>
+        <h4>Add New Task Group</h4>
         <form id="addGroupForm" onsubmit="submitAddGroup(event)">
             <div class="form-group">
                 <label>Group Name <span class="text-danger">*</span></label>
@@ -462,10 +788,50 @@
     </div>
 </div>
 
+<!-- Edit Task Type Modal -->
+<div id="editTypeModal" class="modal">
+    <div class="modal-content">
+        <h4>Edit Task Type</h4>
+        <form id="editTypeForm" onsubmit="submitEditType(event)">
+            <input type="hidden" id="edit_type_id">
+            <div class="form-group">
+                <label>Task Name <span class="text-danger">*</span></label>
+                <input type="text" id="edit_type_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label>Group <span class="text-danger">*</span></label>
+                <select id="edit_type_group" class="form-control" required>
+                    {% for g in groups %}
+                    <option value="{{ g.group_id }}">{{ g.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Points <span class="text-danger">*</span></label>
+                        <input type="number" id="edit_type_points" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label>Price (RM)</label>
+                        <input type="number" step="0.01" id="edit_type_price" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('editTypeModal')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Add Task Type Modal -->
 <div id="addTypeModal" class="modal">
     <div class="modal-content">
-        <h4 class="mb-4">Add New Task Type</h4>
+        <h4>Add New Task Type</h4>
         <form id="addTypeForm" onsubmit="submitAddType(event)">
             <div class="form-group">
                 <label>Task Name <span class="text-danger">*</span></label>
@@ -562,25 +928,75 @@ function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
 }
 
+// Global Filter (searches both task types and groups)
+function globalFilter() {
+    const searchInput = document.getElementById('globalSearch');
+    const searchTerm = searchInput.value.toLowerCase();
+    const rows = document.querySelectorAll('#taskTypesTable tr[data-type-id]');
+    const tabs = document.querySelectorAll('.tab-item[data-group-id]');
+    
+    // Filter task type rows
+    rows.forEach(row => {
+        const taskName = row.getAttribute('data-task-name');
+        const groupName = row.getAttribute('data-group-name');
+        
+        if (taskName.includes(searchTerm) || groupName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+            // Also hide advanced settings
+            const typeId = row.getAttribute('data-type-id');
+            const advancedRow = document.getElementById(`advanced-${typeId}`);
+            if (advancedRow) {
+                advancedRow.style.display = 'none';
+            }
+        }
+    });
+    
+    // Filter group tabs with smooth transition
+    tabs.forEach(tab => {
+        const tabText = tab.textContent.toLowerCase();
+        if (tabText.includes(searchTerm)) {
+            tab.classList.remove('hidden');
+        } else {
+            tab.classList.add('hidden');
+        }
+    });
+}
+
 // Filter by Group
 function filterByGroup(groupId) {
     window.location.href = `?group=${groupId}`;
 }
 
-// GROUP OPERATIONS
-function updateGroup(groupId, field, value) {
+// Edit Group
+function editGroup(groupId, name, description) {
+    document.getElementById('edit_group_id').value = groupId;
+    document.getElementById('edit_group_name').value = name;
+    document.getElementById('edit_group_desc').value = description;
+    document.getElementById('editGroupModal').classList.add('show');
+}
+
+function submitEditGroup(event) {
+    event.preventDefault();
+    const groupId = document.getElementById('edit_group_id').value;
+    const name = document.getElementById('edit_group_name').value;
+    const description = document.getElementById('edit_group_desc').value;
+    
     fetch(`{% url 'task_management:ajax_update_task_group' 'GROUPID' %}`.replace('GROUPID', groupId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrftoken
         },
-        body: JSON.stringify({ [field]: value })
+        body: JSON.stringify({ name: name, description: description })
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showToast('Group updated');
+            showToast('Group updated successfully');
+            closeModal('editGroupModal');
+            setTimeout(() => location.reload(), 1000);
         } else {
             showToast(data.error, 'error');
         }
@@ -588,6 +1004,48 @@ function updateGroup(groupId, field, value) {
     .catch(err => showToast('Network error', 'error'));
 }
 
+// Edit Task Type
+function editType(typeId) {
+    const name = document.getElementById(`typename-${typeId}`).textContent;
+    const points = document.getElementById(`typepoints-${typeId}`).textContent;
+    const price = document.getElementById(`typeprice-${typeId}`).textContent;
+    
+    document.getElementById('edit_type_id').value = typeId;
+    document.getElementById('edit_type_name').value = name;
+    document.getElementById('edit_type_points').value = points;
+    document.getElementById('edit_type_price').value = price === '-' ? '' : price;
+    document.getElementById('editTypeModal').classList.add('show');
+}
+
+function submitEditType(event) {
+    event.preventDefault();
+    const typeId = document.getElementById('edit_type_id').value;
+    const name = document.getElementById('edit_type_name').value;
+    const group = document.getElementById('edit_type_group').value;
+    const points = document.getElementById('edit_type_points').value;
+    const price = document.getElementById('edit_type_price').value;
+    
+    fetch(`{% url 'task_management:ajax_update_task_type' 'TYPEID' %}`.replace('TYPEID', typeId), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ name: name, group: group, points: points, price: price })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Task type updated successfully');
+            closeModal('editTypeModal');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showToast(data.error, 'error');
+        }
+    });
+}
+
+// GROUP OPERATIONS
 function reorderGroup(groupId, direction) {
     fetch(`{% url 'task_management:ajax_reorder_group' 'GROUPID' %}`.replace('GROUPID', groupId), {
         method: 'POST',
@@ -671,23 +1129,6 @@ function updateType(typeId, field, value) {
     });
 }
 
-function reorderType(typeId, direction) {
-    fetch(`{% url 'task_management:ajax_reorder_task_type' 'TYPEID' %}`.replace('TYPEID', typeId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({ direction: direction })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        }
-    });
-}
-
 function deleteType(typeId, typeName, usageCount) {
     if (usageCount > 0) {
         alert(`Cannot delete "${typeName}":\nThis task type is used in ${usageCount} task(s).\n\nTo delete it, first reassign or remove all tasks using this type.`);
@@ -725,8 +1166,6 @@ function submitAddType(event) {
     const data = Object.fromEntries(formData);
     data.is_active = formData.has('is_active');
     
-    console.log('Submitting task type:', data);
-    
     fetch('{% url "task_management:ajax_create_task_type" %}', {
         method: 'POST',
         headers: {
@@ -735,12 +1174,8 @@ function submitAddType(event) {
         },
         body: JSON.stringify(data)
     })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Response data:', data);
         if (data.success) {
             showToast('Task type created successfully');
             closeModal('addTypeModal');
@@ -750,7 +1185,6 @@ function submitAddType(event) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
         showToast('Network error: ' + error.message, 'error');
     });
 }
