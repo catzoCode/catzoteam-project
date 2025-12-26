@@ -274,6 +274,27 @@ class TaskPackage(models.Model):
         related_name='created_packages'
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # ADD THIS NEW FIELD
+    branch = models.CharField(
+        max_length=50,
+        choices=[
+            ('hq', 'HQ'),
+            ('damansara_perdana', 'Damansara Perdana'),
+            ('wangsa_maju', 'Wangsa Maju'),
+            ('shah_alam', 'Shah Alam'),
+            ('bangi', 'Bangi'),
+            ('cheng_melaka', 'Cheng, Melaka'),
+            ('johor_bahru', 'Johor Bahru'),
+            ('seremban', 'Seremban 2'),
+            ('seri_kembangan', 'Seri Kembangan'),
+            ('usj21', 'USJ 21'),
+            ('ipoh', 'Ipoh'),
+        ],
+        default='seri_kembangan',
+        help_text='Branch where this package will be serviced'
+    )
+    
     total_points = models.IntegerField(default=0)
     notes = models.TextField(blank=True)
     
