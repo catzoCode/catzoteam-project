@@ -158,10 +158,9 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# WhiteNoise settings for serving static files
+# WhiteNoise settings - DON'T use compression to avoid errors
 WHITENOISE_MANIFEST_STRICT = False
 WHITENOISE_USE_FINDERS = True
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ============================================
 # MEDIA FILES (User uploads - use Cloudinary)
@@ -171,6 +170,18 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Use Cloudinary for media files only
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# ============================================
+# STORAGES (Django 5.x)
+# ============================================
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 # ============================================
 # CRISPY FORMS
