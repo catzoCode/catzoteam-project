@@ -60,7 +60,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # serve static in production
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -152,31 +152,25 @@ cloudinary.config(
 )
 
 # ============================================
-# STATIC & MEDIA FILES STORAGE
+# STATIC FILES (CSS, JS, Images from /static/)
 # ============================================
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 
-# Media files (User uploads)
+# WhiteNoise settings for serving static files
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_USE_FINDERS = True
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ============================================
+# MEDIA FILES (User uploads - use Cloudinary)
+# ============================================
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Storage backends configuration
-STORAGES = {
-    # Use Cloudinary for user-uploaded media files
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
-    },
-    # Use local/WhiteNoise for static files
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
-# Prevent 500 if a referenced static file is missing from manifest
-WHITENOISE_MANIFEST_STRICT = False
+# Use Cloudinary for media files only
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # ============================================
 # CRISPY FORMS
@@ -207,7 +201,7 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="catzo.code@gmail.com")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 DEFAULT_FROM_EMAIL = "CatzoTeam <catzo.code@gmail.com>"
 
-# Gmail Booking Automation (for receiving emails)
+# Gmail Booking Automation
 GMAIL_USER = config('GMAIL_USER', default='')
 GMAIL_APP_PASSWORD = config('GMAIL_APP_PASSWORD', default='')
 
