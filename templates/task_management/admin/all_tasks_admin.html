@@ -3,45 +3,386 @@
 
 {% block title %}All Tasks Monitor - CatzoTeam Admin{% endblock %}
 
-{% block page_title %}All Tasks Monitor{% endblock %}
-
-{% block breadcrumbs %}
-<li class="breadcrumb-item active">All Tasks Monitor</li>
-{% endblock %}
-
 {% block extra_css %}
 <style>
-    /* NUCLEAR OPTION - Kill everything */
-    * {
-        transition: none !important;
-        animation: none !important;
-        transform: none !important;
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
     }
 
-    *:hover {
-        transition: none !important;
-        animation: none !important;
+    /* Page Header */
+    .monitor-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    /* Basic card styling */
-    .card {
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    .monitor-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
     }
 
-    /* Table hover - only when modal is NOT open */
-    body:not(.modal-open) .table-hover tbody tr:hover {
-        background-color: #f8f9fa !important;
+    .monitor-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
     }
 
-    /* Kill table when modal is open */
-    body.modal-open table,
-    body.modal-open .table-hover tbody tr,
-    body.modal-open .table-hover tbody tr:hover {
-        pointer-events: none !important;
-        background-color: transparent !important;
+    /* Status Stats Grid */
+    .status-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
     }
 
-    /* Modal styles */
+    .status-stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .status-stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .status-stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+    }
+
+    .status-stat-card.pending::before { background: #6b7280; }
+    .status-stat-card.assigned::before { background: var(--corporate-accent); }
+    .status-stat-card.in-progress::before { background: var(--corporate-warning); }
+    .status-stat-card.submitted::before { background: var(--corporate-info); }
+    .status-stat-card.completed::before { background: var(--corporate-success); }
+    .status-stat-card.total::before { background: var(--corporate-dark); }
+
+    .status-label {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .status-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+    }
+
+    /* Branch Stats Card */
+    .branch-stats-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .branch-stats-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .branch-stats-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .branch-stats-header i {
+        font-size: 1.5rem;
+    }
+
+    .branch-stats-body {
+        padding: 25px;
+    }
+
+    .branch-stat-item {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 20px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .branch-stat-item:hover {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .branch-stat-name {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 12px;
+        font-size: 1rem;
+    }
+
+    .branch-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .branch-stat-label {
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .branch-stat-value {
+        font-weight: 700;
+        color: var(--corporate-dark);
+    }
+
+    .branch-progress {
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-top: 12px;
+    }
+
+    .branch-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--corporate-success) 0%, #10b981 100%);
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* Filters Card */
+    .filters-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+
+    .filters-card h5 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filters-card h5 i {
+        color: var(--corporate-accent);
+    }
+
+    .filter-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-input:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .filter-btn-apply {
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn-apply:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .filter-btn-reset {
+        background: white;
+        color: var(--corporate-secondary);
+        border: 2px solid #e2e8f0;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .filter-btn-reset:hover {
+        background: #f8fafc;
+        border-color: var(--corporate-accent);
+        color: var(--corporate-dark);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Tasks Table Card */
+    .tasks-table-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .tasks-table-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .tasks-table-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .tasks-table-header i {
+        font-size: 1.5rem;
+    }
+
+    .tasks-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .tasks-table thead {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .tasks-table thead th {
+        padding: 15px 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        border: none;
+    }
+
+    .tasks-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .tasks-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .tasks-table tbody td {
+        padding: 15px 12px;
+        vertical-align: middle;
+        font-size: 0.875rem;
+    }
+
+    /* Status Badges */
+    .task-badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+
+    .task-badge.id {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    .task-badge.points {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .task-badge.pending {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .task-badge.assigned {
+        background: #dbeafe;
+        color: #1e3a8a;
+    }
+
+    .task-badge.in-progress {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .task-badge.submitted {
+        background: #cffafe;
+        color: #164e63;
+    }
+
+    .task-badge.completed {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    /* Action Button */
+    .btn-view-task {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.8rem;
+        background: white;
+        color: var(--corporate-accent);
+        border: 2px solid var(--corporate-accent);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-view-task:hover {
+        background: var(--corporate-accent);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
@@ -49,204 +390,146 @@
         left: 0;
         width: 100%;
         height: 100%;
-        overflow: auto;
         z-index: 1050;
+        overflow-y: auto;
     }
 
     .modal.show {
-        display: block !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
     }
 
     .modal-dialog {
-        position: relative;
-        width: auto;
-        margin: 1.75rem auto;
+        width: 90%;
         max-width: 800px;
+        margin: 30px auto;
     }
 
     .modal-content {
-        position: relative;
-        background-color: #fff !important;
-        border: 1px solid rgba(0, 0, 0, 0.2);
-        border-radius: 0.3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
     }
 
-    /* Modal header - stays blue always */
     .modal-header {
-        background-color: #0d6efd !important;
-        color: white !important;
-        padding: 1rem;
-        border-bottom: 1px solid #dee2e6;
-        border-radius: 0.3rem 0.3rem 0 0;
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 25px 30px;
+        border: none;
     }
 
-    .modal-header:hover {
-        background-color: #0d6efd !important;
+    .modal-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 
-    .modal-header * {
-        color: white !important;
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 1;
     }
 
-    /* ABSOLUTE KILL for modal body - NO HOVER ANYWHERE */
     .modal-body {
-        position: relative;
-        padding: 1rem;
-        background-color: white !important;
-        pointer-events: auto !important;
+        padding: 30px;
+        background: white;
     }
 
-    /* Kill hover on EVERY element inside modal */
-    .modal-body,
-    .modal-body *,
-    .modal-body::before,
-    .modal-body::after,
-    .modal-body *::before,
-    .modal-body *::after {
-        background-color: transparent !important;
-        background: none !important;
+    .info-group {
+        margin-bottom: 20px;
     }
 
-    .modal-body:hover,
-    .modal-body *:hover,
-    .modal-body::before:hover,
-    .modal-body::after:hover,
-    .modal-body *::before:hover,
-    .modal-body *::after:hover {
-        background-color: transparent !important;
-        background: none !important;
+    .info-label {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
     }
 
-    /* Force white background on modal body container only */
-    .modal-body {
-        background: white !important;
+    .info-value {
+        color: var(--corporate-dark);
+        font-weight: 600;
+        font-size: 1rem;
     }
 
-    /* Specific elements that need their backgrounds preserved */
-    .modal-body .bg-light,
-    .modal-body .bg-light:hover {
-        background-color: #f8f9fa !important;
-        background: #f8f9fa !important;
+    .notes-box {
+        background: #f8fafc;
+        border-left: 4px solid var(--corporate-accent);
+        padding: 15px 20px;
+        border-radius: 8px;
     }
 
-    .modal-body .alert-success,
-    .modal-body .alert-success:hover,
-    .modal-body .alert-success * {
-        background-color: #d1e7dd !important;
-        background: #d1e7dd !important;
+    .alert-success-custom {
+        background: #d1fae5;
+        border-left: 4px solid var(--corporate-success);
+        padding: 15px 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0;
     }
 
-    .modal-body .alert-info,
-    .modal-body .alert-info:hover,
-    .modal-body .alert-info * {
-        background-color: #cff4fc !important;
-        background: #cff4fc !important;
+    .alert-success-custom i {
+        font-size: 1.5rem;
+        color: var(--corporate-success);
     }
 
-    .modal-body .badge {
-        background-color: var(--bs-badge-bg) !important;
-    }
-
-    .modal-body .badge:hover {
-        background-color: var(--bs-badge-bg) !important;
-    }
-
-    .modal-body .badge.bg-success,
-    .modal-body .badge.bg-success:hover {
-        background-color: #198754 !important;
-    }
-
-    /* Text elements - absolutely no background */
-    .modal-body label,
-    .modal-body label:hover,
-    .modal-body div,
-    .modal-body div:hover,
-    .modal-body p,
-    .modal-body p:hover,
-    .modal-body span,
-    .modal-body span:hover,
-    .modal-body small,
-    .modal-body small:hover {
-        background: none !important;
-        background-color: transparent !important;
-    }
-
-    /* Rows and columns - no background */
-    .modal-body .row,
-    .modal-body .row:hover,
-    .modal-body [class*="col-"],
-    .modal-body [class*="col-"]:hover {
-        background: none !important;
-        background-color: transparent !important;
-    }
-
-    /* Modal footer */
     .modal-footer {
-        padding: 1rem;
-        border-top: 1px solid #dee2e6;
-        background-color: #fff !important;
+        padding: 20px 30px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
     }
 
-    .modal-footer:hover {
-        background-color: #fff !important;
-    }
-
-    /* Backdrop */
     .modal-backdrop {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5) !important;
+        background: rgba(0, 0, 0, 0.6);
         z-index: 1040;
     }
 
-    /* Body when modal is open */
-    body.modal-open {
-        overflow: hidden;
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
     }
 
-    /* Disable main content interaction when modal is open */
-    body.modal-open .container-fluid > *:not(.modal):not(.modal-backdrop) {
-        pointer-events: none !important;
+    .empty-state i {
+        font-size: 5rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
     }
 
-    /* Buttons */
-    .btn {
-        cursor: pointer !important;
+    .empty-state p {
+        color: var(--corporate-secondary);
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0;
     }
 
-    .btn:hover {
-        opacity: 0.9;
-    }
+    /* Responsive */
+    @media (max-width: 768px) {
+        .monitor-header h1 {
+            font-size: 1.5rem;
+        }
 
-    /* Close button */
-    .btn-close-white {
-        filter: brightness(0) invert(1);
-    }
+        .status-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
 
-    /* Text selection in modal */
-    .modal-body {
-        user-select: text;
-        -webkit-user-select: text;
-    }
-
-    /* Ensure modal elements are clickable */
-    .modal.show,
-    .modal.show * {
-        pointer-events: auto !important;
-    }
-
-    /* Override any Bootstrap hover states */
-    .modal-body .row:hover,
-    .modal-body .col:hover,
-    .modal-body .col-md-6:hover,
-    .modal-body .col-md-12:hover,
-    .modal-body .mb-3:hover,
-    .modal-body .mb-0:hover {
-        background-color: transparent !important;
-        background: none !important;
+        .status-value {
+            font-size: 1.5rem;
+        }
     }
 </style>
 {% endblock %}
@@ -254,79 +537,69 @@
 {% block content %}
 <div class="container-fluid">
     
-    <!-- Header Stats -->
-    <div class="row mb-4">
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-secondary text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">Pending</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.pending }}</h2>
-                </div>
-            </div>
+    <!-- Page Header -->
+    <div class="monitor-header">
+        <h1>
+            <i class="bi bi-kanban"></i> All Tasks Monitor
+        </h1>
+        <p>Real-time monitoring of all tasks across branches</p>
+    </div>
+
+    <!-- Status Stats -->
+    <div class="status-stats-grid">
+        <div class="status-stat-card pending">
+            <div class="status-label">Pending</div>
+            <div class="status-value">{{ stats.pending }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-primary text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">Assigned</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.assigned }}</h2>
-                </div>
-            </div>
+        
+        <div class="status-stat-card assigned">
+            <div class="status-label">Assigned</div>
+            <div class="status-value">{{ stats.assigned }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-warning text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">In Progress</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.in_progress }}</h2>
-                </div>
-            </div>
+        
+        <div class="status-stat-card in-progress">
+            <div class="status-label">In Progress</div>
+            <div class="status-value">{{ stats.in_progress }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-info text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">Submitted</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.submitted }}</h2>
-                </div>
-            </div>
+        
+        <div class="status-stat-card submitted">
+            <div class="status-label">Submitted</div>
+            <div class="status-value">{{ stats.submitted }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-success text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">Completed</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.completed }}</h2>
-                </div>
-            </div>
+        
+        <div class="status-stat-card completed">
+            <div class="status-label">Completed</div>
+            <div class="status-value">{{ stats.completed }}</div>
         </div>
-        <div class="col-md-2">
-            <div class="card border-0 shadow-sm bg-dark text-white">
-                <div class="card-body text-center">
-                    <h6 class="mb-0">Total</h6>
-                    <h2 class="mb-0 mt-1">{{ stats.total }}</h2>
-                </div>
-            </div>
+        
+        <div class="status-stat-card total">
+            <div class="status-label">Total</div>
+            <div class="status-value">{{ stats.total }}</div>
         </div>
     </div>
 
     <!-- Branch Stats -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0"><i class="bi bi-building"></i> Branch Statistics</h5>
+    <div class="branch-stats-card">
+        <div class="branch-stats-header">
+            <i class="bi bi-building"></i>
+            <h5>Branch Statistics</h5>
         </div>
-        <div class="card-body">
+        <div class="branch-stats-body">
             <div class="row">
                 {% for branch_code, branch_data in branch_stats.items %}
                 <div class="col-md-4 mb-3">
-                    <div class="border rounded p-3">
-                        <h6 class="mb-2">{{ branch_data.name }}</h6>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Total:</span>
-                            <span class="fw-bold">{{ branch_data.total }}</span>
+                    <div class="branch-stat-item">
+                        <div class="branch-stat-name">{{ branch_data.name }}</div>
+                        <div class="branch-stat-row">
+                            <span class="branch-stat-label">Total Tasks:</span>
+                            <span class="branch-stat-value">{{ branch_data.total }}</span>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Completed:</span>
-                            <span class="text-success fw-bold">{{ branch_data.completed }}</span>
+                        <div class="branch-stat-row">
+                            <span class="branch-stat-label">Completed:</span>
+                            <span class="branch-stat-value" style="color: var(--corporate-success);">{{ branch_data.completed }}</span>
                         </div>
-                        <div class="progress mt-2" style="height: 8px;">
-                            <div class="progress-bar bg-success" style="width: {% if branch_data.total > 0 %}{% widthratio branch_data.completed branch_data.total 100 %}{% else %}0{% endif %}%"></div>
+                        <div class="branch-progress">
+                            <div class="branch-progress-bar" style="width: {% if branch_data.total > 0 %}{% widthratio branch_data.completed branch_data.total 100 %}{% else %}0{% endif %}%"></div>
                         </div>
                     </div>
                 </div>
@@ -336,277 +609,286 @@
     </div>
 
     <!-- Advanced Filters -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0"><i class="bi bi-funnel"></i> Advanced Filters</h5>
-        </div>
-        <div class="card-body">
-            <form method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label for="branch" class="form-label">Branch</label>
-                    <select class="form-select" id="branch" name="branch">
-                        <option value="all" {% if filters.branch == 'all' %}selected{% endif %}>All Branches</option>
-                        {% for branch_code, branch_name in branches %}
-                        <option value="{{ branch_code }}" {% if filters.branch == branch_code %}selected{% endif %}>
-                            {{ branch_name }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
-                        <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All Status</option>
-                        <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="assigned" {% if filters.status == 'assigned' %}selected{% endif %}>Assigned</option>
-                        <option value="in_progress" {% if filters.status == 'in_progress' %}selected{% endif %}>In Progress</option>
-                        <option value="submitted" {% if filters.status == 'submitted' %}selected{% endif %}>Submitted</option>
-                        <option value="completed" {% if filters.status == 'completed' %}selected{% endif %}>Completed</option>
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label for="staff" class="form-label">Staff</label>
-                    <select class="form-select" id="staff" name="staff">
-                        <option value="all" {% if filters.staff == 'all' %}selected{% endif %}>All Staff</option>
-                        {% for staff_member in all_staff %}
-                        <option value="{{ staff_member.id }}" {% if filters.staff == staff_member.id|stringformat:"s" %}selected{% endif %}>
-                            {{ staff_member.username }} - {{ staff_member.get_branch_display }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="col-md-3">
-                    <label for="date_from" class="form-label">Date From</label>
-                    <input type="date" class="form-control" id="date_from" name="date_from" value="{{ filters.date_from }}">
-                </div>
-                
-                <div class="col-md-3">
-                    <label for="date_to" class="form-label">Date To</label>
-                    <input type="date" class="form-control" id="date_to" name="date_to" value="{{ filters.date_to }}">
-                </div>
-                
-                <div class="col-md-9 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="bi bi-funnel"></i> Apply Filters
-                    </button>
-                    <a href="{% url 'task_management:admin_all_tasks_monitor' %}" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-clockwise"></i> Reset
-                    </a>
-                </div>
-            </form>
-        </div>
+    <div class="filters-card">
+        <h5><i class="bi bi-funnel"></i> Advanced Filters</h5>
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label for="branch" class="form-label fw-bold">Branch</label>
+                <select class="form-select filter-input" id="branch" name="branch">
+                    <option value="all" {% if filters.branch == 'all' %}selected{% endif %}>All Branches</option>
+                    {% for branch_code, branch_name in branches %}
+                    <option value="{{ branch_code }}" {% if filters.branch == branch_code %}selected{% endif %}>
+                        {{ branch_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="status" class="form-label fw-bold">Status</label>
+                <select class="form-select filter-input" id="status" name="status">
+                    <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="assigned" {% if filters.status == 'assigned' %}selected{% endif %}>Assigned</option>
+                    <option value="in_progress" {% if filters.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="submitted" {% if filters.status == 'submitted' %}selected{% endif %}>Submitted</option>
+                    <option value="completed" {% if filters.status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="staff" class="form-label fw-bold">Staff</label>
+                <select class="form-select filter-input" id="staff" name="staff">
+                    <option value="all" {% if filters.staff == 'all' %}selected{% endif %}>All Staff</option>
+                    {% for staff_member in all_staff %}
+                    <option value="{{ staff_member.id }}" {% if filters.staff == staff_member.id|stringformat:"s" %}selected{% endif %}>
+                        {{ staff_member.username }} - {{ staff_member.get_branch_display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="date_from" class="form-label fw-bold">Date From</label>
+                <input type="date" class="form-control filter-input" id="date_from" name="date_from" value="{{ filters.date_from }}">
+            </div>
+            
+            <div class="col-md-3">
+                <label for="date_to" class="form-label fw-bold">Date To</label>
+                <input type="date" class="form-control filter-input" id="date_to" name="date_to" value="{{ filters.date_to }}">
+            </div>
+            
+            <div class="col-md-9 d-flex align-items-end gap-2">
+                <button type="submit" class="btn filter-btn-apply">
+                    <i class="bi bi-funnel-fill"></i> Apply Filters
+                </button>
+                <a href="{% url 'task_management:admin_all_tasks_monitor' %}" class="btn filter-btn-reset">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+        </form>
     </div>
 
     <!-- Tasks Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white border-bottom">
-            <h5 class="mb-0"><i class="bi bi-kanban"></i> All Tasks (Showing Latest 100)</h5>
+    <div class="tasks-table-card">
+        <div class="tasks-table-header">
+            <i class="bi bi-table"></i>
+            <h5>All Tasks (Latest 100)</h5>
         </div>
-        <div class="card-body p-0">
-            {% if tasks %}
-            <div class="table-responsive">
-                <table class="table table-hover table-sm mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ID</th>
-                            <th>Branch</th>
-                            <th>Staff</th>
-                            <th>Task</th>
-                            <th>Cat/Customer</th>
-                            <th>Points</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for task in tasks %}
-                        <tr>
-                            <td><small><span class="badge bg-secondary">{{ task.task_id }}</span></small></td>
-                            <td><small>{{ task.assigned_staff.get_branch_display|default:"-" }}</small></td>
-                            <td>
-                                <small>
-                                    <strong>{{ task.assigned_staff.username }}</strong><br>
-                                    {{ task.assigned_staff.employee_id }}
-                                </small>
-                            </td>
-                            <td><small><strong>{{ task.task_type.name }}</strong></small></td>
-                            <td>
-                                <small>
-                                    {{ task.package.cat.name }}<br>
-                                    <span class="text-muted">{{ task.package.cat.owner.name }}</span>
-                                </small>
-                            </td>
-                            <td><small><span class="badge bg-success">{{ task.points }}</span></small></td>
-                            <td><small>{{ task.scheduled_date|date:"M d" }}</small></td>
-                            <td>
-                                <small>
-                                    {% if task.status == 'pending' %}
-                                    <span class="badge bg-secondary">Pending</span>
-                                    {% elif task.status == 'assigned' %}
-                                    <span class="badge bg-primary">Assigned</span>
-                                    {% elif task.status == 'in_progress' %}
-                                    <span class="badge bg-warning">Progress</span>
-                                    {% elif task.status == 'submitted' %}
-                                    <span class="badge bg-info">Submitted</span>
-                                    {% elif task.status == 'completed' %}
-                                    <span class="badge bg-success">Done</span>
-                                    {% endif %}
-                                </small>
-                            </td>
-                            <td>
-                                <button 
-                                    type="button"
-                                    class="btn btn-sm btn-outline-primary" 
-                                    onclick="showModal('taskModal{{ forloop.counter }}')"
-                                >
-                                    <i class="bi bi-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        
+        {% if tasks %}
+        <div class="table-responsive">
+            <table class="table tasks-table mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Branch</th>
+                        <th>Staff</th>
+                        <th>Task</th>
+                        <th>Cat/Customer</th>
+                        <th>Points</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td><span class="task-badge id">{{ task.task_id }}</span></td>
+                        <td><strong>{{ task.assigned_staff.get_branch_display|default:"-" }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600;">{{ task.assigned_staff.username }}</div>
+                            <div style="font-size: 0.75rem; color: var(--corporate-secondary);">
+                                {{ task.assigned_staff.employee_id }}
+                            </div>
+                        </td>
+                        <td><strong>{{ task.task_type.name }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600;">{{ task.package.cat.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--corporate-secondary);">
+                                {{ task.package.cat.owner.name }}
+                            </div>
+                        </td>
+                        <td><span class="task-badge points">{{ task.points }} pts</span></td>
+                        <td>{{ task.scheduled_date|date:"M d" }}</td>
+                        <td>
+                            {% if task.status == 'pending' %}
+                            <span class="task-badge pending">Pending</span>
+                            {% elif task.status == 'assigned' %}
+                            <span class="task-badge assigned">Assigned</span>
+                            {% elif task.status == 'in_progress' %}
+                            <span class="task-badge in-progress">In Progress</span>
+                            {% elif task.status == 'submitted' %}
+                            <span class="task-badge submitted">Submitted</span>
+                            {% elif task.status == 'completed' %}
+                            <span class="task-badge completed">Completed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button 
+                                type="button"
+                                class="btn-view-task" 
+                                onclick="showModal('taskModal{{ forloop.counter }}')"
+                            >
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-            <!-- Task Modals -->
-            {% for task in tasks %}
-            <div class="modal" id="taskModal{{ forloop.counter }}" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">
-                                <i class="bi bi-file-text"></i> Task Details - {{ task.task_id }}
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" onclick="hideModal('taskModal{{ forloop.counter }}')"></button>
+        <!-- Task Modals -->
+        {% for task in tasks %}
+        <div class="modal" id="taskModal{{ forloop.counter }}">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5>
+                            <i class="bi bi-file-text"></i> Task Details - {{ task.task_id }}
+                        </h5>
+                        <button type="button" class="btn-close" onclick="hideModal('taskModal{{ forloop.counter }}')"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Branch</div>
+                                    <div class="info-value">{{ task.assigned_staff.get_branch_display }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Staff</div>
+                                    <div class="info-value">{{ task.assigned_staff.username }}</div>
+                                    <small style="color: var(--corporate-secondary);">{{ task.assigned_staff.employee_id }}</small>
+                                </div>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Branch</label>
-                                    <div>{{ task.assigned_staff.get_branch_display }}</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Staff</label>
-                                    <div class="fw-bold">{{ task.assigned_staff.username }}</div>
-                                    <small class="text-muted">{{ task.assigned_staff.employee_id }}</small>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Task Type</div>
+                                    <div class="info-value">{{ task.task_type.name }}</div>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Task Type</label>
-                                    <div>{{ task.task_type.name }}</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Points</label>
-                                    <div><span class="badge bg-success fs-6">{{ task.points }} pts</span></div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Points</div>
+                                    <div class="info-value">
+                                        <span class="task-badge points" style="font-size: 1rem; padding: 8px 16px;">{{ task.points }} pts</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Cat</label>
-                                    <div>{{ task.package.cat.name }}</div>
-                                    <small class="text-muted">{{ task.package.cat.breed }}</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Customer</label>
-                                    <div>{{ task.package.cat.owner.name }}</div>
-                                    <small class="text-muted">{{ task.package.cat.owner.phone }}</small>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Cat</div>
+                                    <div class="info-value">{{ task.package.cat.name }}</div>
+                                    <small style="color: var(--corporate-secondary);">{{ task.package.cat.breed }}</small>
                                 </div>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Scheduled Date</label>
-                                    <div>{{ task.scheduled_date|date:"F d, Y" }}</div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Customer</div>
+                                    <div class="info-value">{{ task.package.cat.owner.name }}</div>
+                                    <small style="color: var(--corporate-secondary);">{{ task.package.cat.owner.phone }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Scheduled Date</div>
+                                    <div class="info-value">{{ task.scheduled_date|date:"F d, Y" }}</div>
                                     {% if task.scheduled_time %}
-                                    <small class="text-muted">at {{ task.scheduled_time }}</small>
+                                    <small style="color: var(--corporate-secondary);">at {{ task.scheduled_time }}</small>
                                     {% endif %}
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="text-muted small">Status</label>
-                                    <div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-group">
+                                    <div class="info-label">Status</div>
+                                    <div class="info-value">
                                         {% if task.status == 'completed' %}
-                                        <span class="badge bg-success">Completed</span>
+                                        <span class="task-badge completed">Completed</span>
                                         {% elif task.status == 'submitted' %}
-                                        <span class="badge bg-info">Submitted</span>
+                                        <span class="task-badge submitted">Submitted</span>
                                         {% elif task.status == 'in_progress' %}
-                                        <span class="badge bg-warning">In Progress</span>
+                                        <span class="task-badge in-progress">In Progress</span>
                                         {% elif task.status == 'assigned' %}
-                                        <span class="badge bg-primary">Assigned</span>
+                                        <span class="task-badge assigned">Assigned</span>
                                         {% else %}
-                                        <span class="badge bg-secondary">Pending</span>
+                                        <span class="task-badge pending">Pending</span>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
-                            {% if task.notes %}
-                            <div class="mb-3">
-                                <label class="text-muted small">Notes</label>
-                                <div class="p-3 bg-light rounded">{{ task.notes|linebreaks }}</div>
-                            </div>
-                            {% endif %}
-                            {% if task.completed_at %}
-                            <div class="alert alert-success mb-0">
-                                <i class="bi bi-check-circle"></i> 
-                                Task completed on {{ task.completed_at|date:"F d, Y H:i" }}
+                        </div>
+                        
+                        {% if task.notes %}
+                        <div class="info-group">
+                            <div class="info-label">Notes</div>
+                            <div class="notes-box">{{ task.notes|linebreaks }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if task.completed_at %}
+                        <div class="alert-success-custom">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <div>
+                                <strong>Task completed on {{ task.completed_at|date:"F d, Y H:i" }}</strong>
                                 {% if task.approved_by %}
-                                by {{ task.approved_by.username }}
+                                <br>Approved by {{ task.approved_by.username }}
                                 {% endif %}
                             </div>
-                            {% endif %}
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" onclick="hideModal('taskModal{{ forloop.counter }}')">Close</button>
-                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="hideModal('taskModal{{ forloop.counter }}')">
+                            <i class="bi bi-x-lg"></i> Close
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <!-- Backdrop for this modal -->
-            <div class="modal-backdrop" id="backdrop{{ forloop.counter }}" style="display: none;"></div>
-            {% endfor %}
-
-            {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-inbox display-1 text-muted"></i>
-                <p class="text-muted mt-3">No tasks found</p>
-            </div>
-            {% endif %}
         </div>
+
+        <div class="modal-backdrop" id="backdrop{{ forloop.counter }}" style="display: none;"></div>
+        {% endfor %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-inbox"></i>
+            <p>No tasks found</p>
+            <small style="color: var(--corporate-secondary);">Try adjusting your filter criteria</small>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Modal functions with anti-glitch protection
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     const backdrop = document.getElementById('backdrop' + modalId.replace('taskModal', ''));
     
     if (modal && backdrop) {
-        // Disable body scroll
         document.body.style.overflow = 'hidden';
-        document.body.classList.add('modal-open');
-        
-        // Show backdrop first
         backdrop.style.display = 'block';
-        backdrop.style.opacity = '0.5';
-        
-        // Show modal
-        modal.style.display = 'block';
+        modal.style.display = 'flex';
         modal.classList.add('show');
         
-        // Force repaint
-        modal.offsetHeight;
-        
-        // Extra: Remove any lingering hover states
-        document.querySelectorAll('.modal-body *').forEach(el => {
-            el.style.backgroundColor = 'transparent';
-        });
+        setTimeout(() => {
+            backdrop.style.opacity = '1';
+        }, 10);
     }
 }
 
@@ -615,35 +897,19 @@ function hideModal(modalId) {
     const backdrop = document.getElementById('backdrop' + modalId.replace('taskModal', ''));
     
     if (modal && backdrop) {
-        // Hide modal
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-        
-        // Hide backdrop
-        backdrop.style.display = 'none';
         backdrop.style.opacity = '0';
         
-        // Re-enable body scroll
-        document.body.style.overflow = '';
-        document.body.classList.remove('modal-open');
+        setTimeout(() => {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+            backdrop.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 300);
     }
 }
 
-// Click backdrop to close
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('modal-backdrop')) {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(function(backdrop, index) {
-            if (backdrop === e.target && backdrop.style.display !== 'none') {
-                hideModal('taskModal' + (index + 1));
-            }
-        });
-    }
-});
-
-// ESC key to close
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
         const modals = document.querySelectorAll('.modal.show');
         modals.forEach(function(modal) {
             hideModal(modal.id);
@@ -651,39 +917,13 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Clean up any lingering states
-    document.querySelectorAll('.modal').forEach(function(modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('show');
-    });
-    
-    document.querySelectorAll('.modal-backdrop').forEach(function(backdrop) {
-        backdrop.style.display = 'none';
-    });
-    
-    document.body.classList.remove('modal-open');
-    document.body.style.overflow = '';
-    
-    // Kill all hover effects in modal body on page load
-    const style = document.createElement('style');
-    style.textContent = `
-        .modal-body *, .modal-body *:hover {
-            background-color: transparent !important;
-            background: none !important;
-        }
-        .modal-body .bg-light, .modal-body .bg-light:hover {
-            background-color: #f8f9fa !important;
-        }
-        .modal-body .alert-success, .modal-body .alert-success:hover {
-            background-color: #d1e7dd !important;
-        }
-        .modal-body .alert-info, .modal-body .alert-info:hover {
-            background-color: #cff4fc !important;
-        }
-    `;
-    document.head.appendChild(style);
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal.show');
+        modals.forEach(function(modal) {
+            hideModal(modal.id);
+        });
+    }
 });
 </script>
 {% endblock %}

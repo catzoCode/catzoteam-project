@@ -3,28 +3,339 @@
 
 {% block title %}Sales Analytics - All Branches - CatzoTeam{% endblock %}
 
-{% block page_title %}Sales Analytics - All Branches{% endblock %}
-
-{% block breadcrumbs %}
-<li class="breadcrumb-item"><a href="{% url 'dashboard:admin_dashboard' %}">Dashboard</a></li>
-<li class="breadcrumb-item active">Sales Analytics</li>
-{% endblock %}
-
 {% block extra_css %}
 <style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
+    /* Page Header */
+    .analytics-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .analytics-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .analytics-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    /* Period Selector */
+    .period-selector {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .period-selector h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .period-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .period-btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: var(--corporate-secondary);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .period-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: var(--corporate-secondary);
+        text-decoration: none;
+    }
+
+    .period-btn.active {
+        background: var(--corporate-accent);
+        border-color: var(--corporate-accent);
+        color: white;
+    }
+
+    .view-reports-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        background: white;
+        color: var(--corporate-accent);
+        border: 2px solid var(--corporate-accent);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .view-reports-btn:hover {
+        background: var(--corporate-accent);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        text-decoration: none;
+    }
+
+    /* Stats Cards */
+    .stat-card-analytics {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+    }
+
+    .stat-card-analytics:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card-analytics::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+    }
+
+    .stat-card-analytics.revenue::before {
+        background: var(--corporate-accent);
+    }
+
+    .stat-card-analytics.customers::before {
+        background: var(--corporate-success);
+    }
+
+    .stat-card-analytics.average::before {
+        background: var(--corporate-info);
+    }
+
+    .stat-card-analytics.reports::before {
+        background: var(--corporate-warning);
+    }
+
+    .stat-icon-large {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 4rem;
+        opacity: 0.1;
+    }
+
+    .stat-icon-large.revenue { color: var(--corporate-accent); }
+    .stat-icon-large.customers { color: var(--corporate-success); }
+    .stat-icon-large.average { color: var(--corporate-info); }
+    .stat-icon-large.reports { color: var(--corporate-warning); }
+
+    .stat-label-analytics {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .stat-value-analytics {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .stat-sublabel-analytics {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 500;
+    }
+
+    /* Chart Containers */
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .chart-card-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chart-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .chart-card-header i {
+        font-size: 1.5rem;
+    }
+
+    .chart-card-body {
+        padding: 30px;
+    }
+
     .chart-container {
         position: relative;
         height: 450px;
-        margin-bottom: 30px;
     }
+
+    /* Table Styles */
+    .performance-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .performance-table thead {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .performance-table thead th {
+        padding: 18px 15px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        border: none;
+    }
+
+    .performance-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .performance-table tbody tr:hover {
+        background: #f8fafc;
+        transform: scale(1.01);
+    }
+
+    .performance-table tbody td {
+        padding: 18px 15px;
+        vertical-align: middle;
+        font-weight: 500;
+        color: var(--corporate-dark);
+    }
+
+    .branch-badge {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 60px 20px;
-        color: #6c757d;
+        padding: 80px 20px;
     }
+
     .empty-state i {
-        font-size: 64px;
+        font-size: 5rem;
+        color: #cbd5e1;
         margin-bottom: 20px;
+    }
+
+    .empty-state p {
+        color: var(--corporate-secondary);
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .analytics-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .period-selector {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .period-buttons {
+            flex-direction: column;
+        }
+
+        .period-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stat-value-analytics {
+            font-size: 2rem;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
     }
 </style>
 {% endblock %}
@@ -32,22 +343,32 @@
 {% block content %}
 <div class="container-fluid">
     
-    <!-- Header Actions -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="btn-group" role="group">
-                <a href="?period=7" class="btn {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 7 Days
+    <!-- Page Header -->
+    <div class="analytics-header">
+        <h1>
+            <i class="bi bi-graph-up-arrow"></i> Sales Analytics Dashboard
+        </h1>
+        <p>Comprehensive performance analysis across all branches</p>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="period-selector">
+        <div>
+            <h5><i class="bi bi-calendar-range"></i> Time Period</h5>
+        </div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div class="period-buttons">
+                <a href="?period=7" class="period-btn {% if period == '7' %}active{% endif %}">
+                    <i class="bi bi-calendar-week"></i> Last 7 Days
                 </a>
-                <a href="?period=30" class="btn {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 30 Days
+                <a href="?period=30" class="period-btn {% if period == '30' %}active{% endif %}">
+                    <i class="bi bi-calendar-month"></i> Last 30 Days
                 </a>
-                <a href="?period=90" class="btn {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 3 Months
+                <a href="?period=90" class="period-btn {% if period == '90' %}active{% endif %}">
+                    <i class="bi bi-calendar3"></i> Last 3 Months
                 </a>
             </div>
-            
-            <a href="{% url 'task_management:admin_all_closing_reports' %}" class="btn btn-outline-secondary float-end">
+            <a href="{% url 'task_management:admin_all_closing_reports' %}" class="view-reports-btn">
                 <i class="bi bi-file-text"></i> View All Reports
             </a>
         </div>
@@ -55,58 +376,79 @@
 
     <!-- System-Wide Summary Stats -->
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="mb-0">Total Revenue (30d)</h6>
-                    <h2 class="mb-0 mt-1">RM {{ system_stats.total_revenue|floatformat:2|default:"0.00" }}</h2>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card-analytics revenue">
+                <div class="stat-label-analytics">
+                    <i class="bi bi-cash-coin"></i> Total Revenue (30d)
                 </div>
+                <div class="stat-value-analytics">
+                    RM {{ system_stats.total_revenue|floatformat:2|default:"0.00" }}
+                </div>
+                <div class="stat-sublabel-analytics">Across all branches</div>
+                <i class="bi bi-graph-up stat-icon-large revenue"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <h6 class="mb-0">Total Customers (30d)</h6>
-                    <h2 class="mb-0 mt-1">{{ system_stats.total_customers|default:0 }}</h2>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card-analytics customers">
+                <div class="stat-label-analytics">
+                    <i class="bi bi-people"></i> Total Customers (30d)
                 </div>
+                <div class="stat-value-analytics">
+                    {{ system_stats.total_customers|default:0 }}
+                </div>
+                <div class="stat-sublabel-analytics">Unique customers served</div>
+                <i class="bi bi-person-check stat-icon-large customers"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <h6 class="mb-0">Avg Revenue/Day</h6>
-                    <h2 class="mb-0 mt-1">RM {{ system_stats.avg_revenue|floatformat:2|default:"0.00" }}</h2>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card-analytics average">
+                <div class="stat-label-analytics">
+                    <i class="bi bi-calculator"></i> Avg Revenue/Day
                 </div>
+                <div class="stat-value-analytics">
+                    RM {{ system_stats.avg_revenue|floatformat:2|default:"0.00" }}
+                </div>
+                <div class="stat-sublabel-analytics">Daily average performance</div>
+                <i class="bi bi-speedometer2 stat-icon-large average"></i>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-warning text-white">
-                <div class="card-body">
-                    <h6 class="mb-0">Reports Submitted</h6>
-                    <h2 class="mb-0 mt-1">{{ system_stats.total_reports|default:0 }}</h2>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card-analytics reports">
+                <div class="stat-label-analytics">
+                    <i class="bi bi-file-earmark-text"></i> Reports Submitted
                 </div>
+                <div class="stat-value-analytics">
+                    {{ system_stats.total_reports|default:0 }}
+                </div>
+                <div class="stat-sublabel-analytics">Closing reports received</div>
+                <i class="bi bi-clipboard-check stat-icon-large reports"></i>
             </div>
         </div>
     </div>
 
-    <!-- Revenue Comparison Chart - All Branches -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Revenue Comparison - All Branches</h5>
+    <!-- Revenue Comparison Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-graph-up"></i>
+            <h5>Revenue Comparison - All Branches</h5>
         </div>
-        <div class="card-body">
+        <div class="chart-card-body">
             <div class="chart-container">
                 <canvas id="revenueComparisonChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Revenue Projection Chart - All Branches -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Revenue Projection (30-day avg) - All Branches</h5>
+    <!-- Revenue Projection Chart -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-graph-up-arrow"></i>
+            <h5>Revenue Projection (30-day avg) - All Branches</h5>
         </div>
-        <div class="card-body">
+        <div class="chart-card-body">
             <div class="chart-container">
                 <canvas id="projectionComparisonChart"></canvas>
             </div>
@@ -114,11 +456,12 @@
     </div>
 
     <!-- Customer Comparison Chart -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-people"></i> Customer Comparison - All Branches</h5>
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-people"></i>
+            <h5>Customer Comparison - All Branches</h5>
         </div>
-        <div class="card-body">
+        <div class="chart-card-body">
             <div class="chart-container">
                 <canvas id="customerComparisonChart"></canvas>
             </div>
@@ -126,14 +469,15 @@
     </div>
 
     <!-- Branch Performance Table -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-table"></i> Branch Performance Summary (30d)</h5>
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-table"></i>
+            <h5>Branch Performance Summary (30d)</h5>
         </div>
-        <div class="card-body p-0">
+        <div class="chart-card-body" style="padding: 0;">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                <table class="table performance-table mb-0">
+                    <thead>
                         <tr>
                             <th>Branch</th>
                             <th>Total Revenue</th>
@@ -163,21 +507,21 @@
 const branchesData = {{ branches_data|safe }};
 const projectionDates = {{ projection_dates|safe }};
 
-console.log('Branches Data:', branchesData); // Debug log
+console.log('Branches Data:', branchesData);
 
-// DYNAMIC COLOR GENERATION - Works with ANY branch codes!
+// DYNAMIC COLOR GENERATION
 function generateColor(index) {
     const colors = [
-        { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.2)' },   // Red
-        { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.2)' },   // Blue
-        { border: 'rgb(255, 206, 86)', bg: 'rgba(255, 206, 86, 0.2)' },   // Yellow
-        { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.2)' },   // Teal
+        { border: 'rgb(59, 130, 246)', bg: 'rgba(59, 130, 246, 0.2)' },   // Blue
+        { border: 'rgb(5, 150, 105)', bg: 'rgba(5, 150, 105, 0.2)' },     // Green
+        { border: 'rgb(217, 119, 6)', bg: 'rgba(217, 119, 6, 0.2)' },     // Orange
+        { border: 'rgb(220, 38, 38)', bg: 'rgba(220, 38, 38, 0.2)' },     // Red
         { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.2)' }, // Purple
-        { border: 'rgb(255, 159, 64)', bg: 'rgba(255, 159, 64, 0.2)' },   // Orange
-        { border: 'rgb(201, 203, 207)', bg: 'rgba(201, 203, 207, 0.2)' }, // Gray
-        { border: 'rgb(255, 0, 255)', bg: 'rgba(255, 0, 255, 0.2)' },     // Magenta
-        { border: 'rgb(0, 255, 255)', bg: 'rgba(0, 255, 255, 0.2)' },     // Cyan
-        { border: 'rgb(128, 0, 128)', bg: 'rgba(128, 0, 128, 0.2)' },     // Dark Purple
+        { border: 'rgb(2, 132, 199)', bg: 'rgba(2, 132, 199, 0.2)' },     // Cyan
+        { border: 'rgb(234, 88, 12)', bg: 'rgba(234, 88, 12, 0.2)' },     // Dark Orange
+        { border: 'rgb(219, 39, 119)', bg: 'rgba(219, 39, 119, 0.2)' },   // Pink
+        { border: 'rgb(16, 185, 129)', bg: 'rgba(16, 185, 129, 0.2)' },   // Emerald
+        { border: 'rgb(139, 92, 246)', bg: 'rgba(139, 92, 246, 0.2)' },   // Violet
     ];
     return colors[index % colors.length];
 }
@@ -189,8 +533,6 @@ branchKeys.forEach((branchCode, index) => {
     branchColors[branchCode] = generateColor(index);
 });
 
-console.log('Branch Colors:', branchColors); // Debug log
-
 // Check if we have data
 if (!branchesData || Object.keys(branchesData).length === 0) {
     console.error('No branches data available');
@@ -198,24 +540,15 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
         '<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>No data available</p></div>';
 } else {
     
-    // Get date labels from first branch (all branches have same dates now)
+    // Get date labels from first branch
     const firstBranchKey = Object.keys(branchesData)[0];
     const dateLabels = branchesData[firstBranchKey].dates || [];
-    
-    console.log('Date labels:', dateLabels); // Debug log
-    console.log('Number of branches:', branchKeys.length); // Debug log
 
     // 1. Revenue Comparison Chart
     const revenueDatasets = [];
-    branchKeys.forEach((branchCode, index) => {
+    branchKeys.forEach((branchCode) => {
         const data = branchesData[branchCode];
         const color = branchColors[branchCode];
-        
-        console.log(`Branch ${branchCode}:`, {
-            name: data.name,
-            dataPoints: data.revenues.length,
-            color: color
-        }); // Debug log
         
         revenueDatasets.push({
             label: data.name,
@@ -224,7 +557,9 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             backgroundColor: color.bg,
             tension: 0.4,
             fill: false,
-            borderWidth: 2
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6
         });
     });
 
@@ -241,18 +576,56 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
                 },
                 title: {
                     display: true,
-                    text: 'Daily Revenue by Branch (RM)'
+                    text: 'Daily Revenue by Branch (RM)',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
                     ticks: {
                         callback: function(value) {
                             return 'RM ' + value.toFixed(2);
+                        },
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11,
+                            weight: '500'
                         }
                     }
                 }
@@ -271,10 +644,11 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             data: Array(projectionDates.length).fill(data.avg_revenue || 0),
             borderColor: color.border,
             backgroundColor: color.bg,
-            borderDash: [5, 5],
+            borderDash: [8, 4],
             tension: 0,
             fill: false,
-            borderWidth: 2
+            borderWidth: 3,
+            pointRadius: 0
         });
     });
 
@@ -291,18 +665,56 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
                 },
                 title: {
                     display: true,
-                    text: 'Revenue Projection (Next 30 Days) - Based on 30-day Average'
+                    text: 'Revenue Projection (Next 30 Days) - Based on 30-day Average',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
                     ticks: {
                         callback: function(value) {
                             return 'RM ' + value.toFixed(2);
+                        },
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11,
+                            weight: '500'
                         }
                     }
                 }
@@ -323,7 +735,9 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             backgroundColor: color.bg,
             tension: 0.4,
             fill: false,
-            borderWidth: 2
+            borderWidth: 3,
+            pointRadius: 4,
+            pointHoverRadius: 6
         });
     });
 
@@ -340,17 +754,55 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
             plugins: {
                 legend: {
                     position: 'top',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    }
                 },
                 title: {
                     display: true,
-                    text: 'Daily Customer Count by Branch'
+                    text: 'Daily Customer Count by Branch',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 13 },
+                    cornerRadius: 8
                 }
             },
             scales: {
                 y: {
                     beginAtZero: true,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
                     ticks: {
-                        stepSize: 1
+                        stepSize: 1,
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11,
+                            weight: '500'
+                        }
                     }
                 }
             }
@@ -367,7 +819,6 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
         const totalRevenue = revenues.reduce((a, b) => a + b, 0);
         const totalCustomers = customers.reduce((a, b) => a + b, 0);
         
-        // Count only non-zero entries for average (days with actual reports)
         const reportDays = revenues.filter(r => r > 0).length;
         const avgRevenue = reportDays > 0 ? totalRevenue / reportDays : 0;
         const avgCustomers = reportDays > 0 ? totalCustomers / reportDays : 0;
@@ -376,12 +827,16 @@ if (!branchesData || Object.keys(branchesData).length === 0) {
         
         const row = `
             <tr>
-                <td><span class="badge" style="background-color: ${color.border}; color: white;">${data.name}</span></td>
-                <td><strong>RM ${totalRevenue.toFixed(2)}</strong></td>
+                <td>
+                    <span class="branch-badge" style="background: ${color.border};">
+                        <i class="bi bi-building"></i> ${data.name}
+                    </span>
+                </td>
+                <td><strong style="color: var(--corporate-accent); font-size: 1.1rem;">RM ${totalRevenue.toFixed(2)}</strong></td>
                 <td>RM ${avgRevenue.toFixed(2)}</td>
-                <td><strong>${totalCustomers}</strong></td>
+                <td><strong style="color: var(--corporate-success); font-size: 1.1rem;">${totalCustomers}</strong></td>
                 <td>${avgCustomers.toFixed(1)}</td>
-                <td>${reportDays} days</td>
+                <td><span class="badge" style="background: ${color.bg}; color: ${color.border}; border: 2px solid ${color.border};">${reportDays} days</span></td>
             </tr>
         `;
         tableBody.innerHTML += row;

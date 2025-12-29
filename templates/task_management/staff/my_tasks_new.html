@@ -1,299 +1,763 @@
-{% extends 'base/base.html' %}
+\{% extends 'base/base.html' %}
 {% load static %}
 
 {% block title %}My Tasks - CatzoTeam{% endblock %}
 
-{% block page_title %}My Tasks{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
 
-{% block breadcrumbs %}
-<li class="breadcrumb-item active">My Tasks</li>
+    /* Page Header */
+    .my-tasks-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .my-tasks-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .my-tasks-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid-my-tasks {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+        align-items: stretch;
+    }
+
+    .stat-card-my-task {
+        background: white !important;
+        border-radius: 12px !important;
+        padding: 25px 20px !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden !important;
+        display: flex !important;
+        align-items: center !important;
+        min-height: 130px !important;
+        height: auto !important;
+        font-size: inherit !important;
+    }
+
+    .stat-card-my-task::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+    }
+
+    .stat-card-my-task.assigned::before { background: var(--corporate-accent); }
+    .stat-card-my-task.progress::before,
+    .stat-card-my-task.in-progress::before { background: var(--corporate-warning); }
+    .stat-card-my-task.submitted::before { background: var(--corporate-info); }
+    .stat-card-my-task.completed::before { background: var(--corporate-success); }
+
+    .stat-card-my-task:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .stat-card-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .stat-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+    }
+
+    .stat-card-my-task.assigned .stat-icon-wrapper {
+        background: #dbeafe;
+        color: var(--corporate-accent);
+    }
+
+    .stat-card-my-task.progress .stat-icon-wrapper,
+    .stat-card-my-task.in-progress .stat-icon-wrapper {
+        background: #fef3c7;
+        color: var(--corporate-warning);
+    }
+
+    .stat-card-my-task.submitted .stat-icon-wrapper {
+        background: #cff4fc;
+        color: var(--corporate-info);
+    }
+
+    .stat-card-my-task.completed .stat-icon-wrapper {
+        background: #d1fae5;
+        color: var(--corporate-success);
+    }
+
+    .stat-text-content {
+        flex: 1;
+    }
+
+    .stat-label-my-task {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .stat-value-my-task {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+        display: block;
+    }
+
+    /* Modern Tabs */
+    .modern-tabs {
+        background: white;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+    }
+
+    .modern-tab {
+        flex: 1;
+        min-width: 140px;
+        padding: 12px 16px;
+        border: none;
+        background: transparent;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .modern-tab:hover {
+        background: #f8fafc;
+    }
+
+    .modern-tab.active {
+        background: var(--corporate-accent);
+        color: white;
+    }
+
+    .tab-badge {
+        padding: 3px 9px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        min-width: 22px;
+        text-align: center;
+    }
+
+    .modern-tab.active .tab-badge {
+        background: white;
+        color: var(--corporate-accent);
+    }
+
+    .modern-tab:not(.active) .tab-badge {
+        background: #e2e8f0;
+        color: var(--corporate-secondary);
+    }
+
+    /* Table Card */
+    .table-card-tasks {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .table-card-header-tasks {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .table-card-header-tasks h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .table-card-header-tasks i {
+        font-size: 1.4rem;
+    }
+
+    .my-tasks-table {
+        width: 100%;
+        margin: 0;
+        border-collapse: collapse;
+    }
+
+    .my-tasks-table thead {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .my-tasks-table thead th {
+        padding: 15px 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        border: none;
+        text-align: left;
+    }
+
+    .my-tasks-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .my-tasks-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .my-tasks-table tbody td {
+        padding: 15px 12px;
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+
+    /* Badges */
+    .my-task-badge {
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+
+    .my-task-badge.id {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .my-task-badge.points {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .my-task-badge.status {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .my-task-badge.pending {
+        background: #cff4fc;
+        color: #055160;
+    }
+
+    /* Action Buttons */
+    .btn-complete-task {
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .btn-complete-task:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-finish-task {
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        background: var(--corporate-success);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+
+    .btn-finish-task:hover {
+        background: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Empty State */
+    .empty-state-tasks {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state-tasks i {
+        font-size: 5rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+
+    .empty-state-tasks p {
+        color: var(--corporate-secondary);
+        font-size: 1.05rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    /* Tab Content */
+    .tab-content-tasks {
+        display: none;
+    }
+
+    .tab-content-tasks.active {
+        display: block;
+    }
+
+    /* Table Responsive Wrapper */
+    .table-responsive-custom {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .my-tasks-header {
+            padding: 30px 20px;
+        }
+
+        .my-tasks-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .stats-grid-my-tasks {
+            grid-template-columns: 1fr;
+        }
+
+        .modern-tabs {
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .modern-tab {
+            width: 100%;
+            min-width: auto;
+        }
+
+        .stat-icon-wrapper {
+            width: 55px;
+            height: 55px;
+            font-size: 1.5rem;
+        }
+
+        .stat-value-my-task {
+            font-size: 1.8rem;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     
-    <!-- Header Stats -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Assigned</h6>
-                            <h2 class="mb-0 mt-1">{{ tasks_count.assigned }}</h2>
-                        </div>
-                        <div class="fs-1"><i class="bi bi-inbox"></i></div>
-                    </div>
+    <!-- Page Header -->
+    <div class="my-tasks-header">
+        <h1>
+            <i class="bi bi-list-check"></i> My Tasks
+        </h1>
+        <p>Manage and track your assigned tasks</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid-my-tasks">
+        <div class="stat-card-my-task assigned">
+            <div class="stat-card-content">
+                <div class="stat-icon-wrapper">
+                    <i class="bi bi-inbox-fill"></i>
+                </div>
+                <div class="stat-text-content">
+                    <span class="stat-label-my-task">Assigned</span>
+                    <span class="stat-value-my-task">{{ tasks_count.assigned }}</span>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-warning text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">In Progress</h6>
-                            <h2 class="mb-0 mt-1">{{ tasks_count.in_progress }}</h2>
-                        </div>
-                        <div class="fs-1"><i class="bi bi-hourglass-split"></i></div>
-                    </div>
+        <div class="stat-card-my-task progress">
+            <div class="stat-card-content">
+                <div class="stat-icon-wrapper">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-text-content">
+                    <span class="stat-label-my-task">In Progress</span>
+                    <span class="stat-value-my-task">{{ tasks_count.in_progress }}</span>
                 </div>
             </div>
         </div>
         
         {% if user.role == 'staff' %}
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Submitted</h6>
-                            <h2 class="mb-0 mt-1">{{ tasks_count.submitted }}</h2>
-                        </div>
-                        <div class="fs-1"><i class="bi bi-clock-history"></i></div>
-                    </div>
+        <div class="stat-card-my-task submitted">
+            <div class="stat-card-content">
+                <div class="stat-icon-wrapper">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-text-content">
+                    <span class="stat-label-my-task">Submitted</span>
+                    <span class="stat-value-my-task">{{ tasks_count.submitted }}</span>
                 </div>
             </div>
         </div>
         {% endif %}
         
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-0">Completed</h6>
-                            <h2 class="mb-0 mt-1">{{ tasks_count.completed }}</h2>
-                        </div>
-                        <div class="fs-1"><i class="bi bi-check-circle"></i></div>
-                    </div>
+        <div class="stat-card-my-task completed">
+            <div class="stat-card-content">
+                <div class="stat-icon-wrapper">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-text-content">
+                    <span class="stat-label-my-task">Completed</span>
+                    <span class="stat-value-my-task">{{ tasks_count.completed }}</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Tab Navigation -->
-    <ul class="nav nav-tabs mb-3" id="taskTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="assigned-tab" data-bs-toggle="tab" data-bs-target="#assigned" type="button">
-                <i class="bi bi-inbox"></i> Assigned <span class="badge bg-primary">{{ tasks_count.assigned }}</span>
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button">
-                <i class="bi bi-hourglass-split"></i> In Progress <span class="badge bg-warning">{{ tasks_count.in_progress }}</span>
-            </button>
-        </li>
+    <!-- Modern Tabs -->
+    <div class="modern-tabs">
+        <button class="modern-tab active" data-tab="assigned">
+            <i class="bi bi-inbox"></i> Assigned
+            <span class="tab-badge">{{ tasks_count.assigned }}</span>
+        </button>
+        <button class="modern-tab" data-tab="progress">
+            <i class="bi bi-hourglass-split"></i> In Progress
+            <span class="tab-badge">{{ tasks_count.in_progress }}</span>
+        </button>
         {% if user.role == 'staff' %}
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="submitted-tab" data-bs-toggle="tab" data-bs-target="#submitted" type="button">
-                <i class="bi bi-clock-history"></i> Submitted <span class="badge bg-info">{{ tasks_count.submitted }}</span>
-            </button>
-        </li>
+        <button class="modern-tab" data-tab="submitted">
+            <i class="bi bi-clock-history"></i> Submitted
+            <span class="tab-badge">{{ tasks_count.submitted }}</span>
+        </button>
         {% endif %}
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button">
-                <i class="bi bi-check-circle"></i> Completed <span class="badge bg-success">{{ tasks_count.completed }}</span>
-            </button>
-        </li>
-    </ul>
+        <button class="modern-tab" data-tab="completed">
+            <i class="bi bi-check-circle"></i> Completed
+            <span class="tab-badge">{{ tasks_count.completed }}</span>
+        </button>
+    </div>
 
     <!-- Tab Content -->
-    <div class="tab-content" id="taskTabsContent">
-        
-        <!-- ASSIGNED TASKS -->
-        <div class="tab-pane fade show active" id="assigned" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-inbox text-primary"></i> Assigned Tasks</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if assigned_tasks %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Task ID</th>
-                                    <th>Task Type</th>
-                                    <th>Cat</th>
-                                    <th>Customer</th>
-                                    <th>Points</th>
-                                    <th>Scheduled</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in assigned_tasks %}
-                                <tr>
-                                    <td><span class="badge bg-secondary">{{ task.task_id }}</span></td>
-                                    <td><strong>{{ task.task_type.name }}</strong></td>
-                                    <td>{{ task.package.cat.name }}</td>
-                                    <td>{{ task.package.cat.owner.name }}</td>
-                                    <td><span class="badge bg-success">{{ task.points }} pts</span></td>
-                                    <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
-                                    <td>
-                                        <a href="{% url 'task_management:complete_task_with_proof' task.task_id %}" 
-                                           class="btn btn-sm btn-primary">
-                                            <i class="bi bi-check-circle"></i> Complete
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No assigned tasks</p>
-                    </div>
-                    {% endif %}
-                </div>
+    
+    <!-- ASSIGNED TASKS -->
+    <div class="tab-content-tasks active" data-content="assigned">
+        <div class="table-card-tasks">
+            <div class="table-card-header-tasks">
+                <i class="bi bi-inbox"></i>
+                <h5>Assigned Tasks</h5>
             </div>
-        </div>
-
-        <!-- IN PROGRESS TASKS -->
-        <div class="tab-pane fade" id="progress" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-hourglass-split text-warning"></i> In Progress Tasks</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if in_progress_tasks %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Task ID</th>
-                                    <th>Task Type</th>
-                                    <th>Cat</th>
-                                    <th>Customer</th>
-                                    <th>Points</th>
-                                    <th>Started</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in in_progress_tasks %}
-                                <tr>
-                                    <td><span class="badge bg-secondary">{{ task.task_id }}</span></td>
-                                    <td><strong>{{ task.task_type.name }}</strong></td>
-                                    <td>{{ task.package.cat.name }}</td>
-                                    <td>{{ task.package.cat.owner.name }}</td>
-                                    <td><span class="badge bg-success">{{ task.points }} pts</span></td>
-                                    <td>{{ task.started_at|date:"M d, H:i" }}</td>
-                                    <td>
-                                        <a href="{% url 'task_management:complete_task_with_proof' task.task_id %}" 
-                                           class="btn btn-sm btn-success">
-                                            <i class="bi bi-check-circle"></i> Finish
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-hourglass-split display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No tasks in progress</p>
-                    </div>
-                    {% endif %}
-                </div>
+            
+            {% if assigned_tasks %}
+            <div class="table-responsive-custom">
+                <table class="my-tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Task Type</th>
+                            <th>Cat</th>
+                            <th>Customer</th>
+                            <th>Points</th>
+                            <th>Scheduled</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in assigned_tasks %}
+                        <tr>
+                            <td>
+                                <span class="my-task-badge id">{{ task.task_id }}</span>
+                            </td>
+                            <td><strong>{{ task.task_type.name }}</strong></td>
+                            <td>{{ task.package.cat.name }}</td>
+                            <td>{{ task.package.cat.owner.name }}</td>
+                            <td>
+                                <span class="my-task-badge points">{{ task.points }} pts</span>
+                            </td>
+                            <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'task_management:complete_task_with_proof' task.task_id %}" 
+                                   class="btn-complete-task">
+                                    <i class="bi bi-check-circle"></i> Complete
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-
-        <!-- SUBMITTED TASKS (Staff Only) -->
-        {% if user.role == 'staff' %}
-        <div class="tab-pane fade" id="submitted" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-clock-history text-info"></i> Submitted for Approval</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if pending_approval %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Task ID</th>
-                                    <th>Task Type</th>
-                                    <th>Cat</th>
-                                    <th>Points</th>
-                                    <th>Submitted</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in pending_approval %}
-                                <tr>
-                                    <td><span class="badge bg-secondary">{{ task.task_id }}</span></td>
-                                    <td><strong>{{ task.task_type.name }}</strong></td>
-                                    <td>{{ task.package.cat.name }}</td>
-                                    <td><span class="badge bg-success">{{ task.points }} pts</span></td>
-                                    <td>{{ task.completed_at|date:"M d, H:i" }}</td>
-                                    <td><span class="badge bg-info">Pending Approval</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-clock-history display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No tasks pending approval</p>
-                    </div>
-                    {% endif %}
-                </div>
+            {% else %}
+            <div class="empty-state-tasks">
+                <i class="bi bi-inbox"></i>
+                <p>No assigned tasks</p>
             </div>
+            {% endif %}
         </div>
-        {% endif %}
-
-        <!-- COMPLETED TASKS -->
-        <div class="tab-pane fade" id="completed" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom">
-                    <h5 class="mb-0"><i class="bi bi-check-circle text-success"></i> Completed Tasks</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% if completed_tasks %}
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Task ID</th>
-                                    <th>Task Type</th>
-                                    <th>Cat</th>
-                                    <th>Points</th>
-                                    <th>Completed</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in completed_tasks %}
-                                <tr>
-                                    <td><span class="badge bg-secondary">{{ task.task_id }}</span></td>
-                                    <td><strong>{{ task.task_type.name }}</strong></td>
-                                    <td>{{ task.package.cat.name }}</td>
-                                    <td><span class="badge bg-success">{{ task.points }} pts</span></td>
-                                    <td>{{ task.completed_at|date:"M d, H:i" }}</td>
-                                    <td><span class="badge bg-success"><i class="bi bi-check-circle"></i> Done</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-check-circle display-1 text-muted"></i>
-                        <p class="text-muted mt-3">No completed tasks yet</p>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
     </div>
+
+    <!-- IN PROGRESS TASKS -->
+    <div class="tab-content-tasks" data-content="progress">
+        <div class="table-card-tasks">
+            <div class="table-card-header-tasks">
+                <i class="bi bi-hourglass-split"></i>
+                <h5>In Progress Tasks</h5>
+            </div>
+            
+            {% if in_progress_tasks %}
+            <div class="table-responsive-custom">
+                <table class="my-tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Task Type</th>
+                            <th>Cat</th>
+                            <th>Customer</th>
+                            <th>Points</th>
+                            <th>Started</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in in_progress_tasks %}
+                        <tr>
+                            <td>
+                                <span class="my-task-badge id">{{ task.task_id }}</span>
+                            </td>
+                            <td><strong>{{ task.task_type.name }}</strong></td>
+                            <td>{{ task.package.cat.name }}</td>
+                            <td>{{ task.package.cat.owner.name }}</td>
+                            <td>
+                                <span class="my-task-badge points">{{ task.points }} pts</span>
+                            </td>
+                            <td>{{ task.started_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <a href="{% url 'task_management:complete_task_with_proof' task.task_id %}" 
+                                   class="btn-finish-task">
+                                    <i class="bi bi-check-circle-fill"></i> Finish
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-tasks">
+                <i class="bi bi-hourglass-split"></i>
+                <p>No tasks in progress</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- SUBMITTED TASKS (Staff Only) -->
+    {% if user.role == 'staff' %}
+    <div class="tab-content-tasks" data-content="submitted">
+        <div class="table-card-tasks">
+            <div class="table-card-header-tasks">
+                <i class="bi bi-clock-history"></i>
+                <h5>Submitted for Approval</h5>
+            </div>
+            
+            {% if pending_approval %}
+            <div class="table-responsive-custom">
+                <table class="my-tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Task Type</th>
+                            <th>Cat</th>
+                            <th>Points</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in pending_approval %}
+                        <tr>
+                            <td>
+                                <span class="my-task-badge id">{{ task.task_id }}</span>
+                            </td>
+                            <td><strong>{{ task.task_type.name }}</strong></td>
+                            <td>{{ task.package.cat.name }}</td>
+                            <td>
+                                <span class="my-task-badge points">{{ task.points }} pts</span>
+                            </td>
+                            <td>{{ task.completed_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <span class="my-task-badge pending">
+                                    <i class="bi bi-clock"></i> Pending
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-tasks">
+                <i class="bi bi-clock-history"></i>
+                <p>No tasks pending approval</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- COMPLETED TASKS -->
+    <div class="tab-content-tasks" data-content="completed">
+        <div class="table-card-tasks">
+            <div class="table-card-header-tasks">
+                <i class="bi bi-check-circle"></i>
+                <h5>Completed Tasks</h5>
+            </div>
+            
+            {% if completed_tasks %}
+            <div class="table-responsive-custom">
+                <table class="my-tasks-table">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Task Type</th>
+                            <th>Cat</th>
+                            <th>Points</th>
+                            <th>Completed</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in completed_tasks %}
+                        <tr>
+                            <td>
+                                <span class="my-task-badge id">{{ task.task_id }}</span>
+                            </td>
+                            <td><strong>{{ task.task_type.name }}</strong></td>
+                            <td>{{ task.package.cat.name }}</td>
+                            <td>
+                                <span class="my-task-badge points">{{ task.points }} pts</span>
+                            </td>
+                            <td>{{ task.completed_at|date:"M d, H:i" }}</td>
+                            <td>
+                                <span class="my-task-badge status">
+                                    <i class="bi bi-check-circle-fill"></i> Done
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state-tasks">
+                <i class="bi bi-check-circle"></i>
+                <p>No completed tasks yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modern Tab System
+document.querySelectorAll('.modern-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        const targetTab = this.getAttribute('data-tab');
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.modern-tab').forEach(t => {
+            t.classList.remove('active');
+        });
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Hide all tab contents
+        document.querySelectorAll('.tab-content-tasks').forEach(content => {
+            content.classList.remove('active');
+        });
+        
+        // Show target tab content
+        const targetContent = document.querySelector(`[data-content="${targetTab}"]`);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+    });
+});
+</script>
 {% endblock %}

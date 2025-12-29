@@ -3,65 +3,530 @@
 
 {% block title %}Submit Closing Report - CatzoTeam{% endblock %}
 
-{% block page_title %}Daily Closing Checklist{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
 
-{% block breadcrumbs %}
-<li class="breadcrumb-item"><a href="{% url 'dashboard:manager_dashboard' %}">Dashboard</a></li>
-<li class="breadcrumb-item active">Submit Closing Report</li>
+    /* Page Header */
+    .closing-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .closing-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .closing-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    .branch-badge {
+        background: white;
+        color: var(--corporate-primary);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    /* Form Container */
+    .form-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* Info Alert */
+    .info-alert {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-left: 4px solid var(--corporate-info);
+        border-radius: 12px;
+        padding: 20px 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-alert h5 {
+        color: var(--corporate-primary);
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-alert p {
+        color: var(--corporate-secondary);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* Main Form Card */
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+
+    .form-card-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 25px 30px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .form-card-header h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.4rem;
+    }
+
+    .form-card-header i {
+        font-size: 1.8rem;
+    }
+
+    .form-card-body {
+        padding: 40px;
+    }
+
+    /* Section Headers */
+    .section-header {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid var(--corporate-accent);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-header i {
+        color: var(--corporate-accent);
+    }
+
+    /* Form Groups */
+    .form-group-modern {
+        margin-bottom: 25px;
+    }
+
+    .form-label-modern {
+        font-weight: 600;
+        color: var(--corporate-dark);
+        margin-bottom: 8px;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .form-label-modern .required {
+        color: var(--corporate-danger);
+        margin-left: 4px;
+    }
+
+    .form-label-modern small {
+        display: block;
+        font-weight: 400;
+        color: var(--corporate-secondary);
+        margin-top: 4px;
+    }
+
+    .form-input-modern {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+
+    .form-input-modern:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .input-group-modern {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .input-group-modern .input-prefix {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-right: none;
+        padding: 12px 16px;
+        border-radius: 8px 0 0 8px;
+        font-weight: 600;
+        color: var(--corporate-secondary);
+    }
+
+    .input-group-modern .form-input-modern {
+        border-radius: 0 8px 8px 0;
+    }
+
+    .help-text {
+        font-size: 0.85rem;
+        color: var(--corporate-secondary);
+        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .help-text i {
+        color: var(--corporate-info);
+    }
+
+    /* Radio Buttons */
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .radio-option {
+        flex: 1;
+        position: relative;
+    }
+
+    .radio-option input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .radio-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-label {
+        background: var(--corporate-accent);
+        border-color: var(--corporate-accent);
+        color: white;
+    }
+
+    .radio-option.danger input[type="radio"]:checked + .radio-label {
+        background: var(--corporate-danger);
+        border-color: var(--corporate-danger);
+    }
+
+    .radio-option.success input[type="radio"]:checked + .radio-label {
+        background: var(--corporate-success);
+        border-color: var(--corporate-success);
+    }
+
+    .radio-label:hover {
+        border-color: var(--corporate-accent);
+        background: #f0f9ff;
+    }
+
+    .radio-option input[type="radio"]:checked + .radio-label:hover {
+        background: var(--corporate-accent);
+    }
+
+    /* Photo Upload */
+    .photo-upload-area {
+        border: 3px dashed #e2e8f0;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+        cursor: pointer;
+    }
+
+    .photo-upload-area:hover {
+        border-color: var(--corporate-accent);
+        background: #f0f9ff;
+    }
+
+    .photo-upload-area.has-file {
+        border-color: var(--corporate-success);
+        background: #f0fdf4;
+    }
+
+    .upload-icon {
+        font-size: 3rem;
+        color: var(--corporate-accent);
+        margin-bottom: 15px;
+    }
+
+    .upload-text {
+        font-weight: 600;
+        color: var(--corporate-dark);
+        margin-bottom: 8px;
+    }
+
+    .upload-hint {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+    }
+
+    .photo-input-hidden {
+        display: none;
+    }
+
+    .image-preview-container {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .preview-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 3px solid #e2e8f0;
+    }
+
+    .remove-image-btn {
+        margin-top: 15px;
+        background: var(--corporate-danger);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .remove-image-btn:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+    }
+
+    /* Payment Difference Alert */
+    .difference-alert {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-left: 4px solid var(--corporate-warning);
+        border-radius: 8px;
+        padding: 15px 20px;
+        margin-top: 20px;
+        display: none;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .difference-alert.show {
+        display: flex;
+    }
+
+    .difference-alert i {
+        font-size: 1.5rem;
+        color: var(--corporate-warning);
+    }
+
+    .difference-alert strong {
+        color: #92400e;
+    }
+
+    /* Auto-Calculate Badge */
+    .auto-calc-badge {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-left: 8px;
+    }
+
+    /* Section Divider */
+    .section-divider {
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
+        margin: 35px 0;
+    }
+
+    /* Action Buttons */
+    .action-buttons {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .btn-submit {
+        background: var(--corporate-success);
+        color: white;
+        border: none;
+        padding: 16px 24px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-submit:hover {
+        background: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    }
+
+    .btn-cancel {
+        background: white;
+        color: var(--corporate-secondary);
+        border: 2px solid #e2e8f0;
+        padding: 14px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-cancel:hover {
+        background: #f8fafc;
+        border-color: var(--corporate-accent);
+        color: var(--corporate-dark);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .closing-header {
+            padding: 30px 20px;
+        }
+
+        .closing-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .form-card-body {
+            padding: 25px 20px;
+        }
+
+        .radio-group {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            
-            <!-- Instructions -->
-            <div class="alert alert-info mb-4">
-                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Instructions</h5>
-                <p class="mb-0">Record the final customer and revenue numbers before ending the day.</p>
+    <!-- Page Header -->
+    <div class="closing-header">
+        <h1>
+            <i class="bi bi-clipboard-data"></i> Daily Closing Checklist
+        </h1>
+        <p>Record final customer and revenue numbers before ending the day</p>
+        <span class="branch-badge">
+            <i class="bi bi-building"></i> {{ branch }}
+        </span>
+    </div>
+
+    <div class="form-container">
+        
+        <!-- Info Alert -->
+        <div class="info-alert">
+            <h5>
+                <i class="bi bi-info-circle-fill"></i> Important Instructions
+            </h5>
+            <p>
+                <strong>Please ensure all information is accurate.</strong> This closing report cannot be edited after submission. 
+                Double-check all numbers and make sure you have uploaded clear proof of payment records.
+            </p>
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <i class="bi bi-file-earmark-check"></i>
+                <h2>Closing Report Form</h2>
             </div>
-
-            <!-- Main Form Card -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-clipboard-check"></i> Daily Closing Report - {{ branch }}
-                    </h5>
-                </div>
-                <div class="card-body">
+            
+            <div class="form-card-body">
+                <form method="post" enctype="multipart/form-data" id="closingReportForm">
+                    {% csrf_token %}
                     
-                    <form method="post" enctype="multipart/form-data" id="closingReportForm">
-                        {% csrf_token %}
-                        
-                        <!-- Closing Date -->
-                        <div class="mb-4">
-                            <label for="date" class="form-label fw-bold">Closing Date</label>
-                            <input 
-                                type="date" 
-                                class="form-control" 
-                                id="date" 
-                                name="date" 
-                                value="{{ today|date:'Y-m-d' }}"
-                                max="{{ today|date:'Y-m-d' }}"
-                                required
-                            >
-                            <small class="text-muted">Select the date for this closing report</small>
+                    <!-- Closing Date -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <i class="bi bi-calendar-event"></i> Closing Date
+                            <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="date" 
+                            class="form-input-modern" 
+                            id="date" 
+                            name="date" 
+                            value="{{ today|date:'Y-m-d' }}"
+                            max="{{ today|date:'Y-m-d' }}"
+                            required
+                        >
+                        <div class="help-text">
+                            <i class="bi bi-info-circle"></i> Select the date for this closing report
                         </div>
+                    </div>
 
-                        <hr class="my-4">
+                    <div class="section-divider"></div>
 
-                        <!-- Section A-C: Customer & Service Counts -->
-                        <h6 class="text-primary mb-3">Customer & Service Counts</h6>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label for="grooming_count" class="form-label">
-                                    a. Numbers of cat grooming today
+                    <!-- Section: Customer & Service Counts -->
+                    <h3 class="section-header">
+                        <i class="bi bi-people-fill"></i> Customer & Service Counts
+                    </h3>
+                    
+                   <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    a. Cat Grooming Today
+                                    <span class="required">*</span>
                                 </label>
                                 <input 
                                     type="number" 
-                                    class="form-control" 
+                                    class="form-input-modern" 
                                     id="grooming_count" 
                                     name="grooming_count" 
                                     min="0" 
@@ -69,14 +534,17 @@
                                     required
                                 >
                             </div>
-                            
-                            <div class="col-md-4">
-                                <label for="boarding_count" class="form-label">
-                                    b. Numbers of boarded room today
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    b. Boarded Rooms Today
+                                    <span class="required">*</span>
                                 </label>
                                 <input 
                                     type="number" 
-                                    class="form-control" 
+                                    class="form-input-modern" 
                                     id="boarding_count" 
                                     name="boarding_count" 
                                     min="0" 
@@ -84,39 +552,54 @@
                                     required
                                 >
                             </div>
-                            
-                            <div class="col-md-4">
-                                <label for="total_customers" class="form-label">
-                                    c. Numbers of customers today <br>
-                                    <small class="text-muted">(boarding + grooming)</small>
-                                </label>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <div class="form-group-modern">
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+                                    <label class="form-label-modern" style="margin-bottom: 0;">
+                                        c. Total Customers Today
+                                        <span class="required">*</span>
+                                    </label>
+                                    <span class="auto-calc-badge">Auto-calculated</span>
+                                </div>
+                                <small style="display: block; color: var(--corporate-secondary); font-size: 0.85rem; margin-bottom: 8px; margin-left: 0;">
+                                    (boarding + grooming)
+                                </small>
                                 <input 
                                     type="number" 
-                                    class="form-control" 
+                                    class="form-input-modern" 
                                     id="total_customers" 
                                     name="total_customers" 
                                     min="0" 
                                     value="0" 
-                                    required
+                                    readonly
+                                    style="background: #f8fafc; cursor: not-allowed;"
                                 >
                             </div>
                         </div>
+                    </div>
 
-                        <hr class="my-4">
+                    <div class="section-divider"></div>
 
-                        <!-- Section D-E: Payment Information -->
-                        <h6 class="text-primary mb-3">Payment Information</h6>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="payment_record_amount" class="form-label">
-                                    d. Total payment record (RM)
+                    <!-- Section: Payment Information -->
+                    <h3 class="section-header">
+                        <i class="bi bi-cash-stack"></i> Payment Information
+                    </h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    d. Total Payment Record
+                                    <span class="required">*</span>
+                                    <small>Amount from system records</small>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">RM</span>
+                                <div class="input-group-modern">
+                                    <span class="input-prefix">RM</span>
                                     <input 
                                         type="number" 
-                                        class="form-control" 
+                                        class="form-input-modern" 
                                         id="payment_record_amount" 
                                         name="payment_record_amount" 
                                         step="0.01" 
@@ -125,18 +608,21 @@
                                         required
                                     >
                                 </div>
-                                <small class="text-muted">Amount from system records</small>
                             </div>
-                            
-                            <div class="col-md-6">
-                                <label for="payment_receipt_amount" class="form-label">
-                                    e. Total payment receipt (RM)
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="form-group-modern">
+                                <label class="form-label-modern">
+                                    e. Total Payment Receipt
+                                    <span class="required">*</span>
+                                    <small>Actual cash/receipts received</small>
                                 </label>
-                                <div class="input-group">
-                                    <span class="input-group-text">RM</span>
+                                <div class="input-group-modern">
+                                    <span class="input-prefix">RM</span>
                                     <input 
                                         type="number" 
-                                        class="form-control" 
+                                        class="form-input-modern" 
                                         id="payment_receipt_amount" 
                                         name="payment_receipt_amount" 
                                         step="0.01" 
@@ -145,56 +631,72 @@
                                         required
                                     >
                                 </div>
-                                <small class="text-muted">Actual cash/receipts received</small>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Payment Difference Alert -->
-                        <div id="paymentDifferenceAlert" class="alert alert-warning" style="display: none;">
-                            <i class="bi bi-exclamation-triangle"></i> 
-                            <strong>Difference detected:</strong> 
+                    <!-- Payment Difference Alert -->
+                    <div class="difference-alert" id="paymentDifferenceAlert">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <div>
+                            <strong>Difference Detected:</strong> 
                             <span id="differenceAmount"></span>
                         </div>
+                    </div>
 
-                        <hr class="my-4">
+                    <div class="section-divider"></div>
 
-                        <!-- Photo Upload -->
-                        <h6 class="text-primary mb-3">Payment Proof</h6>
+                    <!-- Section: Payment Proof -->
+                    <h3 class="section-header">
+                        <i class="bi bi-image-fill"></i> Payment Proof
+                    </h3>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            Upload Payment Record Screenshot
+                            <span class="required">*</span>
+                            <small>Clear photo or screenshot of the payment record</small>
+                        </label>
                         
-                        <div class="mb-3">
-                            <label for="payment_proof_photo" class="form-label">
-                                Upload a clear photo or screenshot of the payment record
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input 
-                                type="file" 
-                                class="form-control" 
-                                id="payment_proof_photo" 
-                                name="payment_proof_photo" 
-                                accept="image/*"
-                                required
-                            >
-                            <small class="text-muted">Accepted formats: JPG, PNG, PDF (Max 5MB)</small>
-                        </div>
-
-                        <!-- Image Preview -->
-                        <div id="imagePreview" style="display: none;" class="mb-3">
-                            <img id="previewImg" src="" alt="Preview" class="img-thumbnail" style="max-width: 300px;">
-                        </div>
-
-                        <hr class="my-4">
-
-                        <!-- Section F: Compliance Checks -->
-                        <h6 class="text-primary mb-3">f. Compliance checks (answer with Yes or No)</h6>
+                        <label for="payment_proof_photo" class="photo-upload-area" id="uploadArea">
+                            <i class="bi bi-cloud-upload upload-icon"></i>
+                            <div class="upload-text">Click to upload payment proof</div>
+                            <div class="upload-hint">JPG, PNG, or PDF (Max 5MB)</div>
+                        </label>
                         
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                f.i Do all customers are registered and paid through system <br>
-                                <small class="text-muted">(no cash payment or outside payment)?</small>
-                            </label>
-                            <div class="form-check">
+                        <input 
+                            type="file" 
+                            class="photo-input-hidden" 
+                            id="payment_proof_photo" 
+                            name="payment_proof_photo" 
+                            accept="image/*,application/pdf"
+                            required
+                        >
+                        
+                        <div class="image-preview-container" id="imagePreview" style="display: none;">
+                            <img id="previewImg" src="" alt="Preview" class="preview-image">
+                            <button type="button" class="remove-image-btn" id="removeImageBtn">
+                                <i class="bi bi-trash"></i> Remove Image
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="section-divider"></div>
+
+                    <!-- Section: Compliance Checks -->
+                    <h3 class="section-header">
+                        <i class="bi bi-shield-check"></i> f. Compliance Checks
+                    </h3>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            f.i All customers registered and paid through system?
+                            <span class="required">*</span>
+                            <small>No cash payment or outside payment</small>
+                        </label>
+                        <div class="radio-group">
+                            <div class="radio-option success">
                                 <input 
-                                    class="form-check-input" 
                                     type="radio" 
                                     name="compliance_all_paid_through_system" 
                                     id="compliance_yes" 
@@ -202,104 +704,129 @@
                                     required
                                     checked
                                 >
-                                <label class="form-check-label" for="compliance_yes">
-                                    Yes
+                                <label class="radio-label" for="compliance_yes">
+                                    <i class="bi bi-check-circle-fill"></i> Yes
                                 </label>
                             </div>
-                            <div class="form-check">
+                            <div class="radio-option danger">
                                 <input 
-                                    class="form-check-input" 
                                     type="radio" 
                                     name="compliance_all_paid_through_system" 
                                     id="compliance_no" 
                                     value="no"
                                 >
-                                <label class="form-check-label text-danger" for="compliance_no">
-                                    No
+                                <label class="radio-label" for="compliance_no">
+                                    <i class="bi bi-x-circle-fill"></i> No
                                 </label>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">
-                                f.ii Is there any service with no payment today <br>
-                                <small class="text-muted">(combo redemption, free services)?</small>
-                            </label>
-                            <div class="form-check">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            f.ii Any service with no payment today?
+                            <span class="required">*</span>
+                            <small>Combo redemption, free services</small>
+                        </label>
+                        <div class="radio-group">
+                            <div class="radio-option success">
                                 <input 
-                                    class="form-check-input" 
                                     type="radio" 
                                     name="compliance_free_services_today" 
                                     id="free_yes" 
                                     value="yes" 
                                     required
                                 >
-                                <label class="form-check-label" for="free_yes">
-                                    Yes
+                                <label class="radio-label" for="free_yes">
+                                    <i class="bi bi-check-circle-fill"></i> Yes
                                 </label>
                             </div>
-                            <div class="form-check">
+                            <div class="radio-option danger">
                                 <input 
-                                    class="form-check-input" 
                                     type="radio" 
                                     name="compliance_free_services_today" 
                                     id="free_no" 
                                     value="no"
                                     checked
                                 >
-                                <label class="form-check-label" for="free_no">
-                                    No
+                                <label class="radio-label" for="free_no">
+                                    <i class="bi bi-x-circle-fill"></i> No
                                 </label>
                             </div>
                         </div>
+                    </div>
 
-                        <hr class="my-4">
+                    <div class="section-divider"></div>
 
-                        <!-- Notes (Optional) -->
-                        <div class="mb-4">
-                            <label for="notes" class="form-label">Notes (optional)</label>
-                            <textarea 
-                                class="form-control" 
-                                id="notes" 
-                                name="notes" 
-                                rows="3" 
-                                placeholder="Any additional notes or comments..."
-                            ></textarea>
-                        </div>
+                    <!-- Notes (Optional) -->
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">
+                            <i class="bi bi-pencil-square"></i> Additional Notes (Optional)
+                        </label>
+                        <textarea 
+                            class="form-input-modern" 
+                            id="notes" 
+                            name="notes" 
+                            rows="4" 
+                            placeholder="Any additional notes or comments..."
+                            style="resize: vertical;"
+                        ></textarea>
+                    </div>
 
-                        <!-- Submit Button -->
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-check-circle"></i> Save Closing Report
-                            </button>
-                            <a href="{% url 'task_management:my_closing_reports' %}" class="btn btn-outline-secondary">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </a>
-                        </div>
-                    </form>
-
-                </div>
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        <button type="submit" class="btn-submit">
+                            <i class="bi bi-check-circle-fill"></i> Submit Closing Report
+                        </button>
+                        <a href="{% url 'task_management:my_closing_reports' %}" class="btn-cancel">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </a>
+                    </div>
+                </form>
             </div>
-
         </div>
-    </div>
 
+    </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Image preview
-document.getElementById('payment_proof_photo').addEventListener('change', function(e) {
+// Image upload and preview
+const photoInput = document.getElementById('payment_proof_photo');
+const uploadArea = document.getElementById('uploadArea');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const removeImageBtn = document.getElementById('removeImageBtn');
+
+photoInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
+        // Check file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            this.value = '';
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = function(e) {
-            document.getElementById('previewImg').src = e.target.result;
-            document.getElementById('imagePreview').style.display = 'block';
+            previewImg.src = e.target.result;
+            imagePreview.style.display = 'block';
+            uploadArea.classList.add('has-file');
+            uploadArea.querySelector('.upload-text').textContent = 'Payment proof uploaded';
+            uploadArea.querySelector('.upload-icon').className = 'bi bi-check-circle-fill upload-icon';
         };
         reader.readAsDataURL(file);
     }
+});
+
+removeImageBtn.addEventListener('click', function() {
+    photoInput.value = '';
+    imagePreview.style.display = 'none';
+    uploadArea.classList.remove('has-file');
+    uploadArea.querySelector('.upload-text').textContent = 'Click to upload payment proof';
+    uploadArea.querySelector('.upload-icon').className = 'bi bi-cloud-upload upload-icon';
 });
 
 // Calculate payment difference
@@ -308,11 +835,13 @@ function calculateDifference() {
     const receipt = parseFloat(document.getElementById('payment_receipt_amount').value) || 0;
     const difference = Math.abs(record - receipt);
     
+    const alert = document.getElementById('paymentDifferenceAlert');
+    
     if (difference > 0) {
-        document.getElementById('paymentDifferenceAlert').style.display = 'block';
+        alert.classList.add('show');
         document.getElementById('differenceAmount').textContent = `RM ${difference.toFixed(2)}`;
     } else {
-        document.getElementById('paymentDifferenceAlert').style.display = 'none';
+        alert.classList.remove('show');
     }
 }
 
@@ -329,21 +858,35 @@ function calculateTotalCustomers() {
 document.getElementById('grooming_count').addEventListener('input', calculateTotalCustomers);
 document.getElementById('boarding_count').addEventListener('input', calculateTotalCustomers);
 
-// Form validation
+// Form validation and submission
 document.getElementById('closingReportForm').addEventListener('submit', function(e) {
     const photo = document.getElementById('payment_proof_photo').files[0];
     
     if (!photo) {
         e.preventDefault();
-        alert('Please upload a payment proof photo!');
+        alert('⚠️ Please upload a payment proof photo!');
+        document.getElementById('payment_proof_photo').scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
     }
     
     // Confirm submission
-    if (!confirm('Are you sure you want to submit this closing report? It cannot be edited after submission.')) {
+    const confirmMessage = 'Are you sure you want to submit this closing report?\n\n⚠️ This action cannot be undone and the report cannot be edited after submission.';
+    
+    if (!confirm(confirmMessage)) {
         e.preventDefault();
         return false;
     }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('.btn-submit');
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
+    submitBtn.disabled = true;
+});
+
+// Initialize on page load
+window.addEventListener('load', function() {
+    calculateTotalCustomers();
+    calculateDifference();
 });
 </script>
 {% endblock %}

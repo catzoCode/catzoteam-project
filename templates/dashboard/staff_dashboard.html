@@ -763,7 +763,7 @@
                             <div class="task-points">
                                 <i class="bi bi-star-fill"></i> {{ task.points }} pts
                             </div>
-                            <a href="{% url 'task_management:complete_task' task.task_id %}" class="btn btn-complete btn-sm">
+                            <a href="{% url 'task_management:complete_task_with_proof' task.task_id %}" class="btn btn-complete btn-sm"></a>
                                 <i class="bi bi-check-circle"></i> Complete
                             </a>
                         </div>

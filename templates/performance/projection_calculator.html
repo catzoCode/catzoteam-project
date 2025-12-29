@@ -1,133 +1,543 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Projection Calculator - CatzoTeam{% endblock %}
+{% block title %}Points Projection Calculator - CatzoTeam{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
+    /* Page Header */
+    .page-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .page-header h1 {
+        font-weight: 700;
+        margin-bottom: 10px;
+        font-size: 2rem;
+    }
+
+    .page-header p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+
+    /* Modern Cards */
+    .modern-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .modern-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+
+    .modern-card h5 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+    }
+
+    .modern-card h5 i {
+        color: var(--corporate-accent);
+        font-size: 1.3rem;
+    }
+
+    /* Status Cards */
+    .status-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid var(--corporate-accent);
+        margin-bottom: 20px;
+    }
+
+    .status-card.success {
+        border-left-color: var(--corporate-success);
+        background: linear-gradient(to right, rgba(5, 150, 105, 0.05), white);
+    }
+
+    .status-card.warning {
+        border-left-color: var(--corporate-warning);
+        background: linear-gradient(to right, rgba(217, 119, 6, 0.05), white);
+    }
+
+    .status-card.danger {
+        border-left-color: var(--corporate-danger);
+        background: linear-gradient(to right, rgba(220, 38, 38, 0.05), white);
+    }
+
+    .status-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin: 10px 0;
+        line-height: 1;
+    }
+
+    .status-label {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Calculator Input Section */
+    .calculator-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        padding: 30px;
+        border: 2px dashed var(--corporate-accent);
+    }
+
+    .calculator-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px 20px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .calculator-input:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .btn-calculate {
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        padding: 15px 35px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-calculate:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+        color: white;
+    }
+
+    /* Projection Table */
+    .projection-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+
+    .projection-table thead {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+    }
+
+    .projection-table thead th {
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.875rem;
+        padding: 18px 15px;
+        border: none;
+    }
+
+    .projection-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .projection-table tbody tr:hover {
+        background: #f8fafc;
+        transform: scale(1.01);
+    }
+
+    .projection-table tbody td {
+        padding: 18px 15px;
+        vertical-align: middle;
+        font-weight: 500;
+    }
+
+    /* Status Badges */
+    .status-badge {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .status-badge.success {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Metric Display */
+    .metric-large {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+        margin: 15px 0;
+    }
+
+    .metric-medium {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+    }
+
+    /* Info Boxes */
+    .info-box {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+    }
+
+    .info-box:hover {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .info-box h6 {
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+    }
+
+    .info-box.success {
+        border-color: var(--corporate-success);
+        background: linear-gradient(to bottom, rgba(5, 150, 105, 0.05), white);
+    }
+
+    .info-box.success h6 {
+        color: var(--corporate-success);
+    }
+
+    .info-box.warning {
+        border-color: var(--corporate-warning);
+        background: linear-gradient(to bottom, rgba(217, 119, 6, 0.05), white);
+    }
+
+    .info-box.warning h6 {
+        color: var(--corporate-warning);
+    }
+
+    .info-box.danger {
+        border-color: var(--corporate-danger);
+        background: linear-gradient(to bottom, rgba(220, 38, 38, 0.05), white);
+    }
+
+    .info-box.danger h6 {
+        color: var(--corporate-danger);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .status-value {
+            font-size: 2rem;
+        }
+
+        .metric-large {
+            font-size: 2rem;
+        }
+
+        .calculator-section {
+            padding: 20px;
+        }
+    /* Force same height for calculator input & button */
+    .calculator-input,
+    .btn-calculate {
+        height: 56px;
+    }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <h1 class="mb-4">
-            <i class="bi bi-calculator"></i> Projection Calculator
-        </h1>
-        <p class="lead">See how different daily averages affect your monthly total</p>
+<!-- Page Header -->
+<div class="page-header">
+    <h1>
+        <i class="bi bi-calculator-fill"></i> Points Projection Calculator
+    </h1>
+    <p>Project your monthly performance and plan your goals strategically</p>
+</div>
+
+<!-- Current Status Row -->
+<div class="row mb-4">
+    <!-- Current Month Status -->
+    <div class="col-lg-4 mb-3">
+        <div class="status-card {% if current_total >= 1200 %}success{% elif current_total >= 850 %}warning{% else %}danger{% endif %}">
+            <div class="status-label">Current Month Total</div>
+            <div class="status-value">{{ current_total|floatformat:0 }}</div>
+            <small style="font-weight: 600; color: var(--corporate-secondary);">
+                {% if current_total >= 1200 %}
+                    <i class="bi bi-check-circle-fill text-success"></i> Above Target!
+                {% elif current_total >= 850 %}
+                    <i class="bi bi-exclamation-circle-fill text-warning"></i> Below Target
+                {% else %}
+                    <i class="bi bi-x-circle-fill text-danger"></i> Warning Zone
+                {% endif %}
+            </small>
+        </div>
+    </div>
+
+    <!-- Days Remaining -->
+    <div class="col-lg-4 mb-3">
+        <div class="status-card">
+            <div class="status-label">Days Remaining</div>
+            <div class="status-value" style="color: var(--corporate-accent);">{{ days_remaining }}</div>
+            <small style="font-weight: 600; color: var(--corporate-secondary);">
+                <i class="bi bi-calendar-event"></i> Working days left
+            </small>
+        </div>
+    </div>
+
+    <!-- Monthly Target -->
+    <div class="col-lg-4 mb-3">
+        <div class="status-card">
+            <div class="status-label">Monthly Target</div>
+            <div class="status-value" style="color: var(--corporate-primary);">1,200</div>
+            <small style="font-weight: 600; color: var(--corporate-secondary);">
+                <i class="bi bi-bullseye"></i> Points required
+            </small>
+        </div>
     </div>
 </div>
 
-<!-- Current Status -->
+<!-- Calculator Section -->
 <div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card bg-light">
-            <div class="card-body">
-                <h5><i class="bi bi-info-circle"></i> Current Status</h5>
-                <p><strong>Current Month Total:</strong> {{ current_total|floatformat:2 }} points</p>
-                <p><strong>Days Remaining:</strong> {{ days_remaining }} days</p>
-                <p class="mb-0"><strong>Target:</strong> 1,200 points</p>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-body">
-                <h5><i class="bi bi-search"></i> Custom Calculator</h5>
-                <form method="get" class="d-flex gap-2">
+    <div class="col-12">
+        <div class="calculator-section">
+            <h5 style="margin-bottom: 20px; font-weight: 700; color: var(--corporate-dark);">
+                <i class="bi bi-calculator"></i> Custom Projection Calculator
+            </h5>
+            <form method="get" class="row g-3 align-items-center">
+                <div class="col-md-6">
+                    <label class="form-label" style="font-weight: 600; color: var(--corporate-secondary);">
+                        Enter Expected Daily Average
+                    </label>
                     <input type="number" 
                            name="average" 
-                           class="form-control" 
-                           placeholder="Enter daily average" 
+                           class="form-control calculator-input" 
+                           placeholder="e.g., 45.5" 
                            min="0" 
                            max="100" 
                            step="0.1"
                            value="{{ custom_average }}">
-                    <button type="submit" class="btn btn-primary">Calculate</button>
-                </form>
-                <small class="text-muted">Enter your expected daily average to see projections</small>
+                    <div class="form-text text-muted" style="font-weight: 500;">
+                        <i class="bi bi-info-circle"></i> Points you expect to earn daily
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <button type="submit" class="btn btn-calculate w-100">
+                        <i class="bi bi-graph-up-arrow"></i> Calculate Projection
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Projection Scenarios Table -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="modern-card" style="padding: 0; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%); padding: 25px 30px; color: white;">
+                <h5 style="margin: 0; color: white; font-size: 1.3rem;">
+                    <i class="bi bi-graph-up"></i> Projection Scenarios
+                </h5>
+                <small style="opacity: 0.9; font-weight: 500;">
+                    Based on {{ days_remaining }} remaining days in this month
+                </small>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table projection-table mb-0">
+                    <thead>
+                        <tr>
+                            <th><i class="bi bi-speedometer2"></i> Daily Avg</th>
+                            <th><i class="bi bi-graph-up"></i> Projected Total</th>
+                            <th><i class="bi bi-arrow-left-right"></i> vs Target</th>
+                            <th><i class="bi bi-cash-coin"></i> Bonus</th>
+                            <th><i class="bi bi-flag"></i> Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scenario in scenarios %}
+                        <tr>
+                            <td>
+                                <strong style="font-size: 1.1rem; color: var(--corporate-dark);">
+                                    {{ scenario.average }}
+                                </strong>
+                                <small style="color: var(--corporate-secondary); display: block; font-weight: 600;">pts/day</small>
+                            </td>
+                            <td>
+                                <strong style="font-size: 1.2rem; color: var(--corporate-dark);">
+                                    {{ scenario.projected_total|floatformat:0 }}
+                                </strong>
+                                <small style="color: var(--corporate-secondary); display: block; font-weight: 600;">points</small>
+                            </td>
+                            <td>
+                                {% if scenario.projected_total >= 1200 %}
+                                    <span style="color: var(--corporate-success); font-weight: 700; font-size: 1.1rem;">
+                                        <i class="bi bi-arrow-up-circle-fill"></i> +{{ scenario.projected_total|add:"-1200"|floatformat:0 }}
+                                    </span>
+                                {% else %}
+                                    <span style="color: var(--corporate-danger); font-weight: 700; font-size: 1.1rem;">
+                                        <i class="bi bi-arrow-down-circle-fill"></i> -{{ 1200|add:scenario.projected_total|add:"-2400"|floatformat:0 }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if scenario.bonus > 0 %}
+                                    <strong style="color: var(--corporate-success); font-size: 1.1rem;">
+                                        RM {{ scenario.bonus|floatformat:2 }}
+                                    </strong>
+                                {% else %}
+                                    <span style="color: var(--corporate-secondary);">RM 0.00</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-badge {{ scenario.status }}">
+                                    {% if scenario.status == 'success' %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% elif scenario.status == 'warning' %}
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    {% endif %}
+                                    {{ scenario.message|safe }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Scenarios -->
+<!-- Quick Reference Guide -->
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-graph-up"></i> Projection Scenarios</h5>
-            </div>
-            <div class="card-body">
-                <p class="mb-4">If you continue with the remaining {{ days_remaining }} days...</p>
-                
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Daily Average</th>
-                                <th>Projected Total</th>
-                                <th>vs Target (1,200)</th>
-                                <th>Bonus</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for scenario in scenarios %}
-                            <tr class="{% if scenario.status == 'success' %}table-success{% elif scenario.status == 'danger' %}table-danger{% else %}table-warning{% endif %}">
-                                <td><strong>{{ scenario.average }} pts/day</strong></td>
-                                <td><strong>{{ scenario.projected_total|floatformat:2 }}</strong></td>
-                                <td>
-                                    {% if scenario.projected_total >= 1200 %}
-                                        <span class="text-success">+{{ scenario.projected_total|add:"-1200"|floatformat:0 }}</span>
-                                    {% else %}
-                                        <span class="text-danger">-{{ 1200|add:scenario.projected_total|floatformat:0 }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if scenario.bonus > 0 %}
-                                        <strong class="text-success">RM{{ scenario.bonus|floatformat:2 }}</strong>
-                                    {% else %}
-                                        <span class="text-muted">RM0.00</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge bg-{{ scenario.status }}">
-                                        {{ scenario.message|safe }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="modern-card">
+            <h5>
+                <i class="bi bi-book"></i> Performance Zones Reference
+            </h5>
+            
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <div class="info-box success">
+                        <h6>
+                            <i class="bi bi-trophy-fill"></i> Target Zone
+                        </h6>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--corporate-success); margin: 10px 0;">
+                            1,200+ points
+                        </p>
+                        <p style="margin: 0; color: var(--corporate-secondary); font-weight: 500;">
+                            <i class="bi bi-check-circle"></i> Full incentive
+                            <br>
+                            <i class="bi bi-check-circle"></i> point above 1,200
+                            <br>
+                            <i class="bi bi-check-circle"></i> Excellent performance
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Quick Reference -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bookmark"></i> Quick Reference</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <h6 class="text-success"><i class="bi bi-check-circle"></i> Target Zone (1,200+)</h6>
-                        <p>Base incentive + Bonus (RM0.50/point above 1,200)</p>
+                <div class="col-md-4 mb-3">
+                    <div class="info-box warning">
+                        <h6>
+                            <i class="bi bi-shield-fill-check"></i> Safe Zone
+                        </h6>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--corporate-warning); margin: 10px 0;">
+                            850 - 1,199 points
+                        </p>
+                        <p style="margin: 0; color: var(--corporate-secondary); font-weight: 500;">
+                            <i class="bi bi-info-circle"></i> Reduced incentive
+                            <br>
+                            <i class="bi bi-info-circle"></i> No bonus
+                            <br>
+                            <i class="bi bi-info-circle"></i> Needs improvement
+                        </p>
                     </div>
-                    <div class="col-md-4">
-                        <h6 class="text-warning"><i class="bi bi-info-circle"></i> Safe Zone (850-1,199)</h6>
-                        <p>Reduced incentive, no bonus, but no warning</p>
-                    </div>
-                    <div class="col-md-4">
-                        <h6 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Warning Zone (<850)</h6>
-                        <p>Warning letter issued, disciplinary action possible</p>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="info-box danger">
+                        <h6>
+                            <i class="bi bi-exclamation-triangle-fill"></i> Warning Zone
+                        </h6>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--corporate-danger); margin: 10px 0;">
+                            Below 850 points
+                        </p>
+                        <p style="margin: 0; color: var(--corporate-secondary); font-weight: 500;">
+                            <i class="bi bi-x-circle"></i> Warning letter issued
+                            <br>
+                            <i class="bi bi-x-circle"></i> No incentive
+                            <br>
+                            <i class="bi bi-x-circle"></i> Disciplinary action possible
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
 
 {% endblock %}

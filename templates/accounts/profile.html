@@ -1,187 +1,586 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}My Profile - CatzoTeam{% endblock %}
+{% block title %}Edit Profile - CatzoTeam{% endblock %}
 
-{% block page_title %}My Profile{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
 
-{% block breadcrumbs %}
-<li class="breadcrumb-item active">Profile</li>
+    /* Page Container */
+    .edit-profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Page Header */
+    .edit-profile-header {
+        background: white;
+        border-radius: 12px;
+        padding: 25px 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+    }
+
+    .edit-profile-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: var(--corporate-dark);
+    }
+
+    /* Photo Upload Section */
+    .photo-upload-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .photo-preview-container {
+        position: relative;
+    }
+
+    .photo-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid #e2e8f0;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .photo-preview i {
+        font-size: 3rem;
+        color: white;
+    }
+
+    .photo-upload-info {
+        flex: 1;
+    }
+
+    .photo-upload-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+    }
+
+    .photo-upload-hint {
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 15px;
+    }
+
+    .photo-upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .photo-upload-btn:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .photo-upload-input {
+        display: none;
+    }
+
+    /* Info Section */
+    .info-section-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .info-section-header {
+        background: #f8fafc;
+        padding: 20px 30px;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .info-section-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .section-edit-btn {
+        background: none;
+        border: none;
+        color: var(--corporate-accent);
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .section-edit-btn:hover {
+        background: #dbeafe;
+    }
+
+    .info-section-body {
+        padding: 30px;
+    }
+
+    /* Form Groups */
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    .form-group-modern {
+        margin-bottom: 0;
+    }
+
+    .form-label-modern {
+        display: block;
+        font-weight: 600;
+        color: var(--corporate-secondary);
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .form-input-modern {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        color: var(--corporate-dark);
+        font-weight: 500;
+    }
+
+    .form-input-modern:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .form-input-modern:disabled,
+    .form-input-modern[readonly] {
+        background: #f8fafc;
+        color: var(--corporate-secondary);
+        cursor: not-allowed;
+    }
+
+    .form-textarea-modern {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        color: var(--corporate-dark);
+        font-weight: 500;
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-textarea-modern:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    /* Action Buttons */
+    .action-buttons-footer {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        padding: 25px 30px;
+        background: #f8fafc;
+        border-top: 2px solid #e2e8f0;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .btn-save {
+        padding: 12px 32px;
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-save:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-cancel {
+        padding: 12px 32px;
+        background: white;
+        color: var(--corporate-secondary);
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-cancel:hover {
+        background: #f8fafc;
+        border-color: var(--corporate-accent);
+        color: var(--corporate-dark);
+        transform: translateY(-2px);
+        text-decoration: none;
+    }
+
+    /* Alert Messages */
+    .alert-modern {
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .alert-modern.success {
+        background: #d1fae5;
+        border-left: 4px solid var(--corporate-success);
+        color: #065f46;
+    }
+
+    .alert-modern.error {
+        background: #fee2e2;
+        border-left: 4px solid var(--corporate-danger);
+        color: #991b1b;
+    }
+
+    .alert-modern i {
+        font-size: 1.5rem;
+    }
+
+    /* Help Text */
+    .help-text {
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        margin-top: 6px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .photo-upload-card {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons-footer {
+            flex-direction: column-reverse;
+        }
+
+        .btn-save,
+        .btn-cancel {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="row">
-    <!-- Profile Card -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body text-center">
-                {% if user.profile_picture %}
-                    <div class="user-avatar mb-3" style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; overflow: hidden; border: 4px solid #667eea;">
-                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                {% else %}
-                    <div class="user-avatar mb-3" style="width: 150px; height: 150px; margin: 0 auto; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white;">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                {% endif %}
-                
-                <h4>{{ user.first_name }} {{ user.last_name|default:"" }}</h4>
-                <p class="text-muted">@{{ user.username }}</p>
-                
-                <div class="mb-3">
-                    <span class="badge bg-primary">{{ user.get_role_display }}</span>
-                    <span class="badge bg-info">{{ user.get_branch_display }}</span>
-                </div>
-                
-                <div class="mb-3">
-                    <span class="badge bg-secondary" style="font-size: 0.9rem;">{{ user.employee_id }}</span>
-                </div>
-                
-                {% if user.is_on_warning %}
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Warning Status</strong>
-                    <p class="mb-0 small">Warning count: {{ user.warning_count }}</p>
-                </div>
-                {% endif %}
-                
-                <!-- Action Buttons -->
-                <div class="d-grid gap-2 mt-4">
-                    <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">
-                        <i class="bi bi-pencil"></i> Edit Profile
-                    </a>
-                    <a href="{% url 'accounts:change_password' %}" class="btn btn-secondary">
-                        <i class="bi bi-key"></i> Change Password
-                    </a>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Quick Stats -->
-        <div class="card mt-3">
-            <div class="card-header">
-                <i class="bi bi-bar-chart"></i> Quick Stats
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Member Since:</span>
-                    <strong>{{ user.join_date|date:"M d, Y" }}</strong>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span>Days Active:</span>
-                    <strong>{{ user.join_date|timesince }}</strong>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>Status:</span>
-                    <span class="badge {% if user.is_active %}bg-success{% else %}bg-danger{% endif %}">
-                        {% if user.is_active %}Active{% else %}Inactive{% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="edit-profile-container">
     
-    <!-- Profile Details -->
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-person-lines-fill"></i> Personal Information
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    <tr>
-                        <td width="30%"><strong>Full Name:</strong></td>
-                        <td>{{ user.first_name }} {{ user.last_name|default:"Not provided" }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Username:</strong></td>
-                        <td>{{ user.username }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Email:</strong></td>
-                        <td>{{ user.email }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Phone Number:</strong></td>
-                        <td>{{ user.phone_number|default:"Not provided" }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Employee ID:</strong></td>
-                        <td><span class="badge bg-secondary">{{ user.employee_id }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Role:</strong></td>
-                        <td><span class="badge bg-primary">{{ user.get_role_display }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Branch:</strong></td>
-                        <td><span class="badge bg-info">{{ user.get_branch_display }}</span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>Join Date:</strong></td>
-                        <td>{{ user.join_date|date:"F d, Y" }}</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Last Login:</strong></td>
-                        <td>{{ user.last_login|date:"F d, Y h:i A" }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-        
-        <!-- Extended Profile Info -->
-        {% if profile %}
-        <div class="card mt-3">
-            <div class="card-header">
-                <i class="bi bi-info-circle"></i> Additional Information
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless">
-                    {% if profile.bio %}
-                    <tr>
-                        <td width="30%"><strong>Bio:</strong></td>
-                        <td>{{ profile.bio }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if profile.date_of_birth %}
-                    <tr>
-                        <td><strong>Date of Birth:</strong></td>
-                        <td>{{ profile.date_of_birth|date:"F d, Y" }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if profile.address %}
-                    <tr>
-                        <td><strong>Address:</strong></td>
-                        <td>{{ profile.address }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if profile.emergency_contact_name %}
-                    <tr>
-                        <td><strong>Emergency Contact:</strong></td>
-                        <td>{{ profile.emergency_contact_name }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if profile.emergency_contact_phone %}
-                    <tr>
-                        <td><strong>Emergency Phone:</strong></td>
-                        <td>{{ profile.emergency_contact_phone }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if not profile.bio and not profile.date_of_birth and not profile.address and not profile.emergency_contact_name %}
-                    <tr>
-                        <td colspan="2" class="text-center text-muted">
-                            <i class="bi bi-info-circle"></i> No additional information provided.
-                            <br>
-                            <a href="{% url 'accounts:edit_profile' %}" class="btn btn-sm btn-primary mt-2">
-                                Add Information
-                            </a>
-                        </td>
-                    </tr>
-                    {% endif %}
-                </table>
-            </div>
-        </div>
-        {% endif %}
+    <!-- Page Header -->
+    <div class="edit-profile-header">
+        <h1>Edit Profile</h1>
     </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert-modern {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+            <i class="bi bi-{% if message.tags == 'success' %}check-circle-fill{% else %}exclamation-circle-fill{% endif %}"></i>
+            <div>{{ message }}</div>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Photo Upload Section -->
+        <div class="photo-upload-card">
+            <div class="photo-preview-container">
+                <div class="photo-preview" id="photoPreview">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}" id="previewImage">
+                    {% else %}
+                        <i class="bi bi-person-fill" id="previewIcon"></i>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="photo-upload-info">
+                <div class="photo-upload-title">Upload new photo</div>
+                <div class="photo-upload-hint">
+                    At least 800×800 px recommended.<br>
+                    JPG or PNG is allowed
+                </div>
+                <label for="photoInput" class="photo-upload-btn">
+                    <i class="bi bi-upload"></i> Choose Photo
+                </label>
+                <input type="file" 
+                       id="photoInput" 
+                       name="profile_picture" 
+                       class="photo-upload-input"
+                       accept="image/jpeg,image/png">
+            </div>
+        </div>
+
+        <!-- Personal Info Section -->
+        <div class="info-section-card">
+            <div class="info-section-header">
+                <h3 class="info-section-title">Personal Info</h3>
+                <button type="button" class="section-edit-btn">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div class="info-section-body">
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Full Name</label>
+                        <input type="text" 
+                               name="first_name" 
+                               class="form-input-modern" 
+                               value="{{ user.first_name }}"
+                               placeholder="Enter your full name">
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Email</label>
+                        <input type="email" 
+                               name="email" 
+                               class="form-input-modern" 
+                               value="{{ user.email }}"
+                               placeholder="your.email@example.com">
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Phone</label>
+                        <input type="tel" 
+                               name="phone_number" 
+                               class="form-input-modern" 
+                               value="{{ user.phone_number|default:'' }}"
+                               placeholder="(219) 555-0114">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Username</label>
+                        <input type="text" 
+                               name="username" 
+                               class="form-input-modern" 
+                               value="{{ user.username }}"
+                               readonly>
+                        <div class="help-text">Username cannot be changed</div>
+                    </div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Employee ID</label>
+                        <input type="text" 
+                               class="form-input-modern" 
+                               value="{{ user.employee_id }}"
+                               disabled>
+                        <div class="help-text">Assigned by system</div>
+                    </div>
+
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Branch</label>
+                        <input type="text" 
+                               class="form-input-modern" 
+                               value="{{ user.get_branch_display }}"
+                               disabled>
+                        <div class="help-text">Contact admin to change</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Information Section -->
+        <div class="info-section-card">
+            <div class="info-section-header">
+                <h3 class="info-section-title">Additional Information</h3>
+                <button type="button" class="section-edit-btn">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div class="info-section-body">
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Date of Birth</label>
+                        <input type="date" 
+                               name="date_of_birth" 
+                               class="form-input-modern" 
+                               value="{{ profile.date_of_birth|date:'Y-m-d'|default:'' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Bio</label>
+                        <textarea name="bio" 
+                                  class="form-textarea-modern" 
+                                  placeholder="Tell us about yourself...">{{ profile.bio|default:'' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Address</label>
+                        <textarea name="address" 
+                                  class="form-textarea-modern" 
+                                  placeholder="Your address...">{{ profile.address|default:'' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact Section -->
+        <div class="info-section-card">
+            <div class="info-section-header">
+                <h3 class="info-section-title">Emergency Contact</h3>
+                <button type="button" class="section-edit-btn">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+            </div>
+            
+            <div class="info-section-body">
+                <div class="form-row">
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Contact Name</label>
+                        <input type="text" 
+                               name="emergency_contact_name" 
+                               class="form-input-modern" 
+                               value="{{ profile.emergency_contact_name|default:'' }}"
+                               placeholder="Emergency contact name">
+                    </div>
+                    
+                    <div class="form-group-modern">
+                        <label class="form-label-modern">Contact Phone</label>
+                        <input type="tel" 
+                               name="emergency_contact_phone" 
+                               class="form-input-modern" 
+                               value="{{ profile.emergency_contact_phone|default:'' }}"
+                               placeholder="Emergency contact phone">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons-footer">
+                <a href="{% url 'accounts:profile' %}" class="btn-cancel">
+                    <i class="bi bi-x-lg"></i> Cancel
+                </a>
+                <button type="submit" class="btn-save">
+                    <i class="bi bi-check-lg"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Photo Preview
+document.getElementById('photoInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('photoPreview');
+            const previewImage = document.getElementById('previewImage');
+            const previewIcon = document.getElementById('previewIcon');
+            
+            if (previewImage) {
+                previewImage.src = e.target.result;
+            } else {
+                if (previewIcon) {
+                    previewIcon.remove();
+                }
+                const img = document.createElement('img');
+                img.id = 'previewImage';
+                img.src = e.target.result;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                preview.appendChild(img);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
 {% endblock %}

@@ -3,221 +3,855 @@
 
 {% block title %}Unassigned Packages - CatzoTeam{% endblock %}
 
-{% block page_title %}Unassigned Packages{% endblock %}
+{% block extra_css %}
+<style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
 
-{% block breadcrumbs %}
-<li class="breadcrumb-item active">Unassigned Packages</li>
+    /* Page Header */
+    .packages-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .packages-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .packages-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    /* Info Alert */
+    .info-alert-custom {
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border-left: 4px solid var(--corporate-info);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .info-alert-custom h5 {
+        color: var(--corporate-primary);
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-alert-custom p {
+        color: var(--corporate-secondary);
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* Package Card */
+    .package-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .package-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .package-card-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .package-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .package-status-badge {
+        background: var(--corporate-warning);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .package-card-body {
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .info-section {
+        margin-bottom: 0;
+    }
+
+    .info-section-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-section-title i {
+        color: var(--corporate-accent);
+    }
+
+    .info-section-content p {
+        margin-bottom: 6px;
+        color: var(--corporate-secondary);
+        line-height: 1.6;
+    }
+
+    .info-section-content strong {
+        color: var(--corporate-dark);
+    }
+
+    .package-badges {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .package-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .package-badge.tasks {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .package-badge.points {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .package-meta {
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Tasks List */
+    .tasks-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .task-item {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .task-item:hover {
+        border-color: var(--corporate-accent);
+        background: #f0f9ff;
+    }
+
+    .task-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 12px;
+    }
+
+    .task-item-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        font-size: 1rem;
+    }
+
+    .task-item-points {
+        background: #d1fae5;
+        color: #065f46;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+    }
+
+    .task-item-meta {
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .task-item-meta i {
+        color: var(--corporate-accent);
+    }
+
+    /* Assignment Form */
+    .assignment-form {
+        display: flex;
+        gap: 8px;
+    }
+
+    .assignment-select {
+        flex: 1;
+        padding: 10px 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .assignment-select:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .assignment-select option.self-assign {
+        background: #fef3c7;
+        font-weight: 700;
+    }
+
+    .btn-assign {
+        padding: 10px 20px;
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+
+    .btn-assign:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Package Notes */
+    .package-notes {
+        background: #fef3c7;
+        border-left: 4px solid var(--corporate-warning);
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+
+    .package-notes strong {
+        display: block;
+        margin-bottom: 8px;
+        color: #92400e;
+        font-size: 0.95rem;
+    }
+
+    .package-notes p {
+        color: #78350f;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    /* Package Footer */
+    .package-card-footer {
+        background: #f8fafc;
+        padding: 15px 25px;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .package-creator {
+        color: var(--corporate-secondary);
+        font-size: 0.875rem;
+    }
+
+    .btn-view-details {
+        padding: 8px 16px;
+        background: white;
+        color: var(--corporate-accent);
+        border: 2px solid var(--corporate-accent);
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view-details:hover {
+        background: var(--corporate-accent);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        overflow-y: auto;
+    }
+
+    .modal-overlay.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .modal-dialog-custom {
+        max-width: 900px;
+        width: 100%;
+        margin: 30px auto;
+    }
+
+    .modal-content-custom {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .modal-header-custom {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 25px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header-custom h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .btn-close-modal {
+        background: white;
+        color: var(--corporate-primary);
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .btn-close-modal:hover {
+        transform: rotate(90deg);
+        background: #f1f5f9;
+    }
+
+    .modal-body-custom {
+        padding: 30px;
+    }
+
+    .modal-section {
+        margin-bottom: 25px;
+    }
+
+    .modal-section-header {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--corporate-accent);
+        font-size: 1.05rem;
+    }
+
+    .modal-tasks-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modal-tasks-table thead th {
+        background: #f8fafc;
+        padding: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .modal-tasks-table tbody td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .modal-tasks-table tfoot th {
+        padding: 12px;
+        background: #f8fafc;
+        font-weight: 700;
+        border-top: 2px solid #e2e8f0;
+    }
+
+    .modal-alert {
+        padding: 15px 20px;
+        border-radius: 8px;
+        display: flex;
+        align-items: start;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+
+    .modal-alert.warning {
+        background: #fef3c7;
+        border-left: 4px solid var(--corporate-warning);
+    }
+
+    .modal-alert.info {
+        background: #cff4fc;
+        border-left: 4px solid var(--corporate-info);
+    }
+
+    .modal-alert h6 {
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .modal-alert p {
+        margin: 0;
+        color: var(--corporate-secondary);
+        line-height: 1.6;
+    }
+
+    .modal-footer-custom {
+        padding: 20px 30px;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-modal-action {
+        padding: 10px 24px;
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modal-action:hover {
+        background: #4b5563;
+    }
+
+    /* Empty State */
+    .empty-state-package {
+        text-align: center;
+        padding: 80px 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .empty-state-package i {
+        font-size: 5rem;
+        color: #cbd5e1;
+        margin-bottom: 20px;
+    }
+
+    .empty-state-package h3 {
+        color: var(--corporate-dark);
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+
+    .empty-state-package p {
+        color: var(--corporate-secondary);
+        font-size: 1.05rem;
+        margin-bottom: 25px;
+    }
+
+    .btn-empty-action {
+        padding: 12px 24px;
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-empty-action:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .packages-header {
+            padding: 30px 20px;
+        }
+
+        .packages-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .assignment-form {
+            flex-direction: column;
+        }
+
+        .btn-assign {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .package-card-footer {
+            flex-direction: column;
+            gap: 12px;
+            text-align: center;
+        }
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="alert alert-info">
-                <h5 class="alert-heading"><i class="bi bi-info-circle"></i> Task Assignment</h5>
-                <p class="mb-0">
-                    Assign tasks from pending packages to staff members. You can also assign tasks to yourself!
-                    {% if user.role == 'manager' %}
-                    <br><strong>Note:</strong> You can only assign to staff from your branch: {{ user.get_branch_display }}
-                    {% endif %}
-                </p>
-            </div>
-        </div>
+    <!-- Page Header -->
+    <div class="packages-header">
+        <h1>
+            <i class="bi bi-box-seam"></i> Unassigned Packages
+        </h1>
+        <p>Assign pending task packages to staff members from your branch</p>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="info-alert-custom">
+        <h5>
+            <i class="bi bi-info-circle-fill"></i> Task Assignment Guide
+        </h5>
+        <p>
+            <strong>Assign tasks from pending packages to staff members.</strong> You can also assign tasks to yourself!
+            {% if user.role == 'manager' %}
+            <br>Note: You can only assign to staff from your branch: <strong>{{ user.get_branch_display }}</strong>
+            {% endif %}
+        </p>
     </div>
 
     {% if packages %}
     <div class="row">
         {% for package in packages %}
-        <div class="col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-box-seam"></i> Package {{ package.package_id }}
-                        </h5>
-                        <span class="badge bg-warning">Pending</span>
-                    </div>
+        <div class="col-lg-6 mb-4">
+            <div class="package-card">
+                <!-- Card Header -->
+                <div class="package-card-header">
+                    <h5>
+                        <i class="bi bi-box-seam"></i> Package {{ package.package_id }}
+                    </h5>
+                    <span class="package-status-badge">Pending</span>
                 </div>
-                <div class="card-body">
-                    <!-- Package Info -->
-                    <div class="mb-3">
-                        <h6 class="text-muted">Customer Information</h6>
-                        <p class="mb-1"><strong>{{ package.cat.owner.name }}</strong></p>
-                        <p class="mb-1 text-muted">
-                            <i class="bi bi-telephone"></i> {{ package.cat.owner.phone }}
-                        </p>
-                        <p class="mb-0 text-muted">
-                            <i class="bi bi-envelope"></i> {{ package.cat.owner.email|default:"No email" }}
-                        </p>
+                
+                <!-- Card Body -->
+                <div class="package-card-body">
+                    <!-- Customer Info -->
+                    <div class="info-section">
+                        <div class="info-section-title">
+                            <i class="bi bi-person-circle"></i> Customer Information
+                        </div>
+                        <div class="info-section-content">
+                            <p><strong>{{ package.cat.owner.name }}</strong></p>
+                            <p><i class="bi bi-telephone"></i> {{ package.cat.owner.phone }}</p>
+                            <p><i class="bi bi-envelope"></i> {{ package.cat.owner.email|default:"No email provided" }}</p>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <h6 class="text-muted">Cat Information</h6>
-                        <p class="mb-1"><strong>{{ package.cat.name }}</strong> - {{ package.cat.breed }}</p>
-                        <p class="mb-0 text-muted">{{ package.cat.gender }}, {{ package.cat.age }} months</p>
+                    <!-- Cat Info -->
+                    <div class="info-section">
+                        <div class="info-section-title">
+                            <i class="bi bi-heart"></i> Cat Information
+                        </div>
+                        <div class="info-section-content">
+                            <p><strong>{{ package.cat.name }}</strong> - {{ package.cat.breed }}</p>
+                            <p>{{ package.cat.gender }}, {{ package.cat.age }} months old</p>
+                        </div>
                     </div>
 
-                    <div class="mb-3">
-                        <h6 class="text-muted">Package Details</h6>
-                        <p class="mb-1">
-                            <span class="badge bg-info">{{ package.tasks.count }} Tasks</span>
-                            <span class="badge bg-success">{{ package.total_points }} Points</span>
-                        </p>
-                        <p class="mb-0 text-muted">
-                            Created: {{ package.created_at|date:"M d, Y H:i" }}
+                    <!-- Package Details -->
+                    <div class="info-section">
+                        <div class="info-section-title">
+                            <i class="bi bi-info-circle"></i> Package Summary
+                        </div>
+                        <div class="package-badges">
+                            <span class="package-badge tasks">
+                                <i class="bi bi-list-check"></i> {{ package.tasks.count }} Tasks
+                            </span>
+                            <span class="package-badge points">
+                                <i class="bi bi-star-fill"></i> {{ package.total_points }} Points
+                            </span>
+                        </div>
+                        <p class="package-meta mt-2">
+                            <i class="bi bi-clock"></i> Created: {{ package.created_at|date:"M d, Y H:i" }}
                         </p>
                     </div>
 
                     <!-- Tasks List -->
-                    <div class="mb-3">
-                        <h6 class="text-muted">Tasks in this Package:</h6>
-                        <div class="list-group">
+                    <div class="info-section">
+                        <div class="info-section-title">
+                            <i class="bi bi-list-task"></i> Tasks in Package
+                        </div>
+                        <div class="tasks-list">
                             {% for task in package.tasks.all %}
-                            <div class="list-group-item">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>{{ task.task_type.name }}</strong>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="bi bi-calendar"></i> {{ task.scheduled_date|date:"M d, Y" }}
-                                            {% if task.scheduled_time %}
-                                            @ {{ task.scheduled_time }}
-                                            {% endif %}
-                                        </small>
-                                    </div>
-                                    <div>
-                                        <span class="badge bg-success">{{ task.points }} pts</span>
-                                    </div>
+                            <div class="task-item">
+                                <div class="task-item-header">
+                                    <div class="task-item-title">{{ task.task_type.name }}</div>
+                                    <div class="task-item-points">{{ task.points }} pts</div>
                                 </div>
                                 
-                                <!-- Assignment Form for Each Task -->
-                                <form method="post" action="{% url 'task_management:assign_task' task.task_id %}" class="mt-2">
+                                <div class="task-item-meta">
+                                    <i class="bi bi-calendar-event"></i>
+                                    {{ task.scheduled_date|date:"M d, Y" }}
+                                    {% if task.scheduled_time %}
+                                    @ {{ task.scheduled_time }}
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Assignment Form -->
+                                <form method="post" action="{% url 'task_management:assign_task' task.task_id %}" class="assignment-form">
                                     {% csrf_token %}
-                                    <div class="input-group input-group-sm">
-                                        <select name="assigned_staff" class="form-select" required>
-                                            <option value="">Select Staff...</option>
-                                            
-                                            <!-- Self-assignment option -->
-                                            <option value="{{ current_user.id }}" class="bg-warning">
-                                                ⭐ Assign to ME ({{ current_user.username }})
-                                            </option>
-                                            
-                                            <option disabled>──────────</option>
-                                            
-                                            <!-- Staff from branch -->
-                                            {% for staff_member in staff %}
-                                                {% if staff_member.id != current_user.id %}
-                                                <option value="{{ staff_member.id }}">
-                                                    {{ staff_member.username }} ({{ staff_member.employee_id }})
-                                                    {% if staff_member.branch %}
-                                                    - {{ staff_member.get_branch_display }}
-                                                    {% endif %}
-                                                </option>
+                                    <select name="assigned_staff" class="assignment-select" required>
+                                        <option value="">Select Staff Member...</option>
+                                        
+                                        <option value="{{ current_user.id }}" class="self-assign">
+                                            ⭐ Assign to ME ({{ current_user.username }})
+                                        </option>
+                                        
+                                        <option disabled>──────────</option>
+                                        
+                                        {% for staff_member in staff %}
+                                            {% if staff_member.id != current_user.id %}
+                                            <option value="{{ staff_member.id }}">
+                                                {{ staff_member.username }} ({{ staff_member.employee_id }})
+                                                {% if staff_member.branch %}
+                                                - {{ staff_member.get_branch_display }}
                                                 {% endif %}
-                                            {% endfor %}
-                                        </select>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-person-check"></i> Assign
-                                        </button>
-                                    </div>
+                                            </option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                    <button type="submit" class="btn-assign">
+                                        <i class="bi bi-person-check-fill"></i> Assign
+                                    </button>
                                 </form>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
 
+                    <!-- Package Notes -->
                     {% if package.notes %}
-                    <div class="alert alert-warning">
+                    <div class="package-notes">
                         <strong><i class="bi bi-sticky"></i> Package Notes:</strong>
-                        <p class="mb-0 mt-2">{{ package.notes|linebreaks }}</p>
+                        <p>{{ package.notes|linebreaks }}</p>
                     </div>
                     {% endif %}
                 </div>
-                <div class="card-footer bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <small class="text-muted">
-                            Created by: {{ package.created_by.username }}
-                        </small>
-                        <button 
-                            type="button" 
-                            class="btn btn-sm btn-outline-primary" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#packageModal{{ package.id }}"
-                        >
-                            <i class="bi bi-eye"></i> View Details
-                        </button>
+                
+                <!-- Card Footer -->
+                <div class="package-card-footer">
+                    <div class="package-creator">
+                        Created by: <strong>{{ package.created_by.username }}</strong>
                     </div>
+                    <button 
+                        type="button" 
+                        class="btn-view-details" 
+                        onclick="showModal('packageModal{{ package.id }}')"
+                    >
+                        <i class="bi bi-eye"></i> View Details
+                    </button>
                 </div>
             </div>
         </div>
 
         <!-- Package Detail Modal -->
-        <div class="modal fade" id="packageModal{{ package.id }}" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="bi bi-box-seam"></i> Package {{ package.package_id }} Details
+        <div class="modal-overlay" id="packageModal{{ package.id }}">
+            <div class="modal-dialog-custom">
+                <div class="modal-content-custom">
+                    <div class="modal-header-custom">
+                        <h5>
+                            <i class="bi bi-box-seam"></i> Package {{ package.package_id }} - Complete Details
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close-modal" onclick="hideModal('packageModal{{ package.id }}')">
+                            ×
+                        </button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <h6>Customer</h6>
-                                <p><strong>{{ package.cat.owner.name }}</strong></p>
-                                <p class="text-muted">{{ package.cat.owner.phone }}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <h6>Cat</h6>
-                                <p><strong>{{ package.cat.name }}</strong></p>
-                                <p class="text-muted">{{ package.cat.breed }}, {{ package.cat.age }} months</p>
+                    
+                    <div class="modal-body-custom">
+                        <!-- Customer & Cat Info -->
+                        <div class="modal-section">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="modal-section-header">Customer Information</h6>
+                                    <p><strong>{{ package.cat.owner.name }}</strong></p>
+                                    <p style="color: #64748b;">
+                                        <i class="bi bi-telephone"></i> {{ package.cat.owner.phone }}<br>
+                                        <i class="bi bi-envelope"></i> {{ package.cat.owner.email|default:"No email" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="modal-section-header">Cat Information</h6>
+                                    <p><strong>{{ package.cat.name }}</strong></p>
+                                    <p style="color: #64748b;">
+                                        {{ package.cat.breed }}<br>
+                                        {{ package.cat.gender }}, {{ package.cat.age }} months old
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <h6>Tasks ({{ package.tasks.count }})</h6>
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Task</th>
-                                    <th>Date</th>
-                                    <th>Points</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for task in package.tasks.all %}
-                                <tr>
-                                    <td>{{ task.task_type.name }}</td>
-                                    <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
-                                    <td><span class="badge bg-success">{{ task.points }}</span></td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="2">Total</th>
-                                    <th><span class="badge bg-success">{{ package.total_points }}</span></th>
-                                </tr>
-                            </tfoot>
-                        </table>
+                        <!-- Tasks Table -->
+                        <div class="modal-section">
+                            <h6 class="modal-section-header">Tasks ({{ package.tasks.count }})</h6>
+                            <table class="modal-tasks-table">
+                                <thead>
+                                    <tr>
+                                        <th>Task Type</th>
+                                        <th>Scheduled Date</th>
+                                        <th>Points</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for task in package.tasks.all %}
+                                    <tr>
+                                        <td><strong>{{ task.task_type.name }}</strong></td>
+                                        <td>{{ task.scheduled_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="package-badge points" style="font-size: 0.85rem;">
+                                                {{ task.points }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2">Total Points</th>
+                                        <th>
+                                            <span class="package-badge points">
+                                                {{ package.total_points }}
+                                            </span>
+                                        </th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
+                        <!-- Medical Notes -->
                         {% if package.cat.medical_notes %}
-                        <div class="alert alert-warning">
-                            <h6><i class="bi bi-exclamation-triangle"></i> Medical Notes</h6>
-                            <p class="mb-0">{{ package.cat.medical_notes|linebreaks }}</p>
+                        <div class="modal-alert warning">
+                            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #d97706;"></i>
+                            <div>
+                                <h6><i class="bi bi-heart-pulse"></i> Medical Notes</h6>
+                                <p>{{ package.cat.medical_notes|linebreaks }}</p>
+                            </div>
                         </div>
                         {% endif %}
 
+                        <!-- Special Requirements -->
                         {% if package.cat.special_requirements %}
-                        <div class="alert alert-info">
-                            <h6><i class="bi bi-info-circle"></i> Special Requirements</h6>
-                            <p class="mb-0">{{ package.cat.special_requirements|linebreaks }}</p>
+                        <div class="modal-alert info">
+                            <i class="bi bi-info-circle-fill" style="font-size: 1.5rem; color: #0284c7;"></i>
+                            <div>
+                                <h6><i class="bi bi-star"></i> Special Requirements</h6>
+                                <p>{{ package.cat.special_requirements|linebreaks }}</p>
+                            </div>
                         </div>
                         {% endif %}
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn-modal-action" onclick="hideModal('packageModal{{ package.id }}')">
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
@@ -225,58 +859,72 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="row">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-inbox display-1 text-muted"></i>
-                    <h3 class="mt-3 text-muted">No Unassigned Packages</h3>
-                    <p class="text-muted">All packages have been assigned to staff members.</p>
-                    <a href="{% url 'dashboard:manager_dashboard' %}" class="btn btn-primary mt-3">
-                        <i class="bi bi-arrow-left"></i> Back to Dashboard
-                    </a>
-                </div>
-            </div>
-        </div>
+    <!-- Empty State -->
+    <div class="empty-state-package">
+        <i class="bi bi-inbox"></i>
+        <h3>No Unassigned Packages</h3>
+        <p>All packages have been assigned to staff members. Great work!</p>
+        <a href="{% url 'dashboard:manager_dashboard' %}" class="btn-empty-action">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
     </div>
     {% endif %}
 </div>
+{% endblock %}
 
-<style>
-    .card {
-        transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
-    }
-
-    .list-group-item {
-        border-left: 3px solid transparent;
-        transition: all 0.3s ease;
-    }
-
-    .list-group-item:hover {
-        border-left-color: #0d6efd;
-        background-color: #f8f9fa;
-    }
-
-    .bg-warning option {
-        font-weight: bold;
-    }
-</style>
-
+{% block extra_js %}
 <script>
-    // Auto-submit on staff selection
-    document.querySelectorAll('select[name="assigned_staff"]').forEach(select => {
-        select.addEventListener('change', function() {
-            if (this.value && confirm(`Assign this task to ${this.options[this.selectedIndex].text}?`)) {
-                // Form will submit via button click
-            } else {
-                this.value = '';
-            }
+// Modal functions
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        document.body.style.overflow = 'hidden';
+        modal.classList.add('show');
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        document.body.style.overflow = '';
+        modal.classList.remove('show');
+    }
+}
+
+// Click outside to close
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        hideModal(e.target.id);
+    }
+});
+
+// ESC key to close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('.modal-overlay.show');
+        modals.forEach(function(modal) {
+            hideModal(modal.id);
         });
+    }
+});
+
+// Confirm assignment
+document.querySelectorAll('.assignment-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const select = this.querySelector('select[name="assigned_staff"]');
+        const selectedText = select.options[select.selectedIndex].text;
+        
+        if (!select.value) {
+            e.preventDefault();
+            alert('Please select a staff member first!');
+            return false;
+        }
+        
+        if (!confirm(`Assign this task to ${selectedText}?`)) {
+            e.preventDefault();
+            return false;
+        }
     });
+});
 </script>
 {% endblock %}

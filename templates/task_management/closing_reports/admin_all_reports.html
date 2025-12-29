@@ -5,75 +5,252 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
+    /* Page Header */
+    .reports-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .reports-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .reports-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    /* Action Buttons */
+    .action-bar {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .action-btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .action-btn.analytics {
+        background: var(--corporate-success);
+        color: white;
+    }
+
+    .action-btn.analytics:hover {
+        background: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        color: white;
+    }
+
+    .action-btn.export {
+        background: var(--corporate-accent);
+        color: white;
+    }
+
+    .action-btn.export:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        color: white;
+    }
+
+    /* Stats Grid */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
     }
 
     .stat-card {
         background: white;
         border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         position: relative;
         overflow: hidden;
-        border: 1px solid #eef0f3;
+        transition: all 0.3s ease;
     }
 
-    .stat-card.revenue { border-left: 6px solid #10b981; }
-    .stat-card.customers { border-left: 6px solid #3b82f6; }
-    .stat-card.reports { border-left: 6px solid #8b5cf6; }
-    .stat-card.balanced { border-left: 6px solid #f59e0b; }
-
-    .stat-label {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: #6b7280;
-        font-weight: 600;
-        margin-bottom: 8px;
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
 
-    .stat-value {
-        font-size: 28px;
-        font-weight: 800;
-        color: #111827;
-        line-height: 1.1;
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
     }
+
+    .stat-card.revenue::before { background: var(--corporate-success); }
+    .stat-card.customers::before { background: var(--corporate-accent); }
+    .stat-card.reports::before { background: var(--corporate-info); }
+    .stat-card.balanced::before { background: var(--corporate-warning); }
 
     .stat-icon {
-        font-size: 40px;
+        font-size: 3rem;
         opacity: 0.15;
         position: absolute;
         right: 20px;
-        top: 20px;
+        top: 50%;
+        transform: translateY(-50%);
     }
 
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+    }
+
+    /* Filters Card */
     .filters-card {
         background: white;
         border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 24px;
+        padding: 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
     }
 
+    .filters-card h5 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .filters-card h5 i {
+        color: var(--corporate-accent);
+    }
+
+    .filter-input {
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        transition: all 0.3s ease;
+    }
+
+    .filter-input:focus {
+        border-color: var(--corporate-accent);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        outline: none;
+    }
+
+    .filter-btn-apply {
+        background: var(--corporate-dark);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .filter-btn-apply:hover {
+        background: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .filter-btn-reset {
+        background: white;
+        color: var(--corporate-secondary);
+        border: 2px solid #e2e8f0;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .filter-btn-reset:hover {
+        background: #f8fafc;
+        border-color: var(--corporate-accent);
+        color: var(--corporate-dark);
+        transform: translateY(-2px);
+    }
+
+    /* Table Card */
     .table-card {
         background: white;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
 
     .table-card-header {
-        padding: 20px 24px;
-        background: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 12px;
+    }
+
+    .table-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .table-card-header i {
+        font-size: 1.5rem;
     }
 
     .table-responsive {
@@ -81,173 +258,307 @@
         overflow-y: auto;
     }
 
-    .table thead th {
+    .reports-table {
+        width: 100%;
+        margin: 0;
+    }
+
+    .reports-table thead {
         position: sticky;
         top: 0;
-        background: #f8f9fa;
+        background: #f8fafc;
         z-index: 10;
-        font-weight: 600;
-        font-size: 13px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .reports-table thead th {
+        padding: 18px 15px;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #495057;
-        border-bottom: 2px solid #dee2e6;
-        padding: 16px 12px;
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        border: none;
         white-space: nowrap;
     }
 
-    .table tbody tr { transition: background-color 0.15s; }
-    .table tbody tr:hover { background-color: #f8f9fa; }
+    .reports-table tbody tr {
+        border-bottom: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
 
-    .table tbody td {
+    .reports-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .reports-table tbody td {
+        padding: 18px 15px;
         vertical-align: middle;
-        padding: 16px 12px;
-    }
-
-    .badge {
-        padding: 6px 12px;
         font-weight: 500;
-        font-size: 12px;
+        color: var(--corporate-dark);
     }
 
-    .badge.balanced-yes { background: #28a745; }
-    .badge.balanced-no { background: #ffc107; color: #000; }
-    .badge.compliance-yes { background: #28a745; }
-    .badge.compliance-no { background: #dc3545; }
+    /* Status Badges */
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
 
-    /* IMPORTANT: Do NOT override Bootstrap modal display */
-    /* (Removed .modal { display:none } which can fight Bootstrap) */
+    .status-badge.report-id {
+        background: #e2e8f0;
+        color: #475569;
+    }
 
+    .status-badge.balanced-yes {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.balanced-no {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .status-badge.compliance-yes {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.compliance-no {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Action Button */
+    .btn-view-report {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        background: white;
+        color: var(--corporate-dark);
+        border: 2px solid var(--corporate-dark);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-view-report:hover {
+        background: var(--corporate-dark);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Modal Styles */
     .modal-content {
         border: none;
         border-radius: 12px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
-
-    .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); }
 
     .modal-header {
-        border-bottom: 2px solid rgba(255,255,255,0.2);
-        padding: 24px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 25px 30px;
+        border: none;
+        border-radius: 12px 12px 0 0;
     }
 
-    .modal-body { padding: 32px; }
+    .modal-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .modal-header .btn-close {
+        filter: brightness(0) invert(1);
+        opacity: 1;
+    }
+
+    .modal-body {
+        padding: 30px;
+    }
 
     .info-section {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 24px;
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 25px;
+        border: 2px solid #e2e8f0;
     }
 
     .info-row {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 20px;
-        margin-bottom: 24px;
     }
 
     .info-item label {
-        font-size: 11px;
+        font-size: 0.8rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        color: #6c757d;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
         display: block;
     }
 
     .info-item .value {
-        font-weight: 600;
-        color: #212529;
-        font-size: 15px;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        font-size: 1rem;
     }
 
     .payment-table {
         background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
         overflow: hidden;
     }
 
+    .payment-table td {
+        padding: 15px 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
     .payment-table tr:last-child {
-        background: #f8f9fa;
+        background: #f8fafc;
         font-weight: 700;
     }
 
-    .payment-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid #dee2e6;
+    .payment-table tr:last-child td {
+        border-bottom: none;
     }
 
-    .payment-table tr:last-child td { border-bottom: none; }
+    .section-title {
+        color: var(--corporate-accent);
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+    }
 
     .proof-image {
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         max-width: 100%;
         cursor: pointer;
-        transition: transform 0.2s;
+        transition: transform 0.3s ease;
+        border: 3px solid #e2e8f0;
     }
 
-    .proof-image:hover { transform: scale(1.02); }
+    .proof-image:hover {
+        transform: scale(1.05);
+    }
 
-    .alert-warning {
-        border-left: 4px solid #ffc107;
-        background: #fff3cd;
+    .alert-warning-custom {
+        background: #fef3c7;
+        border-left: 4px solid var(--corporate-warning);
+        padding: 15px 20px;
         border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 15px;
+    }
+
+    .alert-warning-custom i {
+        font-size: 1.5rem;
+        color: var(--corporate-warning);
     }
 
     .notes-box {
-        background: #f8f9fa;
-        border-left: 4px solid #007bff;
-        padding: 16px;
+        background: #dbeafe;
+        border-left: 4px solid var(--corporate-accent);
+        padding: 20px;
         border-radius: 8px;
         margin-top: 20px;
     }
 
-    .btn-view {
-        padding: 6px 16px;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 500;
-        transition: all 0.2s;
+    .notes-box-title {
+        font-weight: 700;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--corporate-accent);
     }
 
-    .btn-view:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    .compliance-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        border: 2px solid #e2e8f0;
     }
 
+    .compliance-check input[type="checkbox"]:checked {
+        background-color: var(--corporate-success);
+        border-color: var(--corporate-success);
+    }
+
+    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 80px 20px;
     }
 
     .empty-state i {
-        font-size: 80px;
-        color: #dee2e6;
+        font-size: 5rem;
+        color: #cbd5e1;
         margin-bottom: 20px;
     }
 
     .empty-state p {
-        color: #6c757d;
-        font-size: 16px;
+        color: var(--corporate-secondary);
+        font-size: 1.1rem;
+        font-weight: 500;
+        margin: 0;
     }
 
-    .action-buttons {
-        display: flex;
-        gap: 12px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: 1fr; }
-        .info-row { grid-template-columns: 1fr; }
-        .action-buttons { flex-direction: column; }
-        .action-buttons .btn { width: 100%; }
-        .table-card-header { flex-direction: column; align-items: stretch; }
+        .reports-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-bar {
+            flex-direction: column;
+        }
+
+        .action-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .table-card-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+        }
     }
 </style>
 {% endblock %}
@@ -255,12 +566,20 @@
 {% block content %}
 <div class="container-fluid">
 
+    <!-- Page Header -->
+    <div class="reports-header">
+        <h1>
+            <i class="bi bi-clipboard-data"></i> Branch Closing Reports
+        </h1>
+        <p>Comprehensive view of daily closing reports across all branches</p>
+    </div>
+
     <!-- Action Buttons -->
-    <div class="action-buttons">
-        <a href="{% url 'task_management:admin_analytics_dashboard' %}" class="btn btn-success">
+    <div class="action-bar">
+        <a href="{% url 'task_management:admin_analytics_dashboard' %}" class="action-btn analytics">
             <i class="bi bi-graph-up"></i> Analytics Dashboard
         </a>
-        <a href="{% url 'task_management:export_reports_excel' %}?{{ request.GET.urlencode }}" class="btn btn-primary">
+        <a href="{% url 'task_management:export_reports_excel' %}?{{ request.GET.urlencode }}" class="action-btn export">
             <i class="bi bi-file-earmark-excel"></i> Export to Excel
         </a>
     </div>
@@ -294,10 +613,11 @@
 
     <!-- Filters -->
     <div class="filters-card">
+        <h5><i class="bi bi-funnel"></i> Filter Reports</h5>
         <form method="get" class="row g-3 align-items-end">
             <div class="col-md-3">
                 <label class="form-label fw-bold">Branch</label>
-                <select name="branch" class="form-select">
+                <select name="branch" class="form-select filter-input">
                     <option value="">All Branches</option>
                     {% for b in branches %}
                         <option value="{{ b.value }}" {% if request.GET.branch == b.value %}selected{% endif %}>
@@ -309,20 +629,20 @@
 
             <div class="col-md-3">
                 <label class="form-label fw-bold">From Date</label>
-                <input type="date" name="date_from" class="form-control" value="{{ request.GET.date_from }}">
+                <input type="date" name="date_from" class="form-control filter-input" value="{{ request.GET.date_from }}">
             </div>
 
             <div class="col-md-3">
                 <label class="form-label fw-bold">To Date</label>
-                <input type="date" name="date_to" class="form-control" value="{{ request.GET.date_to }}">
+                <input type="date" name="date_to" class="form-control filter-input" value="{{ request.GET.date_to }}">
             </div>
 
             <div class="col-md-3 d-flex gap-2">
-                <button class="btn btn-dark flex-fill" type="submit">
-                    <i class="bi bi-funnel"></i> Apply
+                <button class="btn filter-btn-apply flex-fill" type="submit">
+                    <i class="bi bi-funnel-fill"></i> Apply
                 </button>
-                <a class="btn btn-outline-secondary flex-fill" href="?">
-                    Reset
+                <a class="btn filter-btn-reset flex-fill" href="?">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>
         </form>
@@ -331,16 +651,16 @@
     <!-- Table -->
     <div class="table-card">
         <div class="table-card-header">
-            <div class="fw-bold">
-                <i class="bi bi-clipboard-data"></i> All Branch Closing Reports
-            </div>
-            <div class="text-muted small">
+            <h5>
+                <i class="bi bi-table"></i> All Branch Reports
+            </h5>
+            <div style="opacity: 0.9; font-size: 0.9rem;">
                 Showing {{ reports|length }} record{{ reports|length|pluralize }}
             </div>
         </div>
 
         <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
+            <table class="table reports-table mb-0">
                 <thead>
                     <tr>
                         <th>Report ID</th>
@@ -357,34 +677,50 @@
                 <tbody>
                     {% for report in reports %}
                     <tr>
-                        <td><span class="badge bg-secondary">{{ report.report_id }}</span></td>
-                        <td>{{ report.date|date:"M d, Y" }}</td>
-                        <td>{{ report.get_branch_display }}</td>
                         <td>
-                            <div class="fw-bold">{{ report.submitted_by.username }}</div>
-                            <div class="text-muted small">{{ report.submitted_at|date:"M d, Y H:i" }}</div>
+                            <span class="status-badge report-id">{{ report.report_id }}</span>
                         </td>
-                        <td class="text-end fw-bold">RM {{ report.revenue_total|floatformat:2 }}</td>
+                        <td>{{ report.date|date:"M d, Y" }}</td>
+                        <td><strong>{{ report.get_branch_display }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600;">{{ report.submitted_by.username }}</div>
+                            <div style="font-size: 0.8rem; color: var(--corporate-secondary);">
+                                {{ report.submitted_at|date:"M d, Y H:i" }}
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <strong style="color: var(--corporate-success); font-size: 1.1rem;">
+                                RM {{ report.revenue_total|floatformat:2 }}
+                            </strong>
+                        </td>
                         <td class="text-center">
                             {% if report.is_balanced %}
-                                <span class="badge balanced-yes">Yes</span>
+                                <span class="status-badge balanced-yes">
+                                    <i class="bi bi-check-circle-fill"></i> Yes
+                                </span>
                             {% else %}
-                                <span class="badge balanced-no">No</span>
+                                <span class="status-badge balanced-no">
+                                    <i class="bi bi-exclamation-triangle-fill"></i> No
+                                </span>
                             {% endif %}
                         </td>
                         <td class="text-center">
                             {% if report.is_compliant %}
-                                <span class="badge compliance-yes">Yes</span>
+                                <span class="status-badge compliance-yes">
+                                    <i class="bi bi-shield-check"></i> Yes
+                                </span>
                             {% else %}
-                                <span class="badge compliance-no">No</span>
+                                <span class="status-badge compliance-no">
+                                    <i class="bi bi-shield-x"></i> No
+                                </span>
                             {% endif %}
                         </td>
                         <td class="text-end">
                             <button type="button"
-                                    class="btn btn-outline-dark btn-view"
+                                    class="btn btn-view-report"
                                     data-bs-toggle="modal"
                                     data-bs-target="#reportModal{{ report.id }}">
-                                <i class="bi bi-eye"></i> View
+                                <i class="bi bi-eye"></i> View Details
                             </button>
                         </td>
                     </tr>
@@ -392,8 +728,9 @@
                     <tr>
                         <td colspan="8">
                             <div class="empty-state">
-                                <i class="bi bi-inboxes"></i>
-                                <p class="mb-0">No reports found for your filters.</p>
+                                <i class="bi bi-inbox"></i>
+                                <p>No reports found for your filters</p>
+                                <small style="color: var(--corporate-secondary);">Try adjusting your filter criteria</small>
                             </div>
                         </td>
                     </tr>
@@ -405,16 +742,16 @@
 
 </div>
 
-<!-- ✅ Modals MUST be OUTSIDE the table -->
+<!-- Modals -->
 {% for report in reports %}
 <div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title text-white">
+                <h5>
                     <i class="bi bi-file-text"></i> {{ report.report_id }} - {{ report.get_branch_display }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">
@@ -433,11 +770,15 @@
                         <div class="info-item">
                             <label>Submitted By</label>
                             <div class="value">{{ report.submitted_by.username }}</div>
-                            <small class="text-muted">{{ report.submitted_at|date:"M d, Y H:i" }}</small>
+                            <small style="color: var(--corporate-secondary);">
+                                {{ report.submitted_at|date:"M d, Y H:i" }}
+                            </small>
                         </div>
                         <div class="info-item">
                             <label>Report ID</label>
-                            <div class="value"><span class="badge bg-secondary">{{ report.report_id }}</span></div>
+                            <div class="value">
+                                <span class="status-badge report-id">{{ report.report_id }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -445,10 +786,10 @@
                 <div class="row">
                     <!-- Left Column -->
                     <div class="col-lg-6">
-                        <h6 class="text-primary mb-3">
-                            <i class="bi bi-people"></i> Customer & Service Counts
+                        <h6 class="section-title">
+                            <i class="bi bi-people-fill"></i> Customer & Service Counts
                         </h6>
-                        <table class="table table-sm payment-table">
+                        <table class="table payment-table">
                             <tr>
                                 <td>Cat Grooming:</td>
                                 <td class="text-end"><strong>{{ report.grooming_count }}</strong></td>
@@ -463,10 +804,10 @@
                             </tr>
                         </table>
 
-                        <h6 class="text-primary mb-3 mt-4">
+                        <h6 class="section-title mt-4">
                             <i class="bi bi-cash-stack"></i> Payment Information
                         </h6>
-                        <table class="table table-sm payment-table">
+                        <table class="table payment-table">
                             <tr>
                                 <td>Payment Record:</td>
                                 <td class="text-end"><strong>RM {{ report.payment_record_amount|floatformat:2 }}</strong></td>
@@ -477,51 +818,58 @@
                             </tr>
                             <tr>
                                 <td><strong>Revenue Total:</strong></td>
-                                <td class="text-end"><strong>RM {{ report.revenue_total|floatformat:2 }}</strong></td>
+                                <td class="text-end"><strong style="color: var(--corporate-success); font-size: 1.2rem;">RM {{ report.revenue_total|floatformat:2 }}</strong></td>
                             </tr>
                         </table>
 
                         {% if not report.is_balanced %}
-                        <div class="alert alert-warning mt-3">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            <strong>Payment Difference:</strong> RM {{ report.payment_difference|floatformat:2 }}
+                        <div class="alert-warning-custom">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <div>
+                                <strong>Payment Difference:</strong><br>
+                                RM {{ report.payment_difference|floatformat:2 }}
+                            </div>
                         </div>
                         {% endif %}
                     </div>
 
                     <!-- Right Column -->
                     <div class="col-lg-6">
-                        <h6 class="text-primary mb-3">
-                            <i class="bi bi-check-circle"></i> Compliance
+                        <h6 class="section-title">
+                            <i class="bi bi-shield-check"></i> Compliance Checklist
                         </h6>
 
-                        <div class="form-check mb-2">
+                        <div class="compliance-check">
                             <input class="form-check-input" type="checkbox"
                                    {% if report.compliance_all_paid_through_system %}checked{% endif %} disabled>
-                            <label class="form-check-label">All paid through system</label>
+                            <label class="form-check-label">All payments through system</label>
                         </div>
 
-                        <div class="form-check mb-3">
+                        <div class="compliance-check">
                             <input class="form-check-input" type="checkbox"
                                    {% if report.compliance_free_services_today %}checked{% endif %} disabled>
-                            <label class="form-check-label">Free services today</label>
+                            <label class="form-check-label">Free services provided today</label>
                         </div>
 
-                        <h6 class="text-primary mb-3 mt-4">
+                        <h6 class="section-title mt-4">
                             <i class="bi bi-image"></i> Payment Proof
                         </h6>
 
                         {% if report.payment_proof_photo %}
                             <img src="{{ report.payment_proof_photo.url }}" class="proof-image" alt="Payment Proof">
                         {% else %}
-                            <div class="text-muted">No payment proof uploaded.</div>
+                            <div style="padding: 40px; text-align: center; background: #f8fafc; border-radius: 10px; border: 2px dashed #e2e8f0;">
+                                <i class="bi bi-image" style="font-size: 3rem; color: #cbd5e1;"></i>
+                                <p style="color: var(--corporate-secondary); margin: 10px 0 0 0;">No payment proof uploaded</p>
+                            </div>
                         {% endif %}
-
 
                         {% if report.notes %}
                         <div class="notes-box">
-                            <div class="fw-bold mb-1"><i class="bi bi-journal-text"></i> Notes</div>
-                            <div class="text-muted">{{ report.notes }}</div>
+                            <div class="notes-box-title">
+                                <i class="bi bi-journal-text"></i> Additional Notes
+                            </div>
+                            <div style="color: var(--corporate-secondary);">{{ report.notes }}</div>
                         </div>
                         {% endif %}
                     </div>

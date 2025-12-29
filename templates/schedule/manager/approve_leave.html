@@ -1,280 +1,481 @@
 {% extends "base/base.html" %}
 {% load static %}
 
-{% block title %}Review Leave Request{% endblock %}
+{% block title %}Review Leave Request - Manager{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-header {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+        --manager-primary: #0891b2;
+        --manager-secondary: #0e7490;
+    }
+
+    /* Page Header - Manager Cyan Theme */
+    .manager-page-header {
+        background: linear-gradient(135deg, var(--manager-primary) 0%, var(--manager-secondary) 100%);
         color: white;
-        padding: 2rem;
+        padding: 40px 30px;
         border-radius: 12px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        margin-bottom: 30px;
+        box-shadow: 0 8px 16px rgba(8, 145, 178, 0.3);
     }
-    
-    .review-card {
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        padding: 2rem;
-        max-width: 900px;
-        margin: 0 auto;
-    }
-    
-    .staff-info-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+
+    .manager-page-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
         display: flex;
         align-items: center;
-        gap: 1.5rem;
-        border: 2px solid #dee2e6;
+        gap: 15px;
     }
-    
+
+    .manager-page-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn-back-manager {
+        background: white;
+        color: var(--manager-primary);
+        border: 2px solid white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-back-manager:hover {
+        background: rgba(255, 255, 255, 0.9);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(255, 255, 255, 0.3);
+        text-decoration: none;
+        color: var(--manager-primary);
+    }
+
+    /* Review Container */
+    .review-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    /* Staff Info Card */
+    .staff-info-card {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        border-left: 5px solid var(--manager-primary);
+    }
+
     .staff-avatar {
-        width: 80px;
-        height: 80px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, var(--manager-primary) 0%, var(--manager-secondary) 100%);
         color: white;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
+        font-size: 2.5rem;
         font-weight: 700;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 16px rgba(8, 145, 178, 0.4);
+        flex-shrink: 0;
     }
-    
-    .staff-details h4 {
-        margin-bottom: 0.5rem;
-        color: #1f2937;
+
+    .staff-details {
+        flex: 1;
     }
-    
+
+    .staff-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 10px;
+    }
+
     .staff-meta {
         display: flex;
-        gap: 1rem;
+        gap: 20px;
         flex-wrap: wrap;
         align-items: center;
-        color: #6b7280;
+        margin-bottom: 12px;
+    }
+
+    .meta-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--corporate-secondary);
         font-size: 0.9rem;
+        font-weight: 500;
     }
-    
-    .staff-meta i {
-        color: #3b82f6;
+
+    .meta-item i {
+        color: var(--manager-primary);
     }
-    
-    .leave-details-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1rem;
-        margin: 2rem 0;
-    }
-    
-    .detail-box {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.25rem;
-        text-align: center;
-        border: 2px solid #e5e7eb;
-        transition: all 0.3s;
-    }
-    
-    .detail-box:hover {
-        border-color: #3b82f6;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-    
-    .detail-label {
-        font-size: 0.75rem;
-        color: #6b7280;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-    }
-    
-    .detail-value {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1f2937;
-    }
-    
-    .leave-reason-box {
-        background: #f8f9fa;
-        border-left: 4px solid #3b82f6;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin: 1.5rem 0;
-    }
-    
-    .leave-reason-box h6 {
-        color: #1f2937;
-        margin-bottom: 1rem;
-    }
-    
-    .leave-reason-box p {
-        color: #4b5563;
-        line-height: 1.6;
-    }
-    
-    .medical-proof {
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-        border: 2px solid #3b82f6;
-        border-radius: 12px;
-        padding: 2rem;
-        text-align: center;
-        margin: 1.5rem 0;
-    }
-    
-    .medical-proof i {
-        font-size: 3rem;
-        color: #3b82f6;
-        margin-bottom: 1rem;
-    }
-    
+
     .status-badge {
-        display: inline-block;
-        padding: 0.5rem 1.25rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
         border-radius: 20px;
-        font-weight: 600;
+        font-weight: 700;
         font-size: 0.875rem;
     }
-    
-    .status-badge.pending_manager { 
-        background: #fef3c7; 
-        color: #92400e; 
-    }
-    .status-badge.manager_approved { 
-        background: #dbeafe; 
-        color: #1e40af; 
-    }
-    .status-badge.approved { 
-        background: #d1fae5; 
-        color: #065f46; 
-    }
-    .status-badge.rejected { 
-        background: #fee2e2; 
-        color: #991b1b; 
-    }
-    
-    .manager-section {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        border-left: 4px solid #f59e0b;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin: 1.5rem 0;
-        border: 2px solid #fbbf24;
-    }
-    
-    .manager-section h6 {
+
+    .status-badge.pending_manager {
+        background: #fef3c7;
         color: #92400e;
-        margin-bottom: 1rem;
     }
-    
-    .action-section {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+
+    .status-badge.manager_approved {
+        background: #cffafe;
+        color: #164e63;
+    }
+
+    .status-badge.approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-badge.rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Leave Details Grid */
+    .details-section {
+        background: white;
         border-radius: 12px;
-        padding: 2rem;
-        margin-top: 2rem;
-        border: 2px solid #dee2e6;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 25px;
     }
-    
-    .action-section h5 {
-        color: #1f2937;
-        margin-bottom: 1.5rem;
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    
-    .btn-group-custom {
+
+    .section-title i {
+        color: var(--manager-primary);
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .detail-card {
+        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        border: 2px solid #a5f3fc;
+        transition: all 0.3s ease;
+    }
+
+    .detail-card:hover {
+        border-color: var(--manager-primary);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(8, 145, 178, 0.2);
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        color: var(--corporate-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+    }
+
+    .detail-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+    }
+
+    .detail-value .badge {
+        font-size: 0.95rem;
+        padding: 8px 16px;
+    }
+
+    /* Reason Box */
+    .reason-box {
+        background: #f8fafc;
+        border-left: 4px solid var(--manager-primary);
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .reason-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .reason-text {
+        color: var(--corporate-secondary);
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    /* Medical Proof */
+    .medical-proof-section {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 3px solid var(--corporate-accent);
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        margin-top: 20px;
+    }
+
+    .medical-proof-section i {
+        font-size: 4rem;
+        color: var(--corporate-accent);
+        margin-bottom: 15px;
+    }
+
+    .medical-proof-section h6 {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+    }
+
+    .btn-view-medical {
+        background: var(--corporate-accent);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view-medical:hover {
+        background: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Manager Action Section */
+    .manager-action-section {
+        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        border-radius: 12px;
+        padding: 30px;
+        border: 3px solid var(--manager-primary);
+        margin-top: 25px;
+    }
+
+    .action-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .action-title i {
+        color: var(--manager-primary);
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+    }
+
+    .form-label-custom {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .form-textarea-custom {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #a5f3fc;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        resize: vertical;
+    }
+
+    .form-textarea-custom:focus {
+        border-color: var(--manager-primary);
+        box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        outline: none;
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        margin-top: 8px;
+    }
+
+    .info-alert {
+        background: #dbeafe;
+        border-left: 4px solid var(--corporate-info);
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .info-alert i {
+        font-size: 1.5rem;
+        color: var(--corporate-info);
+    }
+
+    /* Action Buttons */
+    .action-buttons {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-        margin-top: 1.5rem;
+        gap: 15px;
+        margin-top: 25px;
     }
-    
-    .btn-group-custom .btn-secondary {
+
+    .btn-action {
+        padding: 14px 24px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-action.approve {
+        background: var(--corporate-success);
+        color: white;
+    }
+
+    .btn-action.approve:hover {
+        background: #047857;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(5, 150, 105, 0.4);
+    }
+
+    .btn-action.reject {
+        background: var(--corporate-danger);
+        color: white;
+    }
+
+    .btn-action.reject:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+    }
+
+    .btn-action.cancel {
+        background: #6b7280;
+        color: white;
         grid-column: 1 / -1;
     }
-    
-    .btn {
-        border-radius: 8px;
-        padding: 0.875rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s;
-        border: none;
-    }
-    
-    .btn:hover {
-        transform: translateY(-2px);
-    }
-    
-    .btn-success {
-        background: #10b981;
-    }
-    
-    .btn-success:hover {
-        background: #059669;
-        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-    }
-    
-    .btn-danger {
-        background: #ef4444;
-    }
-    
-    .btn-danger:hover {
-        background: #dc2626;
-        box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
-    }
-    
-    .btn-secondary {
-        background: #6b7280;
-    }
-    
-    .btn-secondary:hover {
+
+    .btn-action.cancel:hover {
         background: #4b5563;
     }
-    
-    .btn-light {
-        background: white;
-        color: #3b82f6;
-        border: 2px solid white;
-    }
-    
-    .btn-light:hover {
-        background: rgba(255,255,255,0.9);
-        transform: translateY(-2px);
-    }
-    
+
+    /* Submission Info */
     .submission-info {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 2px dashed #dee2e6;
+        margin-top: 30px;
+        padding-top: 25px;
+        border-top: 2px dashed #e2e8f0;
         text-align: center;
-        color: #6b7280;
+        color: var(--corporate-secondary);
+        font-size: 0.9rem;
     }
-    
+
     .submission-info i {
-        color: #3b82f6;
+        color: var(--manager-primary);
     }
-    
+
+    /* Responsive */
     @media (max-width: 768px) {
+        .manager-page-header {
+            padding: 30px 20px;
+        }
+
+        .manager-page-header h1 {
+            font-size: 1.5rem;
+        }
+
         .staff-info-card {
             flex-direction: column;
             text-align: center;
         }
-        
-        .leave-details-grid {
+
+        .staff-meta {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .details-grid {
             grid-template-columns: 1fr 1fr;
         }
-        
-        .btn-group-custom {
+
+        .action-buttons {
             grid-template-columns: 1fr;
         }
-        
-        .btn-group-custom .btn-secondary {
+
+        .btn-action.cancel {
             grid-column: 1;
         }
     }
@@ -282,192 +483,161 @@
 {% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid py-4">
     
-    <!-- Page Header -->
-    <div class="page-header">
+    <!-- Manager Page Header -->
+    <div class="manager-page-header">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
             <div>
-                <h2 class="mb-2">
-                    <i class="bi bi-clipboard-check"></i> Review Leave Request
-                </h2>
-                <p class="mb-0 opacity-75">
-                    {% if is_manager_leave %}
-                        <i class="bi bi-star-fill"></i> Manager Leave Application
-                    {% else %}
-                        <i class="bi bi-person"></i> Staff Leave Application
-                    {% endif %}
+                <h1>
+                    <i class="bi bi-clipboard-check-fill"></i> Manager Leave Review
+                </h1>
+                <p>
+                    <i class="bi bi-person-check-fill"></i> Staff Leave Application - Manager Approval Required
                 </p>
             </div>
-            <a href="{% if request.user.role == 'admin' %}{% url 'schedule:admin_leave_requests' %}{% else %}{% url 'schedule:manager_leave_requests' %}{% endif %}" 
-               class="btn btn-light">
-                <i class="bi bi-arrow-left"></i> Back to List
-            </a>
+            <div class="header-actions">
+                <a href="{% url 'schedule:manager_leave_requests' %}" class="btn-back-manager">
+                    <i class="bi bi-arrow-left"></i> Back to All Requests
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- Review Card -->
-    <div class="review-card">
+    <div class="review-container">
         
-        <!-- Staff Info -->
+        <!-- Staff Info Card -->
         <div class="staff-info-card">
             <div class="staff-avatar">
                 {{ leave_request.staff.username|slice:":2"|upper }}
             </div>
-            <div class="staff-details flex-grow-1">
-                <h4>{{ leave_request.staff.get_full_name|default:leave_request.staff.username }}</h4>
+            <div class="staff-details">
+                <h2 class="staff-name">{{ leave_request.staff.get_full_name|default:leave_request.staff.username }}</h2>
                 <div class="staff-meta">
-                    <span>
-                        <i class="bi bi-briefcase"></i> 
-                        {{ leave_request.staff.get_role_display }}
+                    <span class="meta-item">
+                        <i class="bi bi-briefcase-fill"></i>
+                        <strong>{{ leave_request.staff.get_role_display }}</strong>
                     </span>
-                    <span>
-                        <i class="bi bi-geo-alt"></i> 
-                        {{ leave_request.staff.get_branch_display }}
+                    <span class="meta-item">
+                        <i class="bi bi-building"></i>
+                        <strong>{{ leave_request.staff.get_branch_display }}</strong>
                     </span>
-                    <span>
-                        <i class="bi bi-person-badge"></i> 
-                        {{ leave_request.staff.username }}
+                    <span class="meta-item">
+                        <i class="bi bi-person-badge-fill"></i>
+                        <strong>{{ leave_request.staff.username }}</strong>
                     </span>
                 </div>
-                <div class="mt-2">
+                <div>
                     <span class="status-badge {{ leave_request.status }}">
-                        <i class="bi bi-info-circle"></i>
+                        <i class="bi bi-info-circle-fill"></i>
                         {{ leave_request.get_status_display }}
                     </span>
                 </div>
             </div>
         </div>
 
-        <!-- Leave Details -->
-        <h5 class="mb-3">
-            <i class="bi bi-calendar-range"></i> Leave Details
-        </h5>
-        <div class="leave-details-grid">
-            <div class="detail-box">
-                <div class="detail-label">
-                    <i class="bi bi-tag"></i> Leave Type
-                </div>
-                <div class="detail-value">
-                    <span class="badge bg-primary" style="font-size: 0.9rem;">
-                        {{ leave_request.get_leave_type_display }}
-                    </span>
-                </div>
-            </div>
-            <div class="detail-box">
-                <div class="detail-label">
-                    <i class="bi bi-calendar-event"></i> Start Date
-                </div>
-                <div class="detail-value">
-                    {{ leave_request.start_date|date:"M d, Y" }}
-                </div>
-            </div>
-            <div class="detail-box">
-                <div class="detail-label">
-                    <i class="bi bi-calendar-check"></i> End Date
-                </div>
-                <div class="detail-value">
-                    {{ leave_request.end_date|date:"M d, Y" }}
-                </div>
-            </div>
-            <div class="detail-box">
-                <div class="detail-label">
-                    <i class="bi bi-hourglass-split"></i> Total Days
-                </div>
-                <div class="detail-value" style="color: #3b82f6;">
-                    {{ leave_request.total_days }} day{{ leave_request.total_days|pluralize }}
-                </div>
-            </div>
-        </div>
-
-        <!-- Reason -->
-        <div class="leave-reason-box">
-            <h6>
-                <i class="bi bi-chat-left-text"></i> Reason for Leave
-            </h6>
-            <p class="mb-0">{{ leave_request.reason }}</p>
-        </div>
-
-        <!-- Medical Proof -->
-        {% if leave_request.medical_proof %}
-        <div class="medical-proof">
-            <i class="bi bi-file-earmark-medical"></i>
-            <h6 class="mt-2 mb-3">Medical Certificate Attached</h6>
-            <a href="{{ leave_request.medical_proof.url }}" 
-               target="_blank" 
-               class="btn btn-primary">
-                <i class="bi bi-download"></i> View Medical Certificate
-            </a>
-        </div>
-        {% endif %}
-
-        <!-- Manager Approval Section -->
-        {% if leave_request.status == 'manager_approved' %}
-        <div class="manager-section">
-            <h6>
-                <i class="bi bi-check-circle-fill"></i> Manager Approval
-            </h6>
-            <div class="mt-3">
-                <div class="row">
-                    <div class="col-md-6 mb-2">
-                        <strong><i class="bi bi-person-check"></i> Approved by:</strong><br>
-                        {% if leave_request.manager_approved_by %}
-                            {{ leave_request.manager_approved_by.get_full_name|default:leave_request.manager_approved_by.username }}
-                        {% else %}
-                            <em>System (Manager self-approval)</em>
-                        {% endif %}
+        <!-- Leave Details Section -->
+        <div class="details-section">
+            <h3 class="section-title">
+                <i class="bi bi-calendar-range-fill"></i> Leave Details
+            </h3>
+            
+            <div class="details-grid">
+                <div class="detail-card">
+                    <div class="detail-label">
+                        <i class="bi bi-tag-fill"></i> Leave Type
                     </div>
-                    <div class="col-md-6 mb-2">
-                        <strong><i class="bi bi-clock"></i> Approved at:</strong><br>
-                        {% if leave_request.manager_approved_at %}
-                            {{ leave_request.manager_approved_at|date:"M d, Y g:i A" }}
-                        {% else %}
-                            {{ leave_request.created_at|date:"M d, Y g:i A" }}
-                        {% endif %}
+                    <div class="detail-value">
+                        <span class="badge bg-primary">{{ leave_request.get_leave_type_display }}</span>
                     </div>
-                </div>
-                {% if leave_request.manager_notes %}
-                <div class="mt-3 p-3" style="background: rgba(255,255,255,0.5); border-radius: 8px;">
-                    <strong><i class="bi bi-sticky"></i> Manager Notes:</strong>
-                    <p class="mb-0 mt-2">{{ leave_request.manager_notes }}</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Action Section -->
-        <div class="action-section">
-            <h5>
-                <i class="bi bi-hand-thumbs-up"></i> 
-                {% if request.user.role == 'admin' %}Admin{% else %}Manager{% endif %} Decision
-            </h5>
-            <form method="post">
-                {% csrf_token %}
-                <div class="mb-3">
-                    <label class="form-label fw-bold">
-                        <i class="bi bi-pencil-square"></i> Notes (Optional)
-                    </label>
-                    <textarea name="notes" 
-                              class="form-control" 
-                              rows="4" 
-                              placeholder="Add any comments or reasons for your decision..."
-                              style="border-radius: 8px; border: 2px solid #dee2e6;"></textarea>
-                    <small class="text-muted">
-                        This note will be visible to the staff member
-                    </small>
                 </div>
                 
-                <div class="btn-group-custom">
-                    <button type="submit" name="action" value="approve" class="btn btn-success">
-                        <i class="bi bi-check-circle-fill"></i> Approve Leave
+                <div class="detail-card">
+                    <div class="detail-label">
+                        <i class="bi bi-calendar-event"></i> Start Date
+                    </div>
+                    <div class="detail-value">
+                        {{ leave_request.start_date|date:"M d, Y" }}
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-label">
+                        <i class="bi bi-calendar-check"></i> End Date
+                    </div>
+                    <div class="detail-value">
+                        {{ leave_request.end_date|date:"M d, Y" }}
+                    </div>
+                </div>
+                
+                <div class="detail-card">
+                    <div class="detail-label">
+                        <i class="bi bi-hourglass-split"></i> Total Days
+                    </div>
+                    <div class="detail-value" style="color: var(--manager-primary);">
+                        {{ leave_request.total_days }} day{{ leave_request.total_days|pluralize }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reason -->
+            <div class="reason-box">
+                <div class="reason-title">
+                    <i class="bi bi-chat-left-text-fill"></i> Reason for Leave
+                </div>
+                <p class="reason-text">{{ leave_request.reason }}</p>
+            </div>
+
+            <!-- Medical Proof -->
+            {% if leave_request.medical_proof %}
+            <div class="medical-proof-section">
+                <i class="bi bi-file-earmark-medical-fill"></i>
+                <h6>Medical Certificate Attached</h6>
+                <a href="{{ leave_request.medical_proof.url }}" target="_blank" class="btn-view-medical">
+                    <i class="bi bi-download"></i> View Medical Certificate
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Manager Action Section -->
+        <div class="manager-action-section">
+            <h3 class="action-title">
+                <i class="bi bi-hand-thumbs-up-fill"></i> Manager Decision Required
+            </h3>
+
+            <div class="info-alert">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Approval Process:</strong> Your approval will forward this request to admin for final approval.
+                </div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group-custom">
+                    <label class="form-label-custom">
+                        <i class="bi bi-pencil-square"></i> Manager Notes (Optional)
+                    </label>
+                    <textarea name="notes" 
+                              class="form-textarea-custom" 
+                              rows="5" 
+                              placeholder="Add your comments or recommendations for the admin..."></textarea>
+                    <div class="help-text">
+                        <i class="bi bi-info-circle"></i> Your notes will be visible to admin and staff member
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" name="action" value="approve" class="btn-action approve">
+                        <i class="bi bi-check-circle-fill"></i> Approve & Forward
                     </button>
-                    <button type="submit" name="action" value="reject" class="btn btn-danger">
-                        <i class="bi bi-x-circle-fill"></i> Reject Leave
+                    <button type="submit" name="action" value="reject" class="btn-action reject">
+                        <i class="bi bi-x-circle-fill"></i> Reject Request
                     </button>
-                    <a href="{% if request.user.role == 'admin' %}{% url 'schedule:admin_leave_requests' %}{% else %}{% url 'schedule:manager_leave_requests' %}{% endif %}" 
-                       class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Cancel & Go Back
+                    <a href="{% url 'schedule:manager_leave_requests' %}" class="btn-action cancel">
+                        <i class="bi bi-arrow-left"></i> Cancel & Return
                     </a>
                 </div>
             </form>
@@ -476,9 +646,9 @@
         <!-- Submission Info -->
         <div class="submission-info">
             <i class="bi bi-clock-history"></i> 
-            Submitted <strong>{{ leave_request.created_at|timesince }}</strong> ago 
+            Submitted <strong>{{ leave_request.created_at|timesince }}</strong> ago
             <br>
-            <small>({{ leave_request.created_at|date:"l, M d, Y \a\t g:i A" }})</small>
+            <small>({{ leave_request.created_at|date:"l, F d, Y \a\t g:i A" }})</small>
         </div>
     </div>
 

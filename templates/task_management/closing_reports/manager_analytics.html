@@ -3,89 +3,445 @@
 
 {% block title %}Branch Analytics - {{ branch }} - CatzoTeam{% endblock %}
 
-{% block page_title %}Branch Analytics - {{ branch }}{% endblock %}
-
-{% block breadcrumbs %}
-<li class="breadcrumb-item"><a href="{% url 'dashboard:manager_dashboard' %}">Dashboard</a></li>
-<li class="breadcrumb-item active">Branch Analytics</li>
-{% endblock %}
-
 {% block extra_css %}
 <style>
+    :root {
+        --corporate-primary: #1e3a8a;
+        --corporate-secondary: #475569;
+        --corporate-accent: #3b82f6;
+        --corporate-success: #059669;
+        --corporate-warning: #d97706;
+        --corporate-danger: #dc2626;
+        --corporate-info: #0284c7;
+        --corporate-light: #f8fafc;
+        --corporate-dark: #0f172a;
+    }
+
+    /* Page Header */
+    .analytics-page-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 40px 30px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .analytics-page-header h1 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .analytics-page-header p {
+        margin: 10px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.05rem;
+    }
+
+    .branch-tag {
+        background: white;
+        color: var(--corporate-primary);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 15px;
+    }
+
+    /* Period Selector */
+    .period-selector {
+        background: white;
+        border-radius: 12px;
+        padding: 20px 25px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .period-selector h5 {
+        margin: 0;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .period-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .period-btn {
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: var(--corporate-secondary);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .period-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: var(--corporate-secondary);
+        text-decoration: none;
+    }
+
+    .period-btn.active {
+        background: var(--corporate-accent);
+        border-color: var(--corporate-accent);
+        color: white;
+    }
+
+    .view-reports-btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        background: white;
+        color: var(--corporate-success);
+        border: 2px solid var(--corporate-success);
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .view-reports-btn:hover {
+        background: var(--corporate-success);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+        text-decoration: none;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card-analytics {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card-analytics:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-card-analytics::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+    }
+
+    .stat-card-analytics.revenue::before { background: var(--corporate-accent); }
+    .stat-card-analytics.customers::before { background: var(--corporate-success); }
+    .stat-card-analytics.average::before { background: var(--corporate-info); }
+    .stat-card-analytics.reports::before { background: var(--corporate-warning); }
+
+    .stat-icon-large {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 3.5rem;
+        opacity: 0.1;
+    }
+
+    .stat-icon-large.revenue { color: var(--corporate-accent); }
+    .stat-icon-large.customers { color: var(--corporate-success); }
+    .stat-icon-large.average { color: var(--corporate-info); }
+    .stat-icon-large.reports { color: var(--corporate-warning); }
+
+    .stat-label-analytics {
+        font-size: 0.875rem;
+        color: var(--corporate-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .stat-value-analytics {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        line-height: 1;
+    }
+
+    /* Chart Cards */
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .chart-card-header {
+        background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
+        color: white;
+        padding: 20px 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .chart-card-header h5 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+
+    .chart-card-header i {
+        font-size: 1.5rem;
+    }
+
+    .chart-card-body {
+        padding: 30px;
+    }
+
     .chart-container {
         position: relative;
-        height: 400px;
-        margin-bottom: 30px;
+        height: 450px;
+    }
+
+    .chart-container.small {
+        height: 350px;
+    }
+
+    /* Stats Table */
+    .stats-table {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .stats-table tr {
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .stats-table tr:last-child {
+        border-bottom: none;
+    }
+
+    .stats-table td {
+        padding: 15px 10px;
+        font-size: 0.95rem;
+    }
+
+    .stats-table td:first-child {
+        color: var(--corporate-secondary);
+        font-weight: 500;
+    }
+
+    .stats-table td:last-child {
+        text-align: right;
+        font-weight: 700;
+        color: var(--corporate-dark);
+        font-size: 1.1rem;
+    }
+
+    .stats-section-title {
+        font-weight: 700;
+        color: var(--corporate-dark);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.1rem;
+    }
+
+    .stats-section-title i {
+        color: var(--corporate-accent);
+    }
+
+    /* Service Breakdown Layout */
+    .service-breakdown-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    .breakdown-chart-container {
+        position: relative;
+        height: 350px;
+    }
+
+    .breakdown-stats {
+        background: #f8fafc;
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .service-breakdown-row {
+            grid-template-columns: 1fr;
+        }
+
+        .breakdown-chart-container {
+            height: 300px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .analytics-page-header {
+            padding: 30px 20px;
+        }
+
+        .analytics-page-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .period-selector {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .period-buttons {
+            flex-direction: column;
+        }
+
+        .period-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .stat-value-analytics {
+            font-size: 1.8rem;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
+<div class="container-fluid py-4">
     
+    <!-- Page Header -->
+    <div class="analytics-page-header">
+        <h1>
+            <i class="bi bi-graph-up-arrow"></i> Branch Analytics Dashboard
+        </h1>
+        <p>Performance insights and revenue projections for your branch</p>
+        <span class="branch-tag">
+            <i class="bi bi-building"></i> {{ branch }}
+        </span>
+    </div>
+
     <!-- Period Selector -->
-    <div class="row mb-4">
-        <div class="col-md-12">
-            <div class="btn-group" role="group">
-                <a href="?period=7" class="btn {% if period == '7' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 7 Days
+    <div class="period-selector">
+        <div>
+            <h5><i class="bi bi-calendar-range"></i> Time Period</h5>
+        </div>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+            <div class="period-buttons">
+                <a href="?period=7" class="period-btn {% if period == '7' %}active{% endif %}">
+                    <i class="bi bi-calendar-week"></i> Last 7 Days
                 </a>
-                <a href="?period=30" class="btn {% if period == '30' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 30 Days
+                <a href="?period=30" class="period-btn {% if period == '30' %}active{% endif %}">
+                    <i class="bi bi-calendar-month"></i> Last 30 Days
                 </a>
-                <a href="?period=90" class="btn {% if period == '90' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                    Last 3 Months
+                <a href="?period=90" class="period-btn {% if period == '90' %}active{% endif %}">
+                    <i class="bi bi-calendar3"></i> Last 3 Months
                 </a>
             </div>
-            
-            <a href="{% url 'task_management:my_closing_reports' %}" class="btn btn-outline-secondary float-end">
+            <a href="{% url 'task_management:my_closing_reports' %}" class="view-reports-btn">
                 <i class="bi bi-file-text"></i> View Reports
             </a>
         </div>
     </div>
 
     <!-- Summary Stats -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Total Revenue (30d)</h6>
-                    <h3 class="mb-0">RM {{ summary.total_revenue|floatformat:2|default:"0.00" }}</h3>
-                </div>
+    <div class="stats-grid">
+        <div class="stat-card-analytics revenue">
+            <div class="stat-label-analytics">
+                <i class="bi bi-cash-coin"></i> Total Revenue (30d)
             </div>
+            <div class="stat-value-analytics">
+                RM {{ summary.total_revenue|floatformat:2|default:"0.00" }}
+            </div>
+            <i class="bi bi-graph-up stat-icon-large revenue"></i>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Total Customers (30d)</h6>
-                    <h3 class="mb-0">{{ summary.total_customers|default:0 }}</h3>
-                </div>
+        
+        <div class="stat-card-analytics customers">
+            <div class="stat-label-analytics">
+                <i class="bi bi-people"></i> Total Customers (30d)
             </div>
+            <div class="stat-value-analytics">
+                {{ summary.total_customers|default:0 }}
+            </div>
+            <i class="bi bi-person-check stat-icon-large customers"></i>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Avg Revenue/Day</h6>
-                    <h3 class="mb-0">RM {{ avg_stats.avg_revenue|floatformat:2|default:"0.00" }}</h3>
-                </div>
+        
+        <div class="stat-card-analytics average">
+            <div class="stat-label-analytics">
+                <i class="bi bi-calculator"></i> Avg Revenue/Day
             </div>
+            <div class="stat-value-analytics">
+                RM {{ avg_stats.avg_revenue|floatformat:2|default:"0.00" }}
+            </div>
+            <i class="bi bi-speedometer2 stat-icon-large average"></i>
         </div>
-        <div class="col-md-3">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="text-muted mb-2">Reports Submitted</h6>
-                    <h3 class="mb-0">{{ summary.total_reports|default:0 }}</h3>
-                </div>
+        
+        <div class="stat-card-analytics reports">
+            <div class="stat-label-analytics">
+                <i class="bi bi-file-earmark-text"></i> Reports Submitted
             </div>
+            <div class="stat-value-analytics">
+                {{ summary.total_reports|default:0 }}
+            </div>
+            <i class="bi bi-clipboard-check stat-icon-large reports"></i>
         </div>
     </div>
 
     <!-- Revenue Trend Chart -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-graph-up"></i> Revenue Trend & Projection</h5>
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-graph-up"></i>
+            <h5>Revenue Trend & Projection</h5>
         </div>
-        <div class="card-body">
+        <div class="chart-card-body">
             <div class="chart-container">
                 <canvas id="revenueTrendChart"></canvas>
             </div>
@@ -93,43 +449,53 @@
     </div>
 
     <!-- Customer Trend Chart -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-people"></i> Customer Trend</h5>
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-people"></i>
+            <h5>Customer Trend</h5>
         </div>
-        <div class="card-body">
+        <div class="chart-card-body">
             <div class="chart-container">
                 <canvas id="customerTrendChart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Service Breakdown Chart -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-header bg-white">
-            <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Service Breakdown</h5>
+    <!-- Service Breakdown -->
+    <div class="chart-card">
+        <div class="chart-card-header">
+            <i class="bi bi-pie-chart"></i>
+            <h5>Service Breakdown</h5>
         </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="chart-container" style="height: 300px;">
+        <div class="chart-card-body">
+            <div class="service-breakdown-row">
+                <div>
+                    <div class="breakdown-chart-container">
                         <canvas id="groomingBoardingChart"></canvas>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <h6 class="mb-3">Average Statistics (30d)</h6>
-                    <table class="table">
+                <div class="breakdown-stats">
+                    <h6 class="stats-section-title">
+                        <i class="bi bi-bar-chart-fill"></i> Average Statistics (30d)
+                    </h6>
+                    <table class="stats-table">
                         <tr>
-                            <td>Avg Grooming/Day:</td>
-                            <td><strong>{{ avg_stats.avg_grooming|floatformat:1 }}</strong></td>
+                            <td>Avg Grooming per Day:</td>
+                            <td>{{ avg_stats.avg_grooming|floatformat:1 }}</td>
                         </tr>
                         <tr>
-                            <td>Avg Boarding/Day:</td>
-                            <td><strong>{{ avg_stats.avg_boarding|floatformat:1 }}</strong></td>
+                            <td>Avg Boarding per Day:</td>
+                            <td>{{ avg_stats.avg_boarding|floatformat:1 }}</td>
                         </tr>
                         <tr>
-                            <td>Avg Customers/Day:</td>
-                            <td><strong>{{ avg_stats.avg_customers|floatformat:1 }}</strong></td>
+                            <td>Avg Customers per Day:</td>
+                            <td>{{ avg_stats.avg_customers|floatformat:1 }}</td>
+                        </tr>
+                        <tr>
+                            <td>Total Services (30d):</td>
+                            <td style="color: var(--corporate-accent);">
+                                {{ summary.total_customers|default:0 }}
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -164,19 +530,24 @@ new Chart(revenueTrendCtx, {
             {
                 label: 'Actual Revenue',
                 data: [...revenues, ...Array(projectionDates.length).fill(null)],
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
-                fill: true
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6
             },
             {
                 label: 'Projected Revenue (30-day avg)',
                 data: [...Array(dates.length).fill(null), ...projectionRevenues],
-                borderColor: 'rgb(255, 159, 64)',
-                backgroundColor: 'rgba(255, 159, 64, 0.1)',
-                borderDash: [5, 5],
+                borderColor: 'rgb(217, 119, 6)',
+                backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                borderDash: [8, 4],
                 tension: 0.4,
-                fill: false
+                fill: false,
+                borderWidth: 3,
+                pointRadius: 0
             }
         ]
     },
@@ -186,18 +557,56 @@ new Chart(revenueTrendCtx, {
         plugins: {
             legend: {
                 position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    }
+                }
             },
             title: {
                 display: true,
-                text: 'Daily Revenue (RM) - Historical & Projected'
+                text: 'Daily Revenue (RM) - Historical & Projected',
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: 20
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                cornerRadius: 8
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                },
                 ticks: {
                     callback: function(value) {
                         return 'RM ' + value.toFixed(2);
+                    },
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    font: {
+                        size: 11,
+                        weight: '500'
                     }
                 }
             }
@@ -214,9 +623,10 @@ new Chart(customerTrendCtx, {
         datasets: [{
             label: 'Total Customers',
             data: customers,
-            backgroundColor: 'rgba(54, 162, 235, 0.6)',
-            borderColor: 'rgb(54, 162, 235)',
-            borderWidth: 1
+            backgroundColor: 'rgba(5, 150, 105, 0.6)',
+            borderColor: 'rgb(5, 150, 105)',
+            borderWidth: 2,
+            borderRadius: 6
         }]
     },
     options: {
@@ -225,24 +635,62 @@ new Chart(customerTrendCtx, {
         plugins: {
             legend: {
                 position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 15,
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    }
+                }
             },
             title: {
                 display: true,
-                text: 'Daily Customer Count'
+                text: 'Daily Customer Count',
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: 20
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                cornerRadius: 8
             }
         },
         scales: {
             y: {
                 beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                },
                 ticks: {
-                    stepSize: 1
+                    stepSize: 1,
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    font: {
+                        size: 11,
+                        weight: '500'
+                    }
                 }
             }
         }
     }
 });
 
-// 3. Grooming vs Boarding Pie Chart
+// 3. Grooming vs Boarding Doughnut Chart
 const totalGrooming = groomingCounts.reduce((a, b) => a + b, 0);
 const totalBoarding = boardingCounts.reduce((a, b) => a + b, 0);
 
@@ -254,14 +702,15 @@ new Chart(groomingBoardingCtx, {
         datasets: [{
             data: [totalGrooming, totalBoarding],
             backgroundColor: [
-                'rgba(255, 99, 132, 0.6)',
-                'rgba(153, 102, 255, 0.6)'
+                'rgba(239, 68, 68, 0.8)',
+                'rgba(139, 92, 246, 0.8)'
             ],
             borderColor: [
-                'rgb(255, 99, 132)',
-                'rgb(153, 102, 255)'
+                'rgb(239, 68, 68)',
+                'rgb(139, 92, 246)'
             ],
-            borderWidth: 1
+            borderWidth: 3,
+            hoverOffset: 10
         }]
     },
     options: {
@@ -270,10 +719,39 @@ new Chart(groomingBoardingCtx, {
         plugins: {
             legend: {
                 position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
             },
             title: {
                 display: true,
-                text: 'Grooming vs Boarding Distribution'
+                text: 'Service Distribution (30 days)',
+                font: {
+                    size: 16,
+                    weight: 'bold'
+                },
+                padding: 20
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 13 },
+                cornerRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} (${percentage}%)`;
+                    }
+                }
             }
         }
     }

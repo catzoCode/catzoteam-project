@@ -22,11 +22,6 @@ urlpatterns = [
     path('unassigned/', views.unassigned_packages, name='unassigned_packages'),
     path('task/<str:task_id>/assign/', views.assign_task, name='assign_task'),
     
-    # ============================================
-    # STAFF: MY TASKS - EXISTING (Keep for backward compatibility)
-    # ============================================
-    path('my-tasks/', views.my_tasks, name='my_tasks'),
-    path('complete/<str:task_id>/', views.complete_task, name='complete_task'),
     
     # ============================================
     # STAFF: ENHANCED TASK VIEWS - NEW
