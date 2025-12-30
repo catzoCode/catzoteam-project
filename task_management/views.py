@@ -1255,14 +1255,14 @@ def review_point_request(request, pk):  # Changed from request_id to pk
 
 @login_required
 def submit_closing_report(request):
-    """Manager submits daily closing report"""
+    """Manager submits daily closing report with multiple images"""
     if request.user.role not in ['manager', 'admin']:
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
     
     if request.method == 'POST':
         # Get form data
-        report_date = request.POST.get('date')
+        report_date_str = request.POST.get('date')
         grooming_count = request.POST.get('grooming_count', 0)
         boarding_count = request.POST.get('boarding_count', 0)
         total_customers = request.POST.get('total_customers', 0)
@@ -1272,23 +1272,30 @@ def submit_closing_report(request):
         compliance_free = request.POST.get('compliance_free_services_today') == 'yes'
         notes = request.POST.get('notes', '')
         
-        # Handle photo upload
-        payment_photo = request.FILES.get('payment_proof_photo')
-        
-        if not payment_photo:
-            messages.error(request, 'Payment proof photo is required!')
-            return redirect('task_management:submit_closing_report')
+        # Parse date
+        report_date_obj = datetime.strptime(report_date_str, '%Y-%m-%d').date()
         
         # Check if report already exists for this date and branch
-        report_date_obj = datetime.strptime(report_date, '%Y-%m-%d').date()
         existing_report = ClosingReport.objects.filter(
             date=report_date_obj,
             branch=request.user.branch
         ).first()
         
         if existing_report:
-            messages.error(request, f'Closing report for {report_date} already submitted!')
+            messages.error(request, f'Closing report for {report_date_str} already submitted!')
             return redirect('task_management:my_closing_reports')
+        
+        # Handle multiple image uploads (5 images possible)
+        image_1 = request.FILES.get('image_1')
+        image_2 = request.FILES.get('image_2')
+        image_3 = request.FILES.get('image_3')
+        image_4 = request.FILES.get('image_4')
+        image_5 = request.FILES.get('image_5')
+        
+        # Require at least one image
+        if not image_1:
+            messages.error(request, 'At least one payment proof image is required!')
+            return redirect('task_management:submit_closing_report')
         
         # Create closing report
         report = ClosingReport.objects.create(
@@ -1300,7 +1307,14 @@ def submit_closing_report(request):
             total_customers=int(total_customers),
             payment_record_amount=Decimal(payment_record),
             payment_receipt_amount=Decimal(payment_receipt),
-            payment_proof_photo=payment_photo,
+            
+            # Save all images
+            image_1=image_1,
+            image_2=image_2 if image_2 else None,
+            image_3=image_3 if image_3 else None,
+            image_4=image_4 if image_4 else None,
+            image_5=image_5 if image_5 else None,
+            
             compliance_all_paid_through_system=compliance_system,
             compliance_free_services_today=compliance_free,
             notes=notes
@@ -1308,7 +1322,7 @@ def submit_closing_report(request):
         
         messages.success(
             request,
-            f'✅ Closing report {report.report_id} submitted successfully for {report_date}!'
+            f'✅ Closing report {report.report_id} submitted successfully for {report_date_str}!'
         )
         return redirect('task_management:my_closing_reports')
     
