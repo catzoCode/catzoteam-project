@@ -226,23 +226,71 @@
     .photo-upload-area {
         border: 3px dashed #e2e8f0;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         text-align: center;
         background: #f8fafc;
         margin-top: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .photo-upload-area.has-file {
+        border-color: var(--corporate-success);
+        background: #f0fdf4;
     }
 
     .upload-icon {
-        font-size: 4rem;
+        font-size: 3rem;
         color: var(--corporate-accent);
-        margin-bottom: 20px;
+        margin-bottom: 15px;
+    }
+
+    .photo-upload-area.has-file .upload-icon {
+        color: var(--corporate-success);
     }
 
     .upload-text {
         font-weight: 700;
         color: var(--corporate-dark);
         font-size: 1.1rem;
-        margin-bottom: 8px;
+        margin-bottom: 15px;
+    }
+
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .upload-btn.camera-btn {
+        background: var(--corporate-accent);
+        color: white;
+        border-color: var(--corporate-accent);
+    }
+
+    .upload-btn.camera-btn:hover {
+        background: var(--corporate-primary);
+        border-color: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .upload-btn.file-btn {
+        background: white;
+        color: var(--corporate-accent);
+        border-color: var(--corporate-accent);
+    }
+
+    .upload-btn.file-btn:hover {
+        background: var(--corporate-accent);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .section-divider {
@@ -407,8 +455,52 @@
                         
                         <div class="photo-upload-area">
                             <i class="bi bi-camera upload-icon"></i>
-                            <div class="upload-text">Tap to Capture or Upload Photo</div>
-                            <input type="file" name="payment_proof_photo" accept="image/*" capture="environment" required style="margin-top: 20px;">
+                            <div class="upload-text">Choose how to upload your payment proof</div>
+                            
+                            <!-- Two Upload Options -->
+                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px;">
+                                <!-- Camera Capture Button -->
+                                <label for="payment_proof_photo" class="upload-btn camera-btn" style="cursor: pointer;">
+                                    <i class="bi bi-camera-fill"></i> Take Photo
+                                </label>
+                                
+                                <!-- File Choose Button -->
+                                <label for="payment_proof_photo_file" class="upload-btn file-btn" style="cursor: pointer;">
+                                    <i class="bi bi-folder2-open"></i> Choose File
+                                </label>
+                            </div>
+                            
+                            <!-- Hidden File Inputs -->
+                            <input 
+                                type="file" 
+                                id="payment_proof_photo" 
+                                name="payment_proof_photo" 
+                                accept="image/*" 
+                                capture="environment"
+                                style="display: none;"
+                            >
+                            
+                            <input 
+                                type="file" 
+                                id="payment_proof_photo_file" 
+                                name="payment_proof_photo" 
+                                accept="image/*"
+                                style="display: none;"
+                            >
+                            
+                            <!-- Preview Area -->
+                            <div id="imagePreview" style="margin-top: 20px; display: none;">
+                                <img id="previewImg" src="" alt="Preview" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); border: 3px solid #e2e8f0;">
+                                <div style="margin-top: 15px;">
+                                    <button type="button" id="removeImage" style="background: var(--corporate-danger); color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                                        <i class="bi bi-trash"></i> Remove Image
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 15px; font-size: 0.85rem; color: var(--corporate-secondary);">
+                                <i class="bi bi-info-circle"></i> Max file size: 5MB | Supported: JPG, PNG
+                            </div>
                         </div>
                     </div>
 
@@ -470,7 +562,7 @@
 
 {% block extra_js %}
 <script>
-// Auto-calculate total customers (optional helper)
+// Auto-calculate total customers
 document.getElementById('grooming_count').addEventListener('input', function() {
     const grooming = parseInt(this.value) || 0;
     const boarding = parseInt(document.getElementById('boarding_count').value) || 0;
@@ -483,6 +575,86 @@ document.getElementById('boarding_count').addEventListener('input', function() {
     document.getElementById('total_customers').value = grooming + boarding;
 });
 
-// NO FORM VALIDATION - Let browser handle it!
+// Image Upload Handling
+const cameraInput = document.getElementById('payment_proof_photo');
+const fileInput = document.getElementById('payment_proof_photo_file');
+const imagePreview = document.getElementById('imagePreview');
+const previewImg = document.getElementById('previewImg');
+const removeBtn = document.getElementById('removeImage');
+const uploadArea = document.querySelector('.photo-upload-area');
+
+// Handle both camera and file input
+function handleImageUpload(file, sourceInput) {
+    if (!file) return;
+    
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('⚠️ File size must be less than 5MB');
+        sourceInput.value = '';
+        return;
+    }
+    
+    // Validate file type
+    if (!file.type.match('image.*')) {
+        alert('⚠️ Please select an image file (JPG, PNG)');
+        sourceInput.value = '';
+        return;
+    }
+    
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        previewImg.src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadArea.classList.add('has-file');
+        
+        // Update the other input to have the same file
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        
+        if (sourceInput === cameraInput) {
+            fileInput.files = dataTransfer.files;
+        } else {
+            cameraInput.files = dataTransfer.files;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+// Camera input listener
+cameraInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    handleImageUpload(file, cameraInput);
+});
+
+// File input listener
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    handleImageUpload(file, fileInput);
+});
+
+// Remove image
+removeBtn.addEventListener('click', function() {
+    cameraInput.value = '';
+    fileInput.value = '';
+    imagePreview.style.display = 'none';
+    uploadArea.classList.remove('has-file');
+    previewImg.src = '';
+});
+
+// Form validation
+const form = document.querySelector('form');
+form.addEventListener('submit', function(e) {
+    // Check if image is uploaded
+    if (!cameraInput.files[0] && !fileInput.files[0]) {
+        e.preventDefault();
+        alert('⚠️ Please upload a payment proof image!');
+        uploadArea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+});
+
+// Initialize auto-calculate
+document.getElementById('grooming_count').dispatchEvent(new Event('input'));
 </script>
 {% endblock %}

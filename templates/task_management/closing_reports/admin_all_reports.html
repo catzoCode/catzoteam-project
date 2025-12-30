@@ -17,7 +17,6 @@
         --corporate-dark: #0f172a;
     }
 
-    /* Page Header */
     .reports-header {
         background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
         color: white;
@@ -42,7 +41,6 @@
         font-size: 1.05rem;
     }
 
-    /* Action Buttons */
     .action-bar {
         background: white;
         border-radius: 12px;
@@ -91,7 +89,6 @@
         color: white;
     }
 
-    /* Stats Grid */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -153,7 +150,6 @@
         line-height: 1;
     }
 
-    /* Filters Card */
     .filters-card {
         background: white;
         border-radius: 12px;
@@ -222,7 +218,6 @@
         transform: translateY(-2px);
     }
 
-    /* Table Card */
     .table-card {
         background: white;
         border-radius: 12px;
@@ -298,7 +293,6 @@
         color: var(--corporate-dark);
     }
 
-    /* Status Badges */
     .status-badge {
         padding: 6px 12px;
         border-radius: 6px;
@@ -335,7 +329,6 @@
         color: #991b1b;
     }
 
-    /* Action Button */
     .btn-view-report {
         padding: 8px 16px;
         border-radius: 6px;
@@ -357,7 +350,6 @@
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-    /* Modal Styles */
     .modal-content {
         border: none;
         border-radius: 12px;
@@ -379,11 +371,35 @@
         display: flex;
         align-items: center;
         gap: 12px;
+        flex: 1;
     }
 
     .modal-header .btn-close {
         filter: brightness(0) invert(1);
         opacity: 1;
+    }
+
+    .btn-pdf-download {
+        background: white;
+        color: var(--corporate-primary);
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        margin-right: 15px;
+    }
+
+    .btn-pdf-download:hover {
+        background: #f0f9ff;
+        color: var(--corporate-primary);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
 
     .modal-body {
@@ -513,7 +529,6 @@
         border-color: var(--corporate-success);
     }
 
-    /* Empty State */
     .empty-state {
         text-align: center;
         padding: 80px 20px;
@@ -532,30 +547,24 @@
         margin: 0;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         .reports-header h1 {
             font-size: 1.5rem;
         }
-
         .stats-grid {
             grid-template-columns: 1fr;
         }
-
         .action-bar {
             flex-direction: column;
         }
-
         .action-btn {
             width: 100%;
             justify-content: center;
         }
-
         .table-card-header {
             flex-direction: column;
             align-items: stretch;
         }
-
         .stat-value {
             font-size: 2rem;
         }
@@ -566,7 +575,6 @@
 {% block content %}
 <div class="container-fluid">
 
-    <!-- Page Header -->
     <div class="reports-header">
         <h1>
             <i class="bi bi-clipboard-data"></i> Branch Closing Reports
@@ -574,7 +582,6 @@
         <p>Comprehensive view of daily closing reports across all branches</p>
     </div>
 
-    <!-- Action Buttons -->
     <div class="action-bar">
         <a href="{% url 'task_management:admin_analytics_dashboard' %}" class="action-btn analytics">
             <i class="bi bi-graph-up"></i> Analytics Dashboard
@@ -584,7 +591,6 @@
         </a>
     </div>
 
-    <!-- Summary Stats -->
     <div class="stats-grid">
         <div class="stat-card revenue">
             <div class="stat-icon">💰</div>
@@ -611,7 +617,6 @@
         </div>
     </div>
 
-    <!-- Filters -->
     <div class="filters-card">
         <h5><i class="bi bi-funnel"></i> Filter Reports</h5>
         <form method="get" class="row g-3 align-items-end">
@@ -648,7 +653,6 @@
         </form>
     </div>
 
-    <!-- Table -->
     <div class="table-card">
         <div class="table-card-header">
             <h5>
@@ -742,7 +746,6 @@
 
 </div>
 
-<!-- Modals -->
 {% for report in reports %}
 <div class="modal fade" id="reportModal{{ report.id }}" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -751,12 +754,16 @@
                 <h5>
                     <i class="bi bi-file-text"></i> {{ report.report_id }} - {{ report.get_branch_display }}
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <a href="{% url 'task_management:download_closing_report_pdf' report.report_id %}" class="btn-pdf-download">
+                        <i class="bi bi-file-pdf-fill"></i> Download PDF
+                    </a>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             </div>
 
             <div class="modal-body">
 
-                <!-- Basic Info -->
                 <div class="info-section">
                     <div class="info-row">
                         <div class="info-item">
@@ -784,7 +791,6 @@
                 </div>
 
                 <div class="row">
-                    <!-- Left Column -->
                     <div class="col-lg-6">
                         <h6 class="section-title">
                             <i class="bi bi-people-fill"></i> Customer & Service Counts
@@ -833,7 +839,6 @@
                         {% endif %}
                     </div>
 
-                    <!-- Right Column -->
                     <div class="col-lg-6">
                         <h6 class="section-title">
                             <i class="bi bi-shield-check"></i> Compliance Checklist
