@@ -25,6 +25,22 @@ def get_branch_display_name(report):
     return branch_choices.get(report.branch, report.branch)
 
 
+def is_report_balanced(report):
+    """Check if report is balanced"""
+    if hasattr(report, 'is_balanced'):
+        return report.is_balanced
+    # Fallback: check if payment amounts match
+    return abs(report.payment_record_amount - report.payment_receipt_amount) < 0.01
+
+
+def is_report_compliant(report):
+    """Check if report is compliant"""
+    if hasattr(report, 'is_compliant'):
+        return report.is_compliant
+    # Fallback: check compliance fields
+    return report.compliance_all_paid_through_system and not report.compliance_free_services_today
+
+
 def generate_reports_summary_pdf(reports, filters=None):
     """
     Generate comprehensive PDF with all closing reports in table format
@@ -105,7 +121,7 @@ def generate_reports_summary_pdf(reports, filters=None):
     if reports:
         total_revenue = sum(r.revenue_total for r in reports)
         total_customers = sum(r.total_customers for r in reports)
-        balanced_count = sum(1 for r in reports if r.is_balanced)
+        balanced_count = sum(1 for r in reports if is_report_balanced(r))
         
         summary_data = [
             ['Total Reports', 'Total Revenue', 'Total Customers', 'Balanced Reports'],
@@ -162,8 +178,8 @@ def generate_reports_summary_pdf(reports, filters=None):
                 get_branch_display_name(report),
                 f'{report.revenue_total:.2f}',
                 str(report.total_customers),
-                '✓' if report.is_balanced else '✗',
-                '✓' if report.is_compliant else '✗'
+                '✓' if is_report_balanced(report) else '✗',
+                '✓' if is_report_compliant(report) else '✗'
             ])
         
         # Create table
@@ -234,7 +250,7 @@ def generate_reports_summary_pdf(reports, filters=None):
             ['Submitted By:', report.submitted_by.username, 'Total Customers:', str(report.total_customers)],
             ['Grooming:', str(report.grooming_count), 'Boarding:', str(report.boarding_count)],
             ['Payment Record:', f'RM {report.payment_record_amount:.2f}', 'Payment Receipt:', f'RM {report.payment_receipt_amount:.2f}'],
-            ['Balanced:', '✓ Yes' if report.is_balanced else '✗ No', 'Compliant:', '✓ Yes' if report.is_compliant else '✗ No'],
+            ['Balanced:', '✓ Yes' if is_report_balanced(report) else '✗ No', 'Compliant:', '✓ Yes' if is_report_compliant(report) else '✗ No'],
         ]
         
         info_table = Table(info_data, colWidths=[4*cm, 4*cm, 4*cm, 4*cm])
