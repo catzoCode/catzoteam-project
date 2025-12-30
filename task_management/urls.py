@@ -111,5 +111,6 @@ urlpatterns = [
     path('closing-report/<str:report_id>/download-pdf/', 
          views.download_closing_report_pdf, 
          name='download_closing_report_pdf'),
+     path('closing-reports/export-pdf/', views.export_reports_pdf, name='export_reports_pdf'), 
 
 ]
