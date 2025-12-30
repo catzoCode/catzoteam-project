@@ -89,6 +89,18 @@
         color: white;
     }
 
+    .action-btn.pdf {
+        background: var(--corporate-danger);
+        color: white;
+    }
+
+    .action-btn.pdf:hover {
+        background: #b91c1c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+        color: white;
+    }
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -379,29 +391,6 @@
         opacity: 1;
     }
 
-    .btn-pdf-download {
-        background: white;
-        color: var(--corporate-primary);
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        margin-right: 15px;
-    }
-
-    .btn-pdf-download:hover {
-        background: #f0f9ff;
-        color: var(--corporate-primary);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-
     .modal-body {
         padding: 30px;
     }
@@ -589,6 +578,9 @@
         <a href="{% url 'task_management:export_reports_excel' %}?{{ request.GET.urlencode }}" class="action-btn export">
             <i class="bi bi-file-earmark-excel"></i> Export to Excel
         </a>
+        <a href="{% url 'task_management:export_reports_pdf' %}?{{ request.GET.urlencode }}" class="action-btn pdf">
+            <i class="bi bi-file-pdf-fill"></i> Export to PDF
+        </a>
     </div>
 
     <div class="stats-grid">
@@ -754,12 +746,7 @@
                 <h5>
                     <i class="bi bi-file-text"></i> {{ report.report_id }} - {{ report.get_branch_display }}
                 </h5>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <a href="{% url 'task_management:download_closing_report_pdf' report.report_id %}" class="btn-pdf-download">
-                        <i class="bi bi-file-pdf-fill"></i> Download PDF
-                    </a>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <div class="modal-body">

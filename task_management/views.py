@@ -13,6 +13,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils import timezone
 from .utils.pdf_generator import generate_closing_report_pdf
+from django.http import HttpResponse
+from .utils.pdf_export import generate_reports_summary_pdf
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import json
@@ -3117,5 +3119,58 @@ def download_closing_report_pdf(request, report_id):
     # Create response
     response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="Closing_Report_{report.report_id}_{report.date}.pdf"'
+    
+    return response
+
+
+@login_required
+def export_reports_pdf(request):
+    """Export filtered closing reports to comprehensive PDF"""
+    if request.user.role not in ['admin', 'manager']:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard:staff_dashboard')
+    
+    # Get filters
+    branch = request.GET.get('branch', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    
+    # Base queryset
+    if request.user.role == 'admin':
+        reports = ClosingReport.objects.all()
+    else:  # manager
+        reports = ClosingReport.objects.filter(branch=request.user.branch)
+    
+    # Apply filters
+    if branch:
+        reports = reports.filter(branch=branch)
+    if date_from:
+        reports = reports.filter(date__gte=date_from)
+    if date_to:
+        reports = reports.filter(date__lte=date_to)
+    
+    # Order by date descending
+    reports = reports.select_related('submitted_by').order_by('-date', '-submitted_at')
+    
+    # Prepare filter info for PDF
+    filter_info = {}
+    if branch:
+        branch_display = dict(ClosingReport._meta.get_field('branch').choices).get(branch, branch)
+        filter_info['branch'] = branch_display
+    if date_from:
+        filter_info['date_from'] = date_from
+    if date_to:
+        filter_info['date_to'] = date_to
+    
+    # Generate PDF
+    pdf_buffer = generate_reports_summary_pdf(reports, filter_info)
+    
+    # Create filename
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'Closing_Reports_{timestamp}.pdf'
+    
+    # Return response
+    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
     
     return response
