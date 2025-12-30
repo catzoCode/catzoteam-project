@@ -17,7 +17,6 @@
         --corporate-dark: #0f172a;
     }
 
-    /* Page Header */
     .closing-header {
         background: linear-gradient(135deg, var(--corporate-primary) 0%, var(--corporate-accent) 100%);
         color: white;
@@ -54,13 +53,11 @@
         margin-top: 10px;
     }
 
-    /* Form Container */
     .form-container {
         max-width: 1000px;
         margin: 0 auto;
     }
 
-    /* Info Alert */
     .info-alert {
         background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
         border-left: 4px solid var(--corporate-info);
@@ -85,7 +82,6 @@
         line-height: 1.6;
     }
 
-    /* Main Form Card */
     .form-card {
         background: white;
         border-radius: 12px;
@@ -116,7 +112,6 @@
         padding: 40px;
     }
 
-    /* Section Headers */
     .section-header {
         font-size: 1.2rem;
         font-weight: 700;
@@ -133,7 +128,6 @@
         color: var(--corporate-accent);
     }
 
-    /* Form Groups */
     .form-group-modern {
         margin-bottom: 25px;
     }
@@ -206,7 +200,6 @@
         color: var(--corporate-info);
     }
 
-    /* Radio Buttons */
     .radio-group {
         display: flex;
         gap: 20px;
@@ -260,79 +253,6 @@
         background: var(--corporate-accent);
     }
 
-    /* Photo Upload */
-    .photo-upload-area {
-        border: 3px dashed #e2e8f0;
-        border-radius: 12px;
-        padding: 30px;
-        text-align: center;
-        transition: all 0.3s ease;
-        background: #f8fafc;
-        cursor: pointer;
-    }
-
-    .photo-upload-area:hover {
-        border-color: var(--corporate-accent);
-        background: #f0f9ff;
-    }
-
-    .photo-upload-area.has-file {
-        border-color: var(--corporate-success);
-        background: #f0fdf4;
-    }
-
-    .upload-icon {
-        font-size: 3rem;
-        color: var(--corporate-accent);
-        margin-bottom: 15px;
-    }
-
-    .upload-text {
-        font-weight: 600;
-        color: var(--corporate-dark);
-        margin-bottom: 8px;
-    }
-
-    .upload-hint {
-        font-size: 0.875rem;
-        color: var(--corporate-secondary);
-    }
-
-    .photo-input-hidden {
-        display: none;
-    }
-
-    .image-preview-container {
-        margin-top: 20px;
-        text-align: center;
-    }
-
-    .preview-image {
-        max-width: 100%;
-        max-height: 400px;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border: 3px solid #e2e8f0;
-    }
-
-    .remove-image-btn {
-        margin-top: 15px;
-        background: var(--corporate-danger);
-        color: white;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .remove-image-btn:hover {
-        background: #b91c1c;
-        transform: translateY(-2px);
-    }
-
-    /* Payment Difference Alert */
     .difference-alert {
         background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
         border-left: 4px solid var(--corporate-warning);
@@ -357,7 +277,6 @@
         color: #92400e;
     }
 
-    /* Auto-Calculate Badge */
     .auto-calc-badge {
         background: #dbeafe;
         color: #1e40af;
@@ -368,14 +287,12 @@
         margin-left: 8px;
     }
 
-    /* Section Divider */
     .section-divider {
         height: 2px;
         background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
         margin: 35px 0;
     }
 
-    /* Action Buttons */
     .action-buttons {
         display: grid;
         grid-template-columns: 1fr;
@@ -430,25 +347,6 @@
         text-decoration: none;
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-        .closing-header {
-            padding: 30px 20px;
-        }
-
-        .closing-header h1 {
-            font-size: 1.5rem;
-        }
-
-        .form-card-body {
-            padding: 25px 20px;
-        }
-
-        .radio-group {
-            flex-direction: column;
-            gap: 10px;
-        }
-    }
     .image-upload-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -539,13 +437,27 @@
         font-size: 0.75rem;
         cursor: pointer;
     }
+
+    @media (max-width: 768px) {
+        .closing-header {
+            padding: 30px 20px;
+        }
+        .closing-header h1 {
+            font-size: 1.5rem;
+        }
+        .form-card-body {
+            padding: 25px 20px;
+        }
+        .radio-group {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    
-    <!-- Page Header -->
     <div class="closing-header">
         <h1>
             <i class="bi bi-clipboard-data"></i> Daily Closing Checklist
@@ -557,8 +469,6 @@
     </div>
 
     <div class="form-container">
-        
-        <!-- Info Alert -->
         <div class="info-alert">
             <h5>
                 <i class="bi bi-info-circle-fill"></i> Important Instructions
@@ -569,7 +479,6 @@
             </p>
         </div>
 
-        <!-- Main Form Card -->
         <div class="form-card">
             <div class="form-card-header">
                 <i class="bi bi-file-earmark-check"></i>
@@ -577,81 +486,54 @@
             </div>
             
             <div class="form-card-body">
-                <!-- CRITICAL: enctype="multipart/form-data" for file uploads -->
                 <form method="post" enctype="multipart/form-data" id="closingReportForm">
                     {% csrf_token %}
                     
-                    <!-- Closing Date -->
                     <div class="form-group-modern">
                         <label class="form-label-modern">
                             <i class="bi bi-calendar-event"></i> Closing Date
                             <span class="required">*</span>
                         </label>
-                        <input 
-                            type="date" 
-                            class="form-input-modern" 
-                            id="date" 
-                            name="date" 
-                            value="{{ today|date:'Y-m-d' }}"
-                            max="{{ today|date:'Y-m-d' }}"
-                            required
-                        >
+                        <input type="date" class="form-input-modern" id="date" name="date" value="{{ today|date:'Y-m-d' }}" max="{{ today|date:'Y-m-d' }}" required>
                     </div>
 
                     <div class="section-divider"></div>
 
-                    <!-- Customer & Service Counts -->
                     <h3 class="section-header">
                         <i class="bi bi-people-fill"></i> Customer & Service Counts
                     </h3>
                     
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label-modern">
-                                a. Cat Grooming Today <span class="required">*</span>
-                            </label>
+                            <label class="form-label-modern">a. Cat Grooming Today <span class="required">*</span></label>
                             <input type="number" class="form-input-modern" id="grooming_count" name="grooming_count" min="0" value="0" required>
                         </div>
-                        
                         <div class="col-md-4 mb-3">
-                            <label class="form-label-modern">
-                                b. Boarded Rooms Today <span class="required">*</span>
-                            </label>
+                            <label class="form-label-modern">b. Boarded Rooms Today <span class="required">*</span></label>
                             <input type="number" class="form-input-modern" id="boarding_count" name="boarding_count" min="0" value="0" required>
                         </div>
-                        
                         <div class="col-md-4 mb-3">
-                            <label class="form-label-modern">
-                                c. Total Customers <span class="auto-calc-badge">Auto</span>
-                            </label>
+                            <label class="form-label-modern">c. Total Customers <span class="auto-calc-badge">Auto</span></label>
                             <input type="number" class="form-input-modern" id="total_customers" name="total_customers" readonly style="background: #f8fafc;">
                         </div>
                     </div>
 
                     <div class="section-divider"></div>
 
-                    <!-- Payment Information -->
                     <h3 class="section-header">
                         <i class="bi bi-cash-stack"></i> Payment Information
                     </h3>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label-modern">
-                                d. Total Payment Record <span class="required">*</span>
-                                <small>System records</small>
-                            </label>
+                            <label class="form-label-modern">d. Total Payment Record <span class="required">*</span><small>System records</small></label>
                             <div class="input-group-modern">
                                 <span class="input-prefix">RM</span>
                                 <input type="number" class="form-input-modern" id="payment_record_amount" name="payment_record_amount" step="0.01" min="0" value="0.00" required>
                             </div>
                         </div>
-                        
                         <div class="col-md-6 mb-3">
-                            <label class="form-label-modern">
-                                e. Total Payment Receipt <span class="required">*</span>
-                                <small>Actual received</small>
-                            </label>
+                            <label class="form-label-modern">e. Total Payment Receipt <span class="required">*</span><small>Actual received</small></label>
                             <div class="input-group-modern">
                                 <span class="input-prefix">RM</span>
                                 <input type="number" class="form-input-modern" id="payment_receipt_amount" name="payment_receipt_amount" step="0.01" min="0" value="0.00" required>
@@ -661,15 +543,11 @@
 
                     <div class="difference-alert" id="paymentDifferenceAlert">
                         <i class="bi bi-exclamation-triangle-fill"></i>
-                        <div>
-                            <strong>Difference:</strong> 
-                            <span id="differenceAmount"></span>
-                        </div>
+                        <div><strong>Difference:</strong> <span id="differenceAmount"></span></div>
                     </div>
 
                     <div class="section-divider"></div>
 
-                    <!-- Payment Proof Images -->
                     <h3 class="section-header">
                         <i class="bi bi-images"></i> Payment Proof Images
                     </h3>
@@ -679,7 +557,6 @@
                     </p>
 
                     <div class="image-upload-grid">
-                        <!-- Image 1 (Required) -->
                         <div class="image-upload-item">
                             <div class="image-number">1</div>
                             <label class="upload-label-small">Image 1 <span class="required">*</span></label>
@@ -687,19 +564,10 @@
                                 <i class="bi bi-camera upload-icon-small"></i>
                                 <span class="upload-text-small">Tap to capture</span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="image_1" 
-                                name="image_1" 
-                                accept="image/*" 
-                                capture="environment"
-                                required 
-                                style="display: none;"
-                            >
+                            <input type="file" id="image_1" name="image_1" accept="image/*" capture="environment" required style="display: none;">
                             <div id="preview1" style="text-align: center;"></div>
                         </div>
 
-                        <!-- Image 2 (Optional) -->
                         <div class="image-upload-item">
                             <div class="image-number">2</div>
                             <label class="upload-label-small">Image 2</label>
@@ -707,18 +575,10 @@
                                 <i class="bi bi-camera upload-icon-small"></i>
                                 <span class="upload-text-small">Tap to capture</span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="image_2" 
-                                name="image_2" 
-                                accept="image/*" 
-                                capture="environment"
-                                style="display: none;"
-                            >
+                            <input type="file" id="image_2" name="image_2" accept="image/*" capture="environment" style="display: none;">
                             <div id="preview2" style="text-align: center;"></div>
                         </div>
 
-                        <!-- Image 3 (Optional) -->
                         <div class="image-upload-item">
                             <div class="image-number">3</div>
                             <label class="upload-label-small">Image 3</label>
@@ -726,18 +586,10 @@
                                 <i class="bi bi-camera upload-icon-small"></i>
                                 <span class="upload-text-small">Tap to capture</span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="image_3" 
-                                name="image_3" 
-                                accept="image/*" 
-                                capture="environment"
-                                style="display: none;"
-                            >
+                            <input type="file" id="image_3" name="image_3" accept="image/*" capture="environment" style="display: none;">
                             <div id="preview3" style="text-align: center;"></div>
                         </div>
 
-                        <!-- Image 4 (Optional) -->
                         <div class="image-upload-item">
                             <div class="image-number">4</div>
                             <label class="upload-label-small">Image 4</label>
@@ -745,18 +597,10 @@
                                 <i class="bi bi-camera upload-icon-small"></i>
                                 <span class="upload-text-small">Tap to capture</span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="image_4" 
-                                name="image_4" 
-                                accept="image/*" 
-                                capture="environment"
-                                style="display: none;"
-                            >
+                            <input type="file" id="image_4" name="image_4" accept="image/*" capture="environment" style="display: none;">
                             <div id="preview4" style="text-align: center;"></div>
                         </div>
 
-                        <!-- Image 5 (Optional) -->
                         <div class="image-upload-item">
                             <div class="image-number">5</div>
                             <label class="upload-label-small">Image 5</label>
@@ -764,76 +608,52 @@
                                 <i class="bi bi-camera upload-icon-small"></i>
                                 <span class="upload-text-small">Tap to capture</span>
                             </label>
-                            <input 
-                                type="file" 
-                                id="image_5" 
-                                name="image_5" 
-                                accept="image/*" 
-                                capture="environment"
-                                style="display: none;"
-                            >
+                            <input type="file" id="image_5" name="image_5" accept="image/*" capture="environment" style="display: none;">
                             <div id="preview5" style="text-align: center;"></div>
                         </div>
                     </div>
 
                     <div class="section-divider"></div>
 
-                    <!-- Compliance Checks -->
                     <h3 class="section-header">
                         <i class="bi bi-shield-check"></i> f. Compliance Checks
                     </h3>
                     
                     <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            f.i All customers paid through system? <span class="required">*</span>
-                        </label>
+                        <label class="form-label-modern">f.i All customers paid through system? <span class="required">*</span></label>
                         <div class="radio-group">
                             <div class="radio-option success">
                                 <input type="radio" name="compliance_all_paid_through_system" id="compliance_yes" value="yes" checked required>
-                                <label class="radio-label" for="compliance_yes">
-                                    <i class="bi bi-check-circle-fill"></i> Yes
-                                </label>
+                                <label class="radio-label" for="compliance_yes"><i class="bi bi-check-circle-fill"></i> Yes</label>
                             </div>
                             <div class="radio-option danger">
                                 <input type="radio" name="compliance_all_paid_through_system" id="compliance_no" value="no">
-                                <label class="radio-label" for="compliance_no">
-                                    <i class="bi bi-x-circle-fill"></i> No
-                                </label>
+                                <label class="radio-label" for="compliance_no"><i class="bi bi-x-circle-fill"></i> No</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            f.ii Any free services today? <span class="required">*</span>
-                        </label>
+                        <label class="form-label-modern">f.ii Any free services today? <span class="required">*</span></label>
                         <div class="radio-group">
                             <div class="radio-option success">
                                 <input type="radio" name="compliance_free_services_today" id="free_yes" value="yes" required>
-                                <label class="radio-label" for="free_yes">
-                                    <i class="bi bi-check-circle-fill"></i> Yes
-                                </label>
+                                <label class="radio-label" for="free_yes"><i class="bi bi-check-circle-fill"></i> Yes</label>
                             </div>
                             <div class="radio-option danger">
                                 <input type="radio" name="compliance_free_services_today" id="free_no" value="no" checked>
-                                <label class="radio-label" for="free_no">
-                                    <i class="bi bi-x-circle-fill"></i> No
-                                </label>
+                                <label class="radio-label" for="free_no"><i class="bi bi-x-circle-fill"></i> No</label>
                             </div>
                         </div>
                     </div>
 
                     <div class="section-divider"></div>
 
-                    <!-- Notes -->
                     <div class="form-group-modern">
-                        <label class="form-label-modern">
-                            <i class="bi bi-pencil-square"></i> Additional Notes (Optional)
-                        </label>
+                        <label class="form-label-modern"><i class="bi bi-pencil-square"></i> Additional Notes (Optional)</label>
                         <textarea class="form-input-modern" id="notes" name="notes" rows="4" placeholder="Any additional notes..."></textarea>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="action-buttons">
                         <button type="submit" class="btn-submit">
                             <i class="bi bi-check-circle-fill"></i> Submit Closing Report
@@ -845,63 +665,56 @@
                 </form>
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-// Setup image preview for each input
 function setupImagePreview(inputId, previewId, uploadAreaId) {
     const input = document.getElementById(inputId);
     const preview = document.getElementById(previewId);
     const uploadArea = document.getElementById(uploadAreaId);
-    
+    if (!input) return;
     input.addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                this.value = '';
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
-                preview.innerHTML = `
-                    <img src="${e.target.result}" class="preview-thumbnail">
-                    <button type="button" class="remove-btn-small" onclick="removeImage('${inputId}', '${previewId}', '${uploadAreaId}')">
-                        <i class="bi bi-trash"></i> Remove
-                    </button>
-                `;
+                preview.innerHTML = `<img src="${e.target.result}" class="preview-thumbnail"><button type="button" class="remove-btn-small" onclick="removeImage('${inputId}', '${previewId}', '${uploadAreaId}')"><i class="bi bi-trash"></i> Remove</button>`;
                 uploadArea.classList.add('has-file');
-                uploadArea.querySelector('.upload-icon-small').className = 'bi bi-check-circle-fill upload-icon-small';
+                const icon = uploadArea.querySelector('.upload-icon-small');
+                if (icon) icon.className = 'bi bi-check-circle-fill upload-icon-small';
             };
             reader.readAsDataURL(file);
         }
     });
 }
 
-// Remove image function
 function removeImage(inputId, previewId, uploadAreaId) {
-    document.getElementById(inputId).value = '';
-    document.getElementById(previewId).innerHTML = '';
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
     const uploadArea = document.getElementById(uploadAreaId);
-    uploadArea.classList.remove('has-file');
-    uploadArea.querySelector('.upload-icon-small').className = 'bi bi-camera upload-icon-small';
+    if (input) input.value = '';
+    if (preview) preview.innerHTML = '';
+    if (uploadArea) {
+        uploadArea.classList.remove('has-file');
+        const icon = uploadArea.querySelector('.upload-icon-small');
+        if (icon) icon.className = 'bi bi-camera upload-icon-small';
+    }
 }
 
-// Initialize all image inputs
-setupImagePreview('image_1', 'preview1', 'uploadArea1');
-setupImagePreview('image_2', 'preview2', 'uploadArea2');
-setupImagePreview('image_3', 'preview3', 'uploadArea3');
-setupImagePreview('image_4', 'preview4', 'uploadArea4');
-setupImagePreview('image_5', 'preview5', 'uploadArea5');
-
-// Calculate payment difference
 function calculateDifference() {
     const record = parseFloat(document.getElementById('payment_record_amount').value) || 0;
     const receipt = parseFloat(document.getElementById('payment_receipt_amount').value) || 0;
     const difference = Math.abs(record - receipt);
-    
     const alert = document.getElementById('paymentDifferenceAlert');
-    
-    if (difference > 0) {
+    if (difference > 0.01) {
         alert.classList.add('show');
         document.getElementById('differenceAmount').textContent = `RM ${difference.toFixed(2)}`;
     } else {
@@ -909,146 +722,45 @@ function calculateDifference() {
     }
 }
 
-document.getElementById('payment_record_amount').addEventListener('input', calculateDifference);
-document.getElementById('payment_receipt_amount').addEventListener('input', calculateDifference);
-
-// Auto-calculate total customers
 function calculateTotalCustomers() {
     const grooming = parseInt(document.getElementById('grooming_count').value) || 0;
     const boarding = parseInt(document.getElementById('boarding_count').value) || 0;
     document.getElementById('total_customers').value = grooming + boarding;
 }
 
-document.getElementById('grooming_count').addEventListener('input', calculateTotalCustomers);
-document.getElementById('boarding_count').addEventListener('input', calculateTotalCustomers);
-
-// Form validation
-document.getElementById('closingReportForm').addEventListener('submit', function(e) {
-    const image1 = document.getElementById('image_1').files[0];
-    
-    if (!image1) {
-        e.preventDefault();
-        alert('⚠️ Please upload at least one payment proof image!');
-        document.getElementById('image_1').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false;
-    }
-    
-    if (!confirm('Are you sure you want to submit this closing report?\n\n⚠️ This cannot be edited after submission.')) {
-        e.preventDefault();
-        return false;
-    }
-    
-    // Show loading
-    const submitBtn = this.querySelector('.btn-submit');
-    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
-    submitBtn.disabled = true;
-});
-
-// Initialize
 window.addEventListener('load', function() {
+    setupImagePreview('image_1', 'preview1', 'uploadArea1');
+    setupImagePreview('image_2', 'preview2', 'uploadArea2');
+    setupImagePreview('image_3', 'preview3', 'uploadArea3');
+    setupImagePreview('image_4', 'preview4', 'uploadArea4');
+    setupImagePreview('image_5', 'preview5', 'uploadArea5');
+    
+    document.getElementById('payment_record_amount').addEventListener('input', calculateDifference);
+    document.getElementById('payment_receipt_amount').addEventListener('input', calculateDifference);
+    document.getElementById('grooming_count').addEventListener('input', calculateTotalCustomers);
+    document.getElementById('boarding_count').addEventListener('input', calculateTotalCustomers);
+    
     calculateTotalCustomers();
     calculateDifference();
-});
-</script>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Image upload and preview
-const photoInput = document.getElementById('payment_proof_photo');
-const uploadArea = document.getElementById('uploadArea');
-const imagePreview = document.getElementById('imagePreview');
-const previewImg = document.getElementById('previewImg');
-const removeImageBtn = document.getElementById('removeImageBtn');
-
-photoInput.addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-        // Check file size (5MB max)
-        if (file.size > 5 * 1024 * 1024) {
-            alert('File size must be less than 5MB');
-            this.value = '';
-            return;
+    
+    document.getElementById('closingReportForm').addEventListener('submit', function(e) {
+        const image1 = document.getElementById('image_1');
+        if (!image1 || !image1.files || !image1.files[0]) {
+            e.preventDefault();
+            alert('⚠️ Please upload at least one payment proof image!');
+            if (image1) image1.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
         }
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            imagePreview.style.display = 'block';
-            uploadArea.classList.add('has-file');
-            uploadArea.querySelector('.upload-text').textContent = 'Payment proof uploaded';
-            uploadArea.querySelector('.upload-icon').className = 'bi bi-check-circle-fill upload-icon';
-        };
-        reader.readAsDataURL(file);
-    }
-});
-
-removeImageBtn.addEventListener('click', function() {
-    photoInput.value = '';
-    imagePreview.style.display = 'none';
-    uploadArea.classList.remove('has-file');
-    uploadArea.querySelector('.upload-text').textContent = 'Click to upload payment proof';
-    uploadArea.querySelector('.upload-icon').className = 'bi bi-cloud-upload upload-icon';
-});
-
-// Calculate payment difference
-function calculateDifference() {
-    const record = parseFloat(document.getElementById('payment_record_amount').value) || 0;
-    const receipt = parseFloat(document.getElementById('payment_receipt_amount').value) || 0;
-    const difference = Math.abs(record - receipt);
-    
-    const alert = document.getElementById('paymentDifferenceAlert');
-    
-    if (difference > 0) {
-        alert.classList.add('show');
-        document.getElementById('differenceAmount').textContent = `RM ${difference.toFixed(2)}`;
-    } else {
-        alert.classList.remove('show');
-    }
-}
-
-document.getElementById('payment_record_amount').addEventListener('input', calculateDifference);
-document.getElementById('payment_receipt_amount').addEventListener('input', calculateDifference);
-
-// Auto-calculate total customers
-function calculateTotalCustomers() {
-    const grooming = parseInt(document.getElementById('grooming_count').value) || 0;
-    const boarding = parseInt(document.getElementById('boarding_count').value) || 0;
-    document.getElementById('total_customers').value = grooming + boarding;
-}
-
-document.getElementById('grooming_count').addEventListener('input', calculateTotalCustomers);
-document.getElementById('boarding_count').addEventListener('input', calculateTotalCustomers);
-
-// Form validation and submission
-document.getElementById('closingReportForm').addEventListener('submit', function(e) {
-    const photo = document.getElementById('payment_proof_photo').files[0];
-    
-    if (!photo) {
-        e.preventDefault();
-        alert('⚠️ Please upload a payment proof photo!');
-        document.getElementById('payment_proof_photo').scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return false;
-    }
-    
-    // Confirm submission
-    const confirmMessage = 'Are you sure you want to submit this closing report?\n\n⚠️ This action cannot be undone and the report cannot be edited after submission.';
-    
-    if (!confirm(confirmMessage)) {
-        e.preventDefault();
-        return false;
-    }
-    
-    // Show loading state
-    const submitBtn = this.querySelector('.btn-submit');
-    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
-    submitBtn.disabled = true;
-});
-
-// Initialize on page load
-window.addEventListener('load', function() {
-    calculateTotalCustomers();
-    calculateDifference();
+        if (!confirm('Are you sure you want to submit this closing report?\n\n⚠️ This cannot be edited after submission.')) {
+            e.preventDefault();
+            return false;
+        }
+        const submitBtn = this.querySelector('.btn-submit');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Submitting...';
+            submitBtn.disabled = true;
+        }
+    });
 });
 </script>
 {% endblock %}
