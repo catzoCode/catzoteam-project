@@ -92,6 +92,7 @@ WSGI_APPLICATION = "catzoteam_project.wsgi.application"
 # ============================================
 # DATABASE
 # ============================================
+
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
