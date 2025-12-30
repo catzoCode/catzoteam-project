@@ -499,7 +499,7 @@
                             <small>Clear photo of payment record, cash register, or receipt</small>
                         </label>
                         
-                        <label for="payment_proof" class="photo-upload-area" id="uploadArea">
+                        <label for="payment_proof_photo" class="photo-upload-area" id="uploadArea">
                             <i class="bi bi-camera upload-icon"></i>
                             <div class="upload-text">Tap to Capture or Upload</div>
                             <div class="upload-hint">JPG or PNG (Max 5MB)</div>
@@ -507,8 +507,8 @@
                         
                         <input 
                             type="file" 
-                            id="payment_proof" 
-                            name="payment_proof" 
+                            id="payment_proof_photo" 
+                            name="payment_proof_photo" 
                             accept="image/*" 
                             capture="environment"
                             required 
@@ -581,7 +581,7 @@
 
 {% block extra_js %}
 <script>
-const photoInput = document.getElementById('payment_proof');
+const photoInput = document.getElementById('payment_proof_photo');
 const uploadArea = document.getElementById('uploadArea');
 const imagePreview = document.getElementById('imagePreview');
 const previewImg = document.getElementById('previewImg');
@@ -643,7 +643,7 @@ window.addEventListener('load', function() {
     calculateDifference();
     
     document.getElementById('closingReportForm').addEventListener('submit', function(e) {
-        const photo = document.getElementById('payment_proof');
+        const photo = document.getElementById('payment_proof_photo');
         if (!photo || !photo.files || !photo.files[0]) {
             e.preventDefault();
             alert('⚠️ Please upload a payment proof image!');

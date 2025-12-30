@@ -1253,7 +1253,7 @@ def review_point_request(request, pk):  # Changed from request_id to pk
     context = {'point_request': point_request}
     return render(request, 'task_management/admin/review_point_request.html', context)
 
-@login_required
+@@login_required
 def submit_closing_report(request):
     """Manager submits daily closing report with ONE image"""
     if request.user.role not in ['manager', 'admin']:
@@ -1272,10 +1272,8 @@ def submit_closing_report(request):
         compliance_free = request.POST.get('compliance_free_services_today') == 'yes'
         notes = request.POST.get('notes', '')
         
-        # Parse date
         report_date_obj = datetime.strptime(report_date_str, '%Y-%m-%d').date()
         
-        # Check if report already exists for this date and branch
         existing_report = ClosingReport.objects.filter(
             date=report_date_obj,
             branch=request.user.branch
@@ -1285,11 +1283,10 @@ def submit_closing_report(request):
             messages.error(request, f'Closing report for {report_date_str} already submitted!')
             return redirect('task_management:my_closing_reports')
         
-        # Handle single image upload
-        payment_proof = request.FILES.get('payment_proof')
+        # ✅ CHANGE THIS LINE - use payment_proof_photo instead
+        payment_proof_photo = request.FILES.get('payment_proof_photo')
         
-        # Require image
-        if not payment_proof:
+        if not payment_proof_photo:
             messages.error(request, 'Payment proof image is required!')
             return redirect('task_management:submit_closing_report')
         
@@ -1303,19 +1300,15 @@ def submit_closing_report(request):
             total_customers=int(total_customers),
             payment_record_amount=Decimal(payment_record),
             payment_receipt_amount=Decimal(payment_receipt),
-            payment_proof=payment_proof,  # Single image
+            payment_proof_photo=payment_proof_photo,  # ✅ CHANGED
             compliance_all_paid_through_system=compliance_system,
             compliance_free_services_today=compliance_free,
             notes=notes
         )
         
-        messages.success(
-            request,
-            f'✅ Closing report {report.report_id} submitted successfully for {report_date_str}!'
-        )
+        messages.success(request, f'✅ Closing report {report.report_id} submitted successfully!')
         return redirect('task_management:my_closing_reports')
     
-    # GET - Show form
     context = {
         'today': date.today(),
         'branch': request.user.get_branch_display(),
