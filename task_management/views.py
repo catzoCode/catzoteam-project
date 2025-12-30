@@ -1255,7 +1255,7 @@ def review_point_request(request, pk):  # Changed from request_id to pk
 
 @login_required
 def submit_closing_report(request):
-    """Manager submits daily closing report with multiple images"""
+    """Manager submits daily closing report with ONE image"""
     if request.user.role not in ['manager', 'admin']:
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
@@ -1285,16 +1285,12 @@ def submit_closing_report(request):
             messages.error(request, f'Closing report for {report_date_str} already submitted!')
             return redirect('task_management:my_closing_reports')
         
-        # Handle multiple image uploads (5 images possible)
-        image_1 = request.FILES.get('image_1')
-        image_2 = request.FILES.get('image_2')
-        image_3 = request.FILES.get('image_3')
-        image_4 = request.FILES.get('image_4')
-        image_5 = request.FILES.get('image_5')
+        # Handle single image upload
+        payment_proof = request.FILES.get('payment_proof')
         
-        # Require at least one image
-        if not image_1:
-            messages.error(request, 'At least one payment proof image is required!')
+        # Require image
+        if not payment_proof:
+            messages.error(request, 'Payment proof image is required!')
             return redirect('task_management:submit_closing_report')
         
         # Create closing report
@@ -1307,14 +1303,7 @@ def submit_closing_report(request):
             total_customers=int(total_customers),
             payment_record_amount=Decimal(payment_record),
             payment_receipt_amount=Decimal(payment_receipt),
-            
-            # Save all images
-            image_1=image_1,
-            image_2=image_2 if image_2 else None,
-            image_3=image_3 if image_3 else None,
-            image_4=image_4 if image_4 else None,
-            image_5=image_5 if image_5 else None,
-            
+            payment_proof=payment_proof,  # Single image
             compliance_all_paid_through_system=compliance_system,
             compliance_free_services_today=compliance_free,
             notes=notes
@@ -1332,7 +1321,6 @@ def submit_closing_report(request):
         'branch': request.user.get_branch_display(),
     }
     return render(request, 'task_management/closing_reports/submit_report.html', context)
-
 
 # ============================================
 # MANAGER: VIEW MY CLOSING REPORTS
