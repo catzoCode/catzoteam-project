@@ -1253,7 +1253,7 @@ def review_point_request(request, pk):  # Changed from request_id to pk
     context = {'point_request': point_request}
     return render(request, 'task_management/admin/review_point_request.html', context)
 
-@@login_required
+@login_required
 def submit_closing_report(request):
     """Manager submits daily closing report with ONE image"""
     if request.user.role not in ['manager', 'admin']:
