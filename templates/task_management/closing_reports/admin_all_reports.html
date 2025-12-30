@@ -616,11 +616,17 @@
                 <label class="form-label fw-bold">Branch</label>
                 <select name="branch" class="form-select filter-input">
                     <option value="">All Branches</option>
-                    {% for b in branches %}
-                        <option value="{{ b.value }}" {% if request.GET.branch == b.value %}selected{% endif %}>
-                            {{ b.label }}
-                        </option>
-                    {% endfor %}
+                    <option value="hq" {% if request.GET.branch == 'hq' %}selected{% endif %}>HQ</option>
+                    <option value="damansara_perdana" {% if request.GET.branch == 'damansara_perdana' %}selected{% endif %}>Damansara Perdana</option>
+                    <option value="wangsa_maju" {% if request.GET.branch == 'wangsa_maju' %}selected{% endif %}>Wangsa Maju</option>
+                    <option value="shah_alam" {% if request.GET.branch == 'shah_alam' %}selected{% endif %}>Shah Alam</option>
+                    <option value="bangi" {% if request.GET.branch == 'bangi' %}selected{% endif %}>Bangi</option>
+                    <option value="cheng_melaka" {% if request.GET.branch == 'cheng_melaka' %}selected{% endif %}>Cheng, Melaka</option>
+                    <option value="johor_bahru" {% if request.GET.branch == 'johor_bahru' %}selected{% endif %}>Johor Bahru</option>
+                    <option value="seremban" {% if request.GET.branch == 'seremban' %}selected{% endif %}>Seremban 2</option>
+                    <option value="seri_kembangan" {% if request.GET.branch == 'seri_kembangan' %}selected{% endif %}>Seri Kembangan</option>
+                    <option value="usj21" {% if request.GET.branch == 'usj21' %}selected{% endif %}>USJ 21</option>
+                    <option value="ipoh" {% if request.GET.branch == 'ipoh' %}selected{% endif %}>Ipoh</option>
                 </select>
             </div>
 
@@ -638,7 +644,7 @@
                 <button class="btn filter-btn-apply flex-fill" type="submit">
                     <i class="bi bi-funnel-fill"></i> Apply
                 </button>
-                <a class="btn filter-btn-reset flex-fill" href="?">
+                <a class="btn filter-btn-reset flex-fill" href="{% url 'task_management:admin_all_closing_reports' %}">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>

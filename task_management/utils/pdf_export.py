@@ -13,14 +13,17 @@ from datetime import datetime
 def get_branch_display_name(report):
     """Helper function to get branch display name"""
     branch_choices = {
-        'pj_ss2': 'Petaling Jaya (SS2)',
-        'pj_sea_park': 'Petaling Jaya (Sea Park)',
-        'kl_bukit_jalil': 'Kuala Lumpur (Bukit Jalil)',
-        'subang_ss15': 'Subang Jaya (SS15)',
-        'subang_usj': 'Subang Jaya (USJ)',
+        'hq': 'HQ',
+        'damansara_perdana': 'Damansara Perdana',
+        'wangsa_maju': 'Wangsa Maju',
         'shah_alam': 'Shah Alam',
-        'ampang': 'Ampang',
-        'cheras': 'Cheras',
+        'bangi': 'Bangi',
+        'cheng_melaka': 'Cheng, Melaka',
+        'johor_bahru': 'Johor Bahru',
+        'seremban': 'Seremban 2',
+        'seri_kembangan': 'Seri Kembangan',
+        'usj21': 'USJ 21',
+        'ipoh': 'Ipoh',
     }
     return branch_choices.get(report.branch, report.branch)
 

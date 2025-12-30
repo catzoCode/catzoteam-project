@@ -1444,56 +1444,76 @@ def manager_analytics_dashboard(request):
 
 @login_required
 def admin_all_closing_reports(request):
-    """Admin views closing reports from all branches"""
+    """Admin view to see all closing reports with filters"""
     if request.user.role != 'admin':
         messages.error(request, 'Access denied. Admin role required.')
-        return redirect('dashboard:admin_dashboard')
+        return redirect('dashboard:staff_dashboard')
     
-    # Filters
-    branch_filter = request.GET.get('branch', 'all')
+    # Get all reports
+    reports = ClosingReport.objects.all().select_related('submitted_by')
+    
+    # Get filter parameters
+    branch_filter = request.GET.get('branch', '')
     date_from = request.GET.get('date_from', '')
     date_to = request.GET.get('date_to', '')
     
-    # Base query
-    reports = ClosingReport.objects.all()
-    
     # Apply filters
-    if branch_filter != 'all':
+    if branch_filter:
         reports = reports.filter(branch=branch_filter)
     
     if date_from:
-        date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
-        reports = reports.filter(date__gte=date_from_obj)
+        try:
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+            reports = reports.filter(date__gte=date_from_obj)
+        except ValueError:
+            messages.warning(request, 'Invalid "From Date" format.')
     
     if date_to:
-        date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
-        reports = reports.filter(date__lte=date_to_obj)
+        try:
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+            reports = reports.filter(date__lte=date_to_obj)
+        except ValueError:
+            messages.warning(request, 'Invalid "To Date" format.')
     
-    reports = reports.order_by('-date')[:50]
+    # Order by most recent
+    reports = reports.order_by('-date', '-submitted_at')
     
-    # Get all branches for filter
-    branches = User.BRANCH_CHOICES
+    # Calculate totals (last 30 days for stats)
+    thirty_days_ago = datetime.now().date() - timedelta(days=30)
+    recent_reports = ClosingReport.objects.filter(date__gte=thirty_days_ago)
     
-    # Calculate totals
-    last_30_days = date.today() - timedelta(days=30)
-    totals = ClosingReport.objects.filter(
-        date__gte=last_30_days
-    ).aggregate(
+    totals = recent_reports.aggregate(
         total_revenue=Sum('revenue_total'),
         total_customers=Sum('total_customers'),
         total_reports=Count('id')
     )
     
+    # Count balanced reports (last 30 days)
+    balanced_reports = sum(1 for r in recent_reports if abs(r.payment_record_amount - r.payment_receipt_amount) < 0.01)
+    totals['balanced_reports'] = balanced_reports
+    
+    # Get branch choices for filter dropdown (CORRECTED)
+    branches = [
+        {'value': 'hq', 'label': 'HQ'},
+        {'value': 'damansara_perdana', 'label': 'Damansara Perdana'},
+        {'value': 'wangsa_maju', 'label': 'Wangsa Maju'},
+        {'value': 'shah_alam', 'label': 'Shah Alam'},
+        {'value': 'bangi', 'label': 'Bangi'},
+        {'value': 'cheng_melaka', 'label': 'Cheng, Melaka'},
+        {'value': 'johor_bahru', 'label': 'Johor Bahru'},
+        {'value': 'seremban', 'label': 'Seremban 2'},
+        {'value': 'seri_kembangan', 'label': 'Seri Kembangan'},
+        {'value': 'usj21', 'label': 'USJ 21'},
+        {'value': 'ipoh', 'label': 'Ipoh'},
+    ]
+    
     context = {
         'reports': reports,
-        'branches': branches,
-        'branch_filter': branch_filter,
-        'date_from': date_from,
-        'date_to': date_to,
         'totals': totals,
+        'branches': branches,
     }
+    
     return render(request, 'task_management/closing_reports/admin_all_reports.html', context)
-
 
 # ============================================
 # ADMIN: ANALYTICS DASHBOARD (ALL BRANCHES)
