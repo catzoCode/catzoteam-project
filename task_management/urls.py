@@ -107,4 +107,9 @@ urlpatterns = [
     path('ajax/staff/<int:user_id>/performance/', views.ajax_staff_performance, name='ajax_staff_performance'),
     path('ajax/staff/<int:user_id>/reassign-tasks/', views.ajax_reassign_tasks, name='ajax_reassign_tasks'),
 
+
+    path('closing-report/<str:report_id>/download-pdf/', 
+         views.download_closing_report_pdf, 
+         name='download_closing_report_pdf'),
+
 ]

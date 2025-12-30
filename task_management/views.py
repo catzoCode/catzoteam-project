@@ -12,7 +12,7 @@ from django.db.models import Count, Sum, Avg, Max, Min, Q, F
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_http_methods, require_POST
 from django.utils import timezone
-
+from .utils.pdf_generator import generate_closing_report_pdf
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 import json
@@ -3094,3 +3094,28 @@ def ajax_reorder_task_type(request, type_id):
     
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    
+@login_required
+def download_closing_report_pdf(request, report_id):
+    """Download closing report as PDF"""
+    # Check permissions
+    if request.user.role not in ['admin', 'manager']:
+        messages.error(request, 'Access denied.')
+        return redirect('dashboard:staff_dashboard')
+    
+    # Get report
+    report = get_object_or_404(ClosingReport, report_id=report_id)
+    
+    # For managers, only show their branch
+    if request.user.role == 'manager' and report.branch != request.user.branch:
+        messages.error(request, 'Access denied. You can only view reports from your branch.')
+        return redirect('task_management:my_closing_reports')
+    
+    # Generate PDF
+    pdf_buffer = generate_closing_report_pdf(report)
+    
+    # Create response
+    response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="Closing_Report_{report.report_id}_{report.date}.pdf"'
+    
+    return response
