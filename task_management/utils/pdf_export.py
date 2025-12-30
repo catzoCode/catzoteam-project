@@ -10,6 +10,21 @@ from PIL import Image as PILImage
 from datetime import datetime
 
 
+def get_branch_display_name(report):
+    """Helper function to get branch display name"""
+    branch_choices = {
+        'pj_ss2': 'Petaling Jaya (SS2)',
+        'pj_sea_park': 'Petaling Jaya (Sea Park)',
+        'kl_bukit_jalil': 'Kuala Lumpur (Bukit Jalil)',
+        'subang_ss15': 'Subang Jaya (SS15)',
+        'subang_usj': 'Subang Jaya (USJ)',
+        'shah_alam': 'Shah Alam',
+        'ampang': 'Ampang',
+        'cheras': 'Cheras',
+    }
+    return branch_choices.get(report.branch, report.branch)
+
+
 def generate_reports_summary_pdf(reports, filters=None):
     """
     Generate comprehensive PDF with all closing reports in table format
@@ -144,7 +159,7 @@ def generate_reports_summary_pdf(reports, filters=None):
             table_data.append([
                 report.report_id,
                 report.date.strftime('%d/%m/%Y'),
-                report.get_branch_display(),
+                get_branch_display_name(report),
                 f'{report.revenue_total:.2f}',
                 str(report.total_customers),
                 '✓' if report.is_balanced else '✗',
@@ -210,7 +225,7 @@ def generate_reports_summary_pdf(reports, filters=None):
             elements.append(PageBreak())
         
         # Report header
-        report_title = f"{report.report_id} - {report.get_branch_display()} - {report.date.strftime('%B %d, %Y')}"
+        report_title = f"{report.report_id} - {get_branch_display_name(report)} - {report.date.strftime('%B %d, %Y')}"
         elements.append(Paragraph(report_title, heading_style))
         elements.append(Spacer(1, 0.3*cm))
         
