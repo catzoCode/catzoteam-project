@@ -6,7 +6,9 @@ from django.utils import timezone
 from datetime import date
 from decimal import Decimal
 import uuid
-
+import random
+from django.db import models
+from django.conf import settings
 # ============================================
 # CUSTOMER & CAT MODELS
 # ============================================
@@ -47,6 +49,7 @@ class Customer(models.Model):
 
 class Cat(models.Model):
     """Cat registration and information"""
+    
     CAT_BREED_CHOICES = [
         ('persian', 'Persian'),
         ('siamese', 'Siamese'),
@@ -70,17 +73,46 @@ class Cat(models.Model):
         ('not_vaccinated', 'Not Vaccinated'),
     ]
     
-    cat_id = models.CharField(max_length=20, unique=True, blank=True)
+    # FIXED: Changed max_length to 12 for new format
+    cat_id = models.CharField(
+        max_length=12,  # Changed from 20 to 12
+        unique=True,
+        blank=True,
+        editable=False,
+        help_text="Format: CAT133001239 (CAT + 3random + 3count + 3random)"
+    )
+    
     name = models.CharField(max_length=100)
-    owner = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='cats')
-    breed = models.CharField(max_length=50, choices=CAT_BREED_CHOICES, default='mixed')
+    owner = models.ForeignKey(
+        'Customer',  # Changed to string reference if Customer is in same file
+        on_delete=models.CASCADE,
+        related_name='cats'
+    )
+    breed = models.CharField(
+        max_length=50,
+        choices=CAT_BREED_CHOICES,
+        default='mixed'
+    )
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES)
     age = models.IntegerField(help_text="Age in years")
-    weight = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text="Weight in kg")
+    weight = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Weight in kg"
+    )
     color = models.CharField(max_length=50, blank=True)
-    medical_notes = models.TextField(blank=True, help_text="Allergies, medications, etc.")
+    medical_notes = models.TextField(
+        blank=True,
+        help_text="Allergies, medications, etc."
+    )
     special_requirements = models.TextField(blank=True)
-    vaccination_status = models.CharField(max_length=20, choices=VACCINATION_STATUS_CHOICES, default='unknown')
+    vaccination_status = models.CharField(
+        max_length=20,
+        choices=VACCINATION_STATUS_CHOICES,
+        default='unknown'
+    )
     is_active = models.BooleanField(default=True)
     registration_date = models.DateField(auto_now_add=True)
     registered_by = models.ForeignKey(
@@ -89,21 +121,67 @@ class Cat(models.Model):
         null=True,
         related_name='registered_cats'
     )
-    photo = models.ImageField(upload_to='cat_photos/', blank=True, null=True)
+    photo = models.ImageField(
+        upload_to='cat_photos/%Y/%m/',  # Organized by year/month
+        blank=True,
+        null=True
+    )
     
     class Meta:
         ordering = ['-registration_date']
+        indexes = [
+            models.Index(fields=['cat_id']),
+            models.Index(fields=['owner', 'name']),
+        ]
     
     def __str__(self):
         return f"{self.cat_id} - {self.name} ({self.owner.name})"
     
+    def generate_cat_id(self):
+        """
+        Generate Cat ID in format: CAT133001239
+        
+        Format:
+        - CAT = Prefix (3 chars)
+        - 133 = Random (3 digits: 100-999)
+        - 001 = Sequential count (3 digits with leading zeros)
+        - 239 = Random (3 digits: 100-999)
+        
+        Total: 12 characters
+        Example: CAT133001239
+        """
+        from django.db.models import Max
+        
+        # Get sequential count based on database ID
+        last_cat = Cat.objects.aggregate(Max('id'))
+        count = (last_cat['id__max'] or 0) + 1
+        
+        # Format count with 3 digits (leading zeros)
+        count_str = str(count).zfill(3)
+        
+        # Generate random parts (3 digits each: 100-999)
+        random_part1 = str(random.randint(100, 999))
+        random_part2 = str(random.randint(100, 999))
+        
+        # Combine: CAT + random1 + count + random2
+        cat_id = f"CAT{random_part1}{count_str}{random_part2}"
+        
+        # Ensure uniqueness (retry if duplicate - very rare)
+        max_attempts = 10
+        attempts = 0
+        
+        while Cat.objects.filter(cat_id=cat_id).exists() and attempts < max_attempts:
+            random_part1 = str(random.randint(100, 999))
+            random_part2 = str(random.randint(100, 999))
+            cat_id = f"CAT{random_part1}{count_str}{random_part2}"
+            attempts += 1
+        
+        return cat_id
+    
     def save(self, *args, **kwargs):
+        """Override save to auto-generate cat_id"""
         if not self.cat_id:
-            last = Cat.objects.all().order_by('id').last()
-            if last and last.cat_id:
-                self.cat_id = f"CAT{int(last.cat_id[3:]) + 1:05d}"
-            else:
-                self.cat_id = "CAT00001"
+            self.cat_id = self.generate_cat_id()
         super().save(*args, **kwargs)
 
 
