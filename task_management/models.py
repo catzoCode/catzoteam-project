@@ -332,9 +332,8 @@ class TaskType(models.Model):
 # ============================================
 # TASK PACKAGES AND TASKS
 # ============================================
-
 class TaskPackage(models.Model):
-    """Task package contains multiple tasks for one cat"""
+    """Task package contains multiple tasks for one cat - ENHANCED with Next Booking System"""
     STATUS_CHOICES = [
         ('pending', 'Pending Assignment'),
         ('assigned', 'Assigned'),
@@ -343,6 +342,19 @@ class TaskPackage(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
+    BOOKING_TYPE_CHOICES = [
+        ('type_a', 'Type A - Got Proof (Award Now)'),
+        ('type_c', 'Type C - No Proof (Hold Points)'),
+        ('type_b', 'Type B - Combo Package (No Points)'),
+    ]
+    
+    ARRIVAL_STATUS_CHOICES = [
+        ('pending', 'Pending Arrival'),
+        ('arrived', 'Customer Arrived'),
+        ('no_show', 'Customer No-Show'),
+    ]
+    
+    # ============ EXISTING FIELDS ============
     package_id = models.CharField(max_length=20, unique=True, blank=True)
     cat = models.ForeignKey(Cat, on_delete=models.CASCADE, related_name='task_packages')
     created_by = models.ForeignKey(
@@ -353,7 +365,6 @@ class TaskPackage(models.Model):
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
-    # ADD THIS NEW FIELD
     branch = models.CharField(
         max_length=50,
         choices=[
@@ -382,8 +393,88 @@ class TaskPackage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
+    # ============ NEXT BOOKING SYSTEM FIELDS ============
+    
+    # Booking Type Selection
+    booking_type = models.CharField(
+        max_length=20,
+        choices=BOOKING_TYPE_CHOICES,
+        default='type_c',
+        help_text='Type of booking determines point awarding logic'
+    )
+    
+    # Type A: Payment Proof
+    payment_proof = models.ImageField(
+        upload_to='payment_proofs/%Y/%m/',
+        blank=True,
+        null=True,
+        help_text='Upload screenshot of payment/deposit/booking confirmation'
+    )
+    
+    # Type B: Combo Package Flag
+    is_combo_package = models.BooleanField(
+        default=False,
+        help_text='Mark if this is a combo package session (no additional points)'
+    )
+    combo_session_number = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Which session of the combo? (e.g., 2 of 4)'
+    )
+    combo_total_sessions = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Total sessions in combo (e.g., 4)'
+    )
+    
+    # Type C: Arrival Tracking
+    scheduled_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text='When customer is scheduled to arrive for service'
+    )
+    
+    arrival_status = models.CharField(
+        max_length=20,
+        choices=ARRIVAL_STATUS_CHOICES,
+        default='pending',
+        help_text='Customer arrival confirmation status'
+    )
+    
+    arrival_confirmed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When manager confirmed customer arrival'
+    )
+    
+    confirmed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='confirmed_arrivals',
+        help_text='Manager who confirmed the arrival'
+    )
+    
+    # Points Tracking
+    points_awarded = models.BooleanField(
+        default=False,
+        help_text='Have points been awarded to staff?'
+    )
+    
+    points_awarded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When points were awarded to staff'
+    )
+    
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['booking_type', 'arrival_status', 'scheduled_date']),
+            models.Index(fields=['scheduled_date', 'arrival_status']),
+            models.Index(fields=['points_awarded', 'booking_type']),
+        ]
     
     def __str__(self):
         return f"{self.package_id} - {self.cat.name}"
@@ -395,7 +486,194 @@ class TaskPackage(models.Model):
             today_count = TaskPackage.objects.filter(created_at__date=today).count()
             seq_num = str(today_count + 1).zfill(4)
             self.package_id = f"PKG-{date_str}-{seq_num}"
+        
+        # Auto-set scheduled_date from first task if not set
+        if not self.scheduled_date and self.pk:
+            first_task = self.tasks.first()
+            if first_task and first_task.scheduled_date:
+                self.scheduled_date = first_task.scheduled_date
+        
         super().save(*args, **kwargs)
+    
+    # ============ NEXT BOOKING METHODS ============
+    
+    def award_points_immediately(self):
+        """
+        Type A: Award points immediately when booking created
+        Called when payment proof is uploaded
+        """
+        if self.booking_type != 'type_a':
+            return False
+        
+        if self.points_awarded:
+            return False  # Already awarded
+        
+        # Award points to staff
+        from performance.models import DailyPoints, MonthlyIncentive
+        from decimal import Decimal
+        
+        try:
+            # Create/update daily points
+            daily_points, created = DailyPoints.objects.get_or_create(
+                user=self.created_by,
+                date=self.created_at.date(),
+                defaults={
+                    'points': Decimal('0.00'),
+                    'booking_points': Decimal('0.00'),
+                }
+            )
+            
+            daily_points.booking_points += Decimal(str(self.total_points))
+            daily_points.points = (
+                daily_points.grooming_points +
+                daily_points.service_points +
+                daily_points.booking_points +
+                daily_points.bonus_points
+            )
+            daily_points.save()
+            
+            # Update monthly incentive
+            first_day = self.created_at.date().replace(day=1)
+            monthly, created = MonthlyIncentive.objects.get_or_create(
+                user=self.created_by,
+                month=first_day,
+                defaults={'total_points': Decimal('0.00')}
+            )
+            monthly.total_points += Decimal(str(self.total_points))
+            if hasattr(monthly, 'calculate_incentive'):
+                monthly.calculate_incentive()
+            monthly.save()
+            
+            # Mark as awarded
+            self.points_awarded = True
+            self.points_awarded_at = timezone.now()
+            self.save()
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error awarding points: {e}")
+            return False
+    
+    def confirm_arrival(self, manager_user):
+        """
+        Type C: Confirm customer arrived and release held points
+        """
+        if self.arrival_status == 'arrived':
+            return False  # Already confirmed
+        
+        # Update arrival status
+        self.arrival_status = 'arrived'
+        self.arrival_confirmed_at = timezone.now()
+        self.confirmed_by = manager_user
+        self.save()
+        
+        # Release points if Type C
+        if self.booking_type == 'type_c' and not self.points_awarded:
+            return self.release_held_points()
+        
+        return True
+    
+    def mark_no_show(self, manager_user):
+        """
+        Mark customer as no-show (points NOT awarded)
+        """
+        self.arrival_status = 'no_show'
+        self.arrival_confirmed_at = timezone.now()
+        self.confirmed_by = manager_user
+        self.save()
+        
+        return True
+    
+    def release_held_points(self):
+        """
+        Release held points to staff (for Type C arrivals)
+        """
+        if self.points_awarded:
+            return False  # Already awarded
+        
+        if self.booking_type == 'type_b':
+            return False  # Combo packages don't get points
+        
+        # Award points to staff
+        from performance.models import DailyPoints, MonthlyIncentive
+        from decimal import Decimal
+        
+        try:
+            # Award points on the scheduled date (when service happens)
+            award_date = self.scheduled_date or self.created_at.date()
+            
+            daily_points, created = DailyPoints.objects.get_or_create(
+                user=self.created_by,
+                date=award_date,
+                defaults={
+                    'points': Decimal('0.00'),
+                    'booking_points': Decimal('0.00'),
+                }
+            )
+            
+            daily_points.booking_points += Decimal(str(self.total_points))
+            daily_points.points = (
+                daily_points.grooming_points +
+                daily_points.service_points +
+                daily_points.booking_points +
+                daily_points.bonus_points
+            )
+            daily_points.save()
+            
+            # Update monthly
+            first_day = award_date.replace(day=1)
+            monthly, created = MonthlyIncentive.objects.get_or_create(
+                user=self.created_by,
+                month=first_day,
+                defaults={'total_points': Decimal('0.00')}
+            )
+            monthly.total_points += Decimal(str(self.total_points))
+            if hasattr(monthly, 'calculate_incentive'):
+                monthly.calculate_incentive()
+            monthly.save()
+            
+            # Mark as awarded
+            self.points_awarded = True
+            self.points_awarded_at = timezone.now()
+            self.save()
+            
+            # Create notification
+            from task_management.models import Notification
+            Notification.objects.create(
+                user=self.created_by,
+                notification_type='points_awarded',
+                title='Points Released!',
+                message=f'{self.total_points} points released for {self.package_id} - Customer arrived',
+                link=f'/registration/dashboard/'
+            )
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error releasing points: {e}")
+            return False
+    
+    def get_booking_type_display_with_icon(self):
+        """Get display text with icon for booking type"""
+        icons = {
+            'type_a': '✅',
+            'type_b': '❌',
+            'type_c': '⏸️',
+        }
+        icon = icons.get(self.booking_type, '')
+        return f"{icon} {self.get_booking_type_display()}"
+    
+    def get_arrival_status_badge_class(self):
+        """Get Bootstrap badge class for arrival status"""
+        classes = {
+            'pending': 'warning',
+            'arrived': 'success',
+            'no_show': 'danger',
+        }
+        return classes.get(self.arrival_status, 'secondary')
+    
+    # ============ EXISTING METHODS ============
     
     def calculate_total_points(self):
         """Calculate total points from all tasks"""
