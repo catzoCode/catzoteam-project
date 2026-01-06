@@ -1,0 +1,193 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Branch Bookings · Catzonia{% endblock %}
+
+{% block content %}
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
+        </a>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
+            </div>
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+            </div>
+            <a href="{% url 'registration_portal:dashboard' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-apple">
+    <!-- PAGE HEADER -->
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-body-apple" style="text-align: center;">
+            <h1 class="text-3xl font-semibold mb-2">
+                <i class="fas fa-building"></i> Branch Bookings
+            </h1>
+            <p class="text-secondary">All bookings for {{ user.get_branch_display }} branch</p>
+        </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid animate-fade-in-up mb-6">
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-orange);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">{{ pending_bookings|length }}</div>
+            <div class="stat-label">Pending Payment</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-green);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ task_packages|length }}</div>
+            <div class="stat-label">Confirmed Bookings</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-blue);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ staff_list|length }}</div>
+            <div class="stat-label">Active Staff</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-purple);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-value">{{ pending_bookings|length|add:task_packages|length }}</div>
+            <div class="stat-label">Total Bookings</div>
+        </div>
+    </div>
+
+    <!-- PENDING BOOKINGS -->
+    {% if pending_bookings %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-clock"></i> Pending Bookings</h2>
+            <div class="navbar-badge">{{ pending_bookings|length }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                {% for booking in pending_bookings %}
+                <div class="card-apple" style="margin: 0; border: 2px solid var(--apple-orange);">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between">
+                            <div style="flex: 1;">
+                                <h3 class="text-lg font-semibold mb-2">
+                                    {{ booking.booking_id }} - {{ booking.customer.name }}
+                                </h3>
+                                <div class="text-sm text-secondary mb-2">
+                                    <span class="navbar-badge" style="margin-right: var(--space-2);">
+                                        <i class="fas fa-user"></i> {{ booking.created_by.first_name|default:booking.created_by.username }}
+                                    </span>
+                                    <span class="navbar-badge" style="margin-right: var(--space-2);">
+                                        <i class="fas fa-cat"></i> {{ booking.cat.name }}
+                                    </span>
+                                    <span class="navbar-badge">
+                                        <i class="fas fa-calendar"></i> {{ booking.scheduled_date|date:"M d, Y" }}
+                                    </span>
+                                </div>
+                                <div class="text-sm">
+                                    <span class="tile-badge" style="background: var(--apple-blue);">{{ booking.total_points }} pts</span>
+                                    {% if booking.status == 'pending_payment' %}
+                                        <span class="tile-badge" style="background: var(--apple-orange);">Pending</span>
+                                    {% elif booking.status == 'confirmed' %}
+                                        <span class="tile-badge" style="background: var(--apple-green);">Confirmed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-sm text-secondary">
+                                {{ booking.created_at|date:"M d, g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CONFIRMED BOOKINGS -->
+    {% if task_packages %}
+    <div class="card-apple animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-check-circle"></i> Confirmed Bookings</h2>
+            <div class="navbar-badge">{{ task_packages|length }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                {% for package in task_packages %}
+                <div class="card-apple" style="margin: 0; border: 2px solid var(--apple-green);">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between">
+                            <div style="flex: 1;">
+                                <h3 class="text-lg font-semibold mb-2">
+                                    {{ package.package_id }} - {{ package.cat.owner.name }}
+                                </h3>
+                                <div class="text-sm text-secondary mb-2">
+                                    <span class="navbar-badge" style="margin-right: var(--space-2);">
+                                        <i class="fas fa-user"></i> {{ package.created_by.first_name|default:package.created_by.username }}
+                                    </span>
+                                    <span class="navbar-badge" style="margin-right: var(--space-2);">
+                                        <i class="fas fa-cat"></i> {{ package.cat.name }}
+                                    </span>
+                                    <span class="navbar-badge">
+                                        <i class="fas fa-calendar"></i> {{ package.scheduled_date|date:"M d, Y" }}
+                                    </span>
+                                </div>
+                                <div class="text-sm">
+                                    {% if package.is_combo_package %}
+                                        <span class="tile-badge" style="background: var(--apple-purple);">
+                                            Combo {{ package.combo_session_number }}/{{ package.combo_total_sessions }}
+                                        </span>
+                                    {% else %}
+                                        <span class="tile-badge" style="background: var(--apple-blue);">{{ package.total_points }} pts</span>
+                                    {% endif %}
+                                    
+                                    {% if package.status == 'pending' %}
+                                        <span class="tile-badge" style="background: var(--apple-orange);">Pending</span>
+                                    {% elif package.status == 'assigned' %}
+                                        <span class="tile-badge" style="background: var(--apple-blue);">Assigned</span>
+                                    {% elif package.status == 'in_progress' %}
+                                        <span class="tile-badge" style="background: var(--apple-purple);">In Progress</span>
+                                    {% elif package.status == 'completed' %}
+                                        <span class="tile-badge" style="background: var(--apple-green);">Completed</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-sm text-secondary">
+                                {{ package.created_at|date:"M d, g:i A" }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EMPTY STATE -->
+    {% if not pending_bookings and not task_packages %}
+    <div class="empty-state animate-fade-in-up">
+        <div class="empty-icon" style="color: var(--apple-blue);">
+            <i class="fas fa-building"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">No bookings in branch</h3>
+        <p class="text-secondary">No bookings have been created yet for this branch</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

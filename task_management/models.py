@@ -9,6 +9,7 @@ import uuid
 import random
 from django.db import models
 from django.conf import settings
+import json
 # ============================================
 # CUSTOMER & CAT MODELS
 # ============================================
@@ -696,6 +697,123 @@ class TaskPackage(models.Model):
             self.status = 'pending'
         
         self.save()
+class ComboPackageOwnership(models.Model):
+    """Track customer's owned combo packages and session usage"""
+    
+    ownership_id = models.CharField(max_length=20, unique=True, blank=True)
+    
+    # Link to customer and cat
+    customer = models.ForeignKey(
+        'Customer',
+        on_delete=models.CASCADE,
+        related_name='owned_combo_packages'
+    )
+    cat = models.ForeignKey(
+        'Cat',
+        on_delete=models.CASCADE,
+        related_name='combo_packages',
+        help_text='Which cat this combo package is for'
+    )
+    
+    # Which combo package
+    combo_task_type = models.ForeignKey(
+        'TaskType',
+        on_delete=models.PROTECT,
+        related_name='combo_ownerships',
+        help_text='The Combo Front task type (e.g., Cute Combo 4)'
+    )
+    
+    # Session tracking
+    total_sessions = models.IntegerField(
+        help_text='Total sessions in this combo (e.g., 4 for Cute Combo 4)'
+    )
+    sessions_used = models.IntegerField(
+        default=0,
+        help_text='How many sessions have been used'
+    )
+    sessions_remaining = models.IntegerField(
+        help_text='How many sessions are left'
+    )
+    
+    # Points tracking (for front desk who sold it)
+    points_awarded = models.IntegerField(
+        default=0,
+        help_text='Points awarded to staff who sold this combo'
+    )
+    awarded_to = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='combo_sales',
+        help_text='Staff who sold this combo package'
+    )
+    awarded_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text='When points were awarded'
+    )
+    
+    # The original sale booking
+    purchase_package = models.OneToOneField(
+        'TaskPackage',
+        on_delete=models.CASCADE,
+        related_name='combo_ownership',
+        help_text='The TaskPackage created when combo was sold'
+    )
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    is_fully_used = models.BooleanField(default=False)
+    
+    # Dates
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateField(
+        null=True,
+        blank=True,
+        help_text='Expiry date (if applicable)'
+    )
+    
+    class Meta:
+        ordering = ['-purchased_at']
+        indexes = [
+            models.Index(fields=['customer', 'is_active']),
+            models.Index(fields=['cat', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.ownership_id} - {self.combo_task_type.name} ({self.sessions_remaining}/{self.total_sessions})"
+    
+    def save(self, *args, **kwargs):
+        if not self.ownership_id:
+            today = date.today()
+            count = ComboPackageOwnership.objects.filter(
+                purchased_at__date=today
+            ).count() + 1
+            self.ownership_id = f"COMBO-{today.strftime('%y%m%d')}-{count:04d}"
+        
+        # Auto-calculate remaining sessions
+        self.sessions_remaining = self.total_sessions - self.sessions_used
+        
+        # Mark as fully used if no sessions left
+        if self.sessions_remaining <= 0:
+            self.is_fully_used = True
+            self.is_active = False
+        
+        super().save(*args, **kwargs)
+    
+    def use_session(self):
+        """Use one session from this combo package"""
+        if self.sessions_remaining > 0:
+            self.sessions_used += 1
+            self.save()
+            return True
+        return False
+    
+    def get_progress_percentage(self):
+        """Get usage progress as percentage"""
+        if self.total_sessions == 0:
+            return 0
+        return int((self.sessions_used / self.total_sessions) * 100)
 
 
 class Task(models.Model):
@@ -1298,3 +1416,237 @@ def log_admin_action(user, action, model_type, object_id, object_repr, changes=N
         ip_address=ip_address
     )
 
+class PendingBooking(models.Model):
+    """
+    Temporary booking created when customer books WITHOUT payment proof.
+    Converts to TaskPackage when customer arrives and pays.
+    Auto-expires if scheduled_date passes without payment.
+    """
+    
+    BOOKING_STATUS = [
+        ('pending_payment', 'Pending Payment'),
+        ('confirmed', 'Confirmed & Converted'),
+        ('expired', 'Expired'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    # Booking ID
+    booking_id = models.CharField(max_length=20, unique=True, blank=True)
+    
+    # Customer & Cat
+    customer = models.ForeignKey(
+        'Customer',
+        on_delete=models.CASCADE,
+        related_name='pending_bookings'
+    )
+    cat = models.ForeignKey(
+        'Cat',
+        on_delete=models.CASCADE,
+        related_name='pending_bookings'
+    )
+    
+    # Selected Services (stored as JSON)
+    selected_tasks_json = models.TextField(
+        help_text='JSON array of task IDs'
+    )
+    total_points = models.IntegerField(default=0)
+    
+    # Schedule
+    scheduled_date = models.DateField(
+        help_text='The appointment date - booking expires day after if no payment'
+    )
+    scheduled_time = models.TimeField(default='09:00')
+    
+    # Notes
+    notes = models.TextField(blank=True)
+    
+    # Status
+    status = models.CharField(
+        max_length=20,
+        choices=BOOKING_STATUS,
+        default='pending_payment'
+    )
+    
+    # Created by (Staff who made the booking)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='created_pending_bookings'
+    )
+    branch = models.CharField(max_length=50, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Confirmation (when customer arrives)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    confirmed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='confirmed_pending_bookings'
+    )
+    payment_proof = models.ImageField(
+        upload_to='pending_booking_proofs/%Y/%m/',
+        null=True,
+        blank=True,
+        help_text='Payment proof uploaded when customer arrives'
+    )
+    
+    # Expiry
+    expired_at = models.DateTimeField(null=True, blank=True)
+    
+    # Converted TaskPackage (when confirmed)
+    converted_to_package = models.OneToOneField(
+        'TaskPackage',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_pending_booking'
+    )
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'scheduled_date']),
+            models.Index(fields=['customer', 'status']),
+            models.Index(fields=['created_by', 'status']),
+        ]
+    
+    def __str__(self):
+        return f"{self.booking_id} - {self.customer.name} ({self.get_status_display()})"
+    
+    def save(self, *args, **kwargs):
+        # Generate booking ID
+        if not self.booking_id:
+            today = date.today()
+            count = PendingBooking.objects.filter(
+                created_at__date=today
+            ).count() + 1
+            self.booking_id = f"PB-{today.strftime('%y%m%d')}-{count:04d}"
+        
+        # Set branch from user
+        if self.created_by and not self.branch:
+            self.branch = self.created_by.branch
+        
+        super().save(*args, **kwargs)
+    
+    def get_selected_tasks(self):
+        """Parse JSON to get list of TaskType objects"""
+        try:
+            task_ids = json.loads(self.selected_tasks_json)
+            return TaskType.objects.filter(id__in=task_ids)
+        except:
+            return TaskType.objects.none()
+    
+    def set_selected_tasks(self, task_types):
+        """Store TaskType IDs as JSON"""
+        task_ids = [task.id for task in task_types]
+        self.selected_tasks_json = json.dumps(task_ids)
+        
+        # Calculate total points
+        self.total_points = sum(task.points for task in task_types)
+    
+    def is_expired(self):
+        """Check if booking should be expired (date passed without payment)"""
+        if self.status == 'pending_payment':
+            today = timezone.now().date()
+            return today > self.scheduled_date
+        return False
+    
+    def can_be_confirmed(self):
+        """Check if booking can still be confirmed"""
+        return self.status == 'pending_payment' and not self.is_expired()
+    
+    def confirm_and_convert(self, confirmed_by_user, payment_proof_file):
+        if not self.can_be_confirmed():
+            return False, None, "Booking cannot be confirmed (expired or already confirmed)"
+        
+        try:
+            with transaction.atomic():
+                # ✅ Create TaskPackage with payment proof
+                task_package = TaskPackage.objects.create(
+                    cat=self.cat,
+                    created_by=self.created_by,  # Original staff who made booking
+                    status='pending',
+                    notes=self.notes or f'Converted from {self.booking_id}',
+                    branch=self.branch,
+                    booking_type='type_a',  # Now has payment proof
+                    payment_proof=payment_proof_file,
+                    scheduled_date=self.scheduled_date,
+                    arrival_status='arrived',  # Customer already arrived
+                    points_awarded=False,  # Will be set to True below
+                    total_points=self.total_points,
+                )
+                
+                # ✅ Create individual tasks
+                tasks = self.get_selected_tasks()
+                for task_type in tasks:
+                    Task.objects.create(
+                        package=task_package,
+                        task_type=task_type,
+                        points=task_type.points,
+                        scheduled_date=self.scheduled_date,
+                        scheduled_time=self.scheduled_time,
+                        status='pending',
+                    )
+                
+                # ✅✅✅ AWARD POINTS TO ORIGINAL STAFF
+                # This is the key fix - points go to whoever created the booking
+                success = task_package.award_points_immediately()
+                
+                if not success:
+                    raise Exception("Failed to award points")
+                
+                # ✅ Update pending booking status
+                self.status = 'confirmed'
+                self.confirmed_at = timezone.now()
+                self.confirmed_by = confirmed_by_user  # Who confirmed (might be manager)
+                self.payment_proof = payment_proof_file
+                self.converted_to_package = task_package
+                self.save()
+                
+                # ✅ Create notification for original staff
+                from task_management.models import Notification
+                Notification.objects.create(
+                    user=self.created_by,  # Notify the staff who made the booking
+                    notification_type='points_awarded',
+                    title=f'Booking {self.booking_id} Confirmed!',
+                    message=f'Customer arrived and paid. {self.total_points} points awarded to you!',
+                    link='/registration/my-bookings/'
+                )
+                
+                return True, task_package, None
+    
+        except Exception as e:
+            import traceback
+            print(f"Error in confirm_and_convert: {traceback.format_exc()}")
+            return False, None, str(e)
+    
+    def mark_as_expired(self):
+        """Mark booking as expired"""
+        if self.status == 'pending_payment':
+            self.status = 'expired'
+            self.expired_at = timezone.now()
+            self.save()
+            
+            # Notify staff
+            from task_management.models import Notification
+            Notification.objects.create(
+                user=self.created_by,
+                title=f'Booking {self.booking_id} Expired',
+                message=f'Customer did not arrive on {self.scheduled_date.strftime("%b %d, %Y")}',
+                notification_type='warning'
+            )
+    
+    def cancel(self, cancelled_by_user):
+        """Manually cancel the booking"""
+        if self.status == 'pending_payment':
+            self.status = 'cancelled'
+            self.confirmed_by = cancelled_by_user
+            self.confirmed_at = timezone.now()
+            self.save()
+            return True
+        return False

@@ -1,221 +1,252 @@
 {% extends 'registration_portal/base.html' %}
 
-{% block title %}Register Cat - Registration Portal{% endblock %}
+{% block title %}Register Cat · Catzonia{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2 class="text-white mb-3">
-            <i class="bi bi-heart-fill text-danger"></i> Register Cat
-        </h2>
-    </div>
-    <div class="col-md-4 text-end">
-        <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" class="btn btn-light">
-            <i class="bi bi-arrow-left"></i> Back
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
         </a>
-    </div>
-</div>
-
-<!-- Customer Info -->
-<div class="card mb-4 border-primary">
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h5 class="mb-0">
-                    <i class="bi bi-person-circle text-primary"></i>
-                    {{ customer.name }}
-                </h5>
-                <p class="text-muted mb-0">
-                    <i class="bi bi-telephone"></i> {{ customer.phone }} | 
-                    <i class="bi bi-tag"></i> {{ customer.customer_id }}
-                </p>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
             </div>
-            <div class="col-md-6 text-end">
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+            </div>
+            <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="container-apple">
+    <!-- Customer Info Banner -->
+    <div class="card-apple mb-4 animate-fade-in-up" style="border: 2px solid var(--apple-blue);">
+        <div class="card-body-apple">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">
+                        <i class="fas fa-user-circle"></i> {{ customer.name }}
+                    </h3>
+                    <div class="text-secondary">
+                        <span class="navbar-badge" style="margin-right: var(--space-2);">
+                            <i class="fas fa-phone"></i> {{ customer.phone }}
+                        </span>
+                        <span class="navbar-badge">
+                            <i class="fas fa-id-card"></i> {{ customer.customer_id }}
+                        </span>
+                    </div>
+                </div>
                 <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
-                   class="btn btn-info">
-                    <i class="bi bi-clipboard-check"></i> Skip to Service Request
+                   class="btn-apple btn-primary">
+                    <i class="fas fa-fast-forward"></i> Skip to Booking
                 </a>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Existing Cats -->
-{% if cats %}
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-list"></i> Registered Cats</span>
-        <span class="badge bg-danger">{{ cats.count }} cat(s)</span>
-    </div>
-    <div class="card-body">
-        <div class="row g-3">
-            {% for cat in cats %}
-            <div class="col-md-6">
-                <div class="card h-100 border-{{ cat.vaccination_status|default:'secondary' }}">
-                    <div class="card-body">
-                        <h6 class="mb-2">
-                            <i class="bi bi-heart-fill text-danger"></i> {{ cat.name }}
-                        </h6>
-                        <p class="mb-1 small">
-                            <strong>ID:</strong> {{ cat.cat_id }}
-                        </p>
-                        <p class="mb-1 small">
-                            {{ cat.breed }} | {{ cat.age }} years | {{ cat.get_gender_display }}
-                        </p>
+    <!-- Existing Cats -->
+    {% if cats %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-cat"></i> Registered Cats</h2>
+            <div class="navbar-badge">{{ cats.count }} cat(s)</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-4);">
+                {% for cat in cats %}
+                <div class="card-apple" style="margin: 0;">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-lg font-semibold">
+                                🐱 {{ cat.name }}
+                            </h3>
+                            {% if cat.vaccination_status == 'up_to_date' %}
+                            <span class="tile-badge" style="background: var(--apple-green);">✓ Vaccinated</span>
+                            {% elif cat.vaccination_status == 'overdue' %}
+                            <span class="tile-badge" style="background: var(--apple-orange);">⚠ Overdue</span>
+                            {% elif cat.vaccination_status == 'not_vaccinated' %}
+                            <span class="tile-badge" style="background: var(--apple-red);">✗ Not Vaccinated</span>
+                            {% else %}
+                            <span class="tile-badge">? Unknown</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="text-sm text-secondary mb-2">
+                            <i class="fas fa-tag"></i> {{ cat.cat_id }}
+                        </div>
+                        
+                        <div class="text-sm mb-3">
+                            <strong>Breed:</strong> {{ cat.breed }}<br>
+                            <strong>Age:</strong> {{ cat.age }} years<br>
+                            <strong>Gender:</strong> {{ cat.get_gender_display }}
+                            {% if cat.color %}<br><strong>Color:</strong> {{ cat.color }}{% endif %}
+                            {% if cat.weight %}<br><strong>Weight:</strong> {{ cat.weight }} kg{% endif %}
+                        </div>
+                        
                         {% if cat.medical_notes %}
-                        <div class="alert alert-warning py-1 px-2 mb-0 mt-2">
-                            <small><i class="bi bi-exclamation-triangle"></i> {{ cat.medical_notes|truncatewords:10 }}</small>
+                        <div style="padding: var(--space-3); background: #fff3cd; border-radius: var(--radius-md); margin-bottom: var(--space-2);">
+                            <div class="text-sm"><strong>Medical:</strong> {{ cat.medical_notes|truncatewords:10 }}</div>
                         </div>
                         {% endif %}
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </div>
-</div>
-{% endif %}
+    {% endif %}
 
-<!-- Register New Cat Form -->
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-plus-circle"></i> Register New Cat
-            </div>
-            <div class="card-body p-4">
-                <form method="post" action="{% url 'registration_portal:register_cat' customer.customer_id %}">
-                    {% csrf_token %}
-                    
-                    <h5 class="text-primary mb-3">
-                        <i class="bi bi-info-circle"></i> Basic Information
-                    </h5>
-                    
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label">Cat Name <span class="text-danger">*</span></label>
-                            <input type="text" 
-                                   name="name" 
-                                   class="form-control" 
-                                   placeholder="Enter cat's name"
-                                   required>
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Breed <span class="text-danger">*</span></label>
-                            <select name="breed" class="form-select" required>
-                                <option value="mixed">Mixed Breed</option>
-                                <option value="persian">Persian</option>
-                                <option value="siamese">Siamese</option>
-                                <option value="maine_coon">Maine Coon</option>
-                                <option value="british_shorthair">British Shorthair</option>
-                                <option value="ragdoll">Ragdoll</option>
-                                <option value="bengal">Bengal</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label">Age (years) <span class="text-danger">*</span></label>
-                            <input type="number" 
-                                   name="age" 
-                                   class="form-control" 
-                                   min="0" 
-                                   max="30"
-                                   placeholder="0"
-                                   required>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label">Gender <span class="text-danger">*</span></label>
-                            <select name="gender" class="form-select" required>
-                                <option value="male">Male</option>
-                                <option value="female">Female</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label">Color</label>
-                            <input type="text" 
-                                   name="color" 
-                                   class="form-control" 
-                                   placeholder="e.g., Orange, White">
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Weight (kg)</label>
-                            <input type="number" 
-                                   name="weight" 
-                                   class="form-control" 
-                                   step="0.1"
-                                   min="0"
-                                   placeholder="e.g., 4.5">
-                        </div>
-                        
-                        <div class="col-md-6">
-                            <label class="form-label">Vaccination Status</label>
-                            <select name="vaccination_status" class="form-select">
-                                <option value="unknown">Unknown</option>
-                                <option value="up_to_date">Up to Date</option>
-                                <option value="overdue">Overdue</option>
-                                <option value="not_vaccinated">Not Vaccinated</option>
-                            </select>
-                        </div>
+    <!-- Register New Cat Form -->
+    <div class="card-apple animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-plus-circle"></i> Register New Cat</h2>
+        </div>
+        <div class="card-body-apple">
+            <form method="post" action="{% url 'registration_portal:register_cat' customer.customer_id %}">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-info-circle"></i> Basic Information
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
+                    <div class="input-group">
+                        <label class="input-label">Cat Name *</label>
+                        <input type="text" 
+                               name="name" 
+                               class="input-apple" 
+                               placeholder="Enter cat's name"
+                               required>
                     </div>
                     
-                    <h5 class="text-primary mb-3">
-                        <i class="bi bi-heart-pulse"></i> Health Information
-                    </h5>
-                    
-                    <div class="row g-3 mb-4">
-                        <div class="col-12">
-                            <label class="form-label">Medical Notes & Allergies <span class="text-danger">*</span></label>
-                            <textarea name="medical_notes" 
-                                      class="form-control" 
-                                      rows="3" 
-                                      placeholder="List any allergies, medical conditions, or current medications..."
-                                      required></textarea>
-                            <small class="text-muted">This is important for the safety of the cat</small>
-                        </div>
-                        
-                        <div class="col-12">
-                            <label class="form-label">Special Requirements</label>
-                            <textarea name="special_requirements" 
-                                      class="form-control" 
-                                      rows="2" 
-                                      placeholder="Any special care instructions, dietary needs, or behavioral notes..."></textarea>
-                        </div>
+                    <div class="input-group">
+                        <label class="input-label">Breed *</label>
+                        <select name="breed" class="input-apple" required>
+                            <option value="mixed">Mixed Breed</option>
+                            <option value="persian">Persian</option>
+                            <option value="siamese">Siamese</option>
+                            <option value="maine_coon">Maine Coon</option>
+                            <option value="british_shorthair">British Shorthair</option>
+                            <option value="ragdoll">Ragdoll</option>
+                            <option value="bengal">Bengal</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-4);">
+                    <div class="input-group">
+                        <label class="input-label">Age (years) *</label>
+                        <input type="number" 
+                               name="age" 
+                               class="input-apple" 
+                               min="0" 
+                               max="30"
+                               placeholder="0"
+                               required>
                     </div>
                     
-                    <hr class="my-4">
-                    
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" 
-                               class="btn btn-outline-secondary btn-lg w-100">
-                                <i class="bi bi-x-circle"></i> Cancel
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <button type="submit" 
-                                    name="action" 
-                                    value="another" 
-                                    class="btn btn-primary btn-lg w-100">
-                                <i class="bi bi-plus-circle"></i> Add Another Cat
-                            </button>
-                        </div>
-                        <div class="col-md-4">
-                            <button type="submit" 
-                                    name="action" 
-                                    value="service" 
-                                    class="btn btn-success btn-lg w-100">
-                                <i class="bi bi-check-circle"></i> Save & Create Service
-                            </button>
-                        </div>
+                    <div class="input-group">
+                        <label class="input-label">Gender *</label>
+                        <select name="gender" class="input-apple" required>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
                     </div>
-                </form>
-            </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Color</label>
+                        <input type="text" 
+                               name="color" 
+                               class="input-apple" 
+                               placeholder="e.g., Orange">
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                    <div class="input-group">
+                        <label class="input-label">Weight (kg)</label>
+                        <input type="number" 
+                               name="weight" 
+                               class="input-apple" 
+                               step="0.1"
+                               min="0"
+                               placeholder="e.g., 4.5">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Vaccination Status</label>
+                        <select name="vaccination_status" class="input-apple">
+                            <option value="unknown">Unknown</option>
+                            <option value="up_to_date">Up to Date</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="not_vaccinated">Not Vaccinated</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Health Information -->
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-heart-pulse"></i> Health Information
+                </h3>
+                
+                <div class="input-group" style="margin-bottom: var(--space-4);">
+                    <label class="input-label">Medical Notes & Allergies *</label>
+                    <textarea name="medical_notes" 
+                              class="input-apple" 
+                              rows="3" 
+                              placeholder="List any allergies, medical conditions, or current medications..."
+                              required></textarea>
+                    <p class="text-sm text-secondary" style="margin-top: var(--space-2);">
+                        This is important for the safety of the cat
+                    </p>
+                </div>
+                
+                <div class="input-group" style="margin-bottom: var(--space-6);">
+                    <label class="input-label">Special Requirements</label>
+                    <textarea name="special_requirements" 
+                              class="input-apple" 
+                              rows="2" 
+                              placeholder="Any special care instructions, dietary needs, or behavioral notes..."></textarea>
+                </div>
+                
+                <!-- Actions -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3);">
+                    <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}" 
+                       class="btn-apple btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" 
+                            name="action" 
+                            value="another" 
+                            class="btn-apple btn-primary">
+                        <i class="fas fa-plus"></i> Add Another
+                    </button>
+                    <button type="submit" 
+                            name="action" 
+                            value="service" 
+                            class="btn-apple btn-success">
+                        <i class="fas fa-check"></i> Save & Book
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<style>
+@media (max-width: 768px) {
+    .card-body-apple > form > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 {% endblock %}

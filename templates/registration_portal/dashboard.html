@@ -1,143 +1,214 @@
 {% extends 'registration_portal/base.html' %}
 
-{% block title %}Dashboard - Catzonia POS{% endblock %}
+{% block title %}Dashboard · Catzonia{% endblock %}
 
 {% block content %}
-<div class="pos-container">
-    <header class="pos-header">
-        <div class="pos-header-content">
-            <div class="pos-logo">
-                <i class="fas fa-cat"></i> CATZONIA POS
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
+        </a>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
             </div>
-            <div class="pos-user-info">
-                <div class="pos-branch-badge">
-                    <i class="fas fa-building"></i> {{ user.get_branch_display }}
-                </div>
-                <div class="pos-user-badge">
-                    <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
-                </div>
-                <a href="{% url 'registration_portal:logout' %}" class="pos-btn pos-btn-sm pos-btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i> Logout
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+            </div>
+            <a href="{% url 'registration_portal:logout' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="container-apple">
+    <!-- STATS -->
+    <div class="stats-grid animate-fade-in-up">
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-blue);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">{{ today_customers }}</div>
+            <div class="stat-label">Today's Customers</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-green);">
+                <i class="fas fa-cat"></i>
+            </div>
+            <div class="stat-value">{{ today_cats }}</div>
+            <div class="stat-label">Today's Cats</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-orange);">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-value">{{ today_requests }}</div>
+            <div class="stat-label">Pending Tasks</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-purple);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-value">{{ session.service_requests_created }}</div>
+            <div class="stat-label">Your Session</div>
+        </div>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2>Quick Actions</h2>
+        </div>
+        <div class="card-body-apple">
+            <div class="tiles-grid">
+                <a href="{% url 'registration_portal:customer_search' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none; border: 2px solid var(--apple-green);">
+                    <div class="tile-icon">📋</div>
+                    <div class="tile-name" style="color: var(--apple-green);">New Booking</div>
+                    <div class="tile-subtitle">Start here</div>
                 </a>
+
+                <a href="{% url 'registration_portal:pending_bookings' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none; border: 2px solid var(--apple-orange);">
+                    <div class="tile-icon">⏸️</div>
+                    <div class="tile-name" style="color: var(--apple-orange);">Pending Bookings</div>
+                    <div class="tile-subtitle">
+                        {% if pending_bookings_count > 0 %}
+                            <span class="tile-badge" style="background: var(--apple-orange);">{{ pending_bookings_count }}</span>
+                        {% else %}
+                            All clear
+                        {% endif %}
+                    </div>
+                </a>
+
+                <a href="{% url 'registration_portal:customer_search' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">🔍</div>
+                    <div class="tile-name">Search</div>
+                    <div class="tile-subtitle">Find customer</div>
+                </a>
+
+                <a href="{% url 'registration_portal:register_customer' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">👤</div>
+                    <div class="tile-name">New Customer</div>
+                    <div class="tile-subtitle">Register</div>
+                </a>
+
+                <a href="{% url 'registration_portal:upload_screenshot' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">📸</div>
+                    <div class="tile-name">OCR Upload</div>
+                    <div class="tile-subtitle">Screenshot</div>
+                </a>
+
+                <a href="{% url 'registration_portal:my_bookings' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">📜</div>
+                    <div class="tile-name">My Bookings</div>
+                    <div class="tile-subtitle">History</div>
+                </a>
+
+                {% if user.role == 'manager' or user.role == 'admin' %}
+                <a href="{% url 'registration_portal:manager_arrivals' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none; border: 2px solid var(--apple-blue);">
+                    <div class="tile-icon">✅</div>
+                    <div class="tile-name" style="color: var(--apple-blue);">Manager Arrivals</div>
+                    <div class="tile-subtitle">Confirm</div>
+                </a>
+
+                <a href="{% url 'registration_portal:branch_bookings' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">🏢</div>
+                    <div class="tile-name">Branch Bookings</div>
+                    <div class="tile-subtitle">All bookings</div>
+                </a>
+                {% endif %}
             </div>
         </div>
-    </header>
+    </div>
 
-    <div class="pos-body">
-        <!-- Stats -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div style="color: #3498DB; font-size: 48px; margin-bottom: 10px;">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-card-value">{{ today_customers }}</div>
-                <div style="color: #7F8C8D;">Today's Customers</div>
-            </div>
-
-            <div class="stat-card" style="border-left-color: #27AE60;">
-                <div style="color: #27AE60; font-size: 48px; margin-bottom: 10px;">
-                    <i class="fas fa-cat"></i>
-                </div>
-                <div class="stat-card-value">{{ today_cats }}</div>
-                <div style="color: #7F8C8D;">Today's Cats</div>
-            </div>
-
-            <div class="stat-card" style="border-left-color: #E67E22;">
-                <div style="color: #E67E22; font-size: 48px; margin-bottom: 10px;">
-                    <i class="fas fa-clipboard-list"></i>
-                </div>
-                <div class="stat-card-value">{{ today_requests }}</div>
-                <div style="color: #7F8C8D;">Pending Bookings</div>
-            </div>
-
-            <div class="stat-card" style="border-left-color: #E74C3C;">
-                <div style="color: #E74C3C; font-size: 48px; margin-bottom: 10px;">
-                    <i class="fas fa-user-check"></i>
-                </div>
-                <div class="stat-card-value">{{ session.customers_registered }}</div>
-                <div style="color: #7F8C8D;">My Session</div>
-            </div>
+    <!-- TODAY'S ACTIVITY -->
+    <div class="card-apple animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2>Today's Activity</h2>
         </div>
-
-        <!-- Quick Actions -->
-        <div class="pos-card">
-            <div class="pos-card-header">
-                <h2><i class="fas fa-bolt"></i> QUICK ACTIONS</h2>
-            </div>
-            <div class="pos-card-body">
-                <div class="service-grid">
-                    <a href="{% url 'registration_portal:customer_search' %}" class="service-tile" style="text-decoration: none;">
-                        <div class="service-tile-icon">🔍</div>
-                        <div class="service-tile-name">SEARCH CUSTOMER</div>
-                    </a>
-
-                    <a href="{% url 'registration_portal:register_customer' %}" class="service-tile" style="text-decoration: none;">
-                        <div class="service-tile-icon">➕</div>
-                        <div class="service-tile-name">NEW CUSTOMER</div>
-                    </a>
-
-                    <a href="{% url 'registration_portal:create_service_request' %}" class="service-tile" style="text-decoration: none;">
-                        <div class="service-tile-icon">📋</div>
-                        <div class="service-tile-name">NEW BOOKING</div>
-                    </a>
-
-                    <a href="{% url 'registration_portal:dashboard' %}" class="service-tile" style="text-decoration: none;">
-                        <div class="service-tile-icon">📊</div>
-                        <div class="service-tile-name">DASHBOARD</div>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="pos-card">
-            <div class="pos-card-header">
-                <h2><i class="fas fa-history"></i> TODAY'S ACTIVITY</h2>
-            </div>
-            <div class="pos-card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h4><i class="fas fa-users"></i> Recent Customers</h4>
-                        {% if recent_customers %}
+        <div class="card-body-apple">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+                <!-- Recent Customers -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-users"></i> Recent Customers
+                    </h3>
+                    {% if recent_customers %}
+                        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
                             {% for customer in recent_customers %}
-                            <div class="cart-item mb-2">
+                            <a href="{% url 'registration_portal:customer_detail' customer.customer_id %}"
+                               class="cart-item-apple" 
+                               style="text-decoration: none;">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600;">{{ customer.name }}</div>
-                                    <small style="color: #7F8C8D;">
+                                    <div class="font-semibold">{{ customer.name }}</div>
+                                    <div class="text-sm text-secondary">
                                         <i class="fas fa-phone"></i> {{ customer.phone }}
-                                    </small>
+                                    </div>
                                 </div>
-                                <small style="color: #7F8C8D;">
-                                    {{ customer.created_at|date:"h:i A" }}
-                                </small>
-                            </div>
+                                <div class="text-sm text-secondary">
+                                    {{ customer.created_at|date:"g:i A" }}
+                                </div>
+                            </a>
                             {% endfor %}
-                        {% else %}
-                            <p style="color: #7F8C8D;">No customers yet</p>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state" style="padding: var(--space-8);">
+                            <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-users"></i></div>
+                            <p>No customers today</p>
+                        </div>
+                    {% endif %}
+                </div>
 
-                    <div class="col-md-6">
-                        <h4><i class="fas fa-clipboard-check"></i> Recent Bookings</h4>
-                        {% if recent_requests %}
+                <!-- Recent Bookings -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">
+                        <i class="fas fa-clipboard-check"></i> Recent Bookings
+                    </h3>
+                    {% if recent_requests %}
+                        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
                             {% for package in recent_requests %}
-                            <div class="cart-item mb-2">
+                            <div class="cart-item-apple">
                                 <div style="flex: 1;">
-                                    <div style="font-weight: 600;">{{ package.package_id }}</div>
-                                    <small style="color: #7F8C8D;">
-                                        <i class="fas fa-cat"></i> {{ package.cat.name }} | 
-                                        {{ package.total_points }} pts
-                                    </small>
+                                    <div class="font-semibold">{{ package.package_id }}</div>
+                                    <div class="text-sm text-secondary">
+                                        <i class="fas fa-cat"></i> {{ package.cat.name }} · 
+                                        <span class="tile-badge">{{ package.total_points }} pts</span>
+                                    </div>
                                 </div>
-                                <small style="color: #7F8C8D;">
-                                    {{ package.created_at|date:"h:i A" }}
-                                </small>
+                                <div class="text-sm text-secondary">
+                                    {{ package.created_at|date:"g:i A" }}
+                                </div>
                             </div>
                             {% endfor %}
-                        {% else %}
-                            <p style="color: #7F8C8D;">No bookings yet</p>
-                        {% endif %}
-                    </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state" style="padding: var(--space-8);">
+                            <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-clipboard"></i></div>
+                            <p>No bookings yet</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

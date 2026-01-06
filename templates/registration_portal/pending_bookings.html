@@ -1,0 +1,263 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}Pending Bookings · Catzonia{% endblock %}
+
+{% block content %}
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
+        </a>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
+            </div>
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+            </div>
+            <a href="{% url 'registration_portal:dashboard' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-apple">
+    <!-- STATS -->
+    <div class="stats-grid animate-fade-in-up">
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-orange);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-value">{{ todays_bookings.count }}</div>
+            <div class="stat-label">Today's Pending</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-blue);">
+                <i class="fas fa-calendar-plus"></i>
+            </div>
+            <div class="stat-value">{{ upcoming_bookings.count }}</div>
+            <div class="stat-label">Upcoming</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-red);">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-value">{{ overdue_bookings.count }}</div>
+            <div class="stat-label">Overdue (Will Expire)</div>
+        </div>
+
+        <div class="stat-card-apple">
+            <div class="stat-icon" style="color: var(--apple-green);">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="stat-value">{{ total_pending }}</div>
+            <div class="stat-label">Total Pending</div>
+        </div>
+    </div>
+
+    <!-- TODAY'S BOOKINGS -->
+    {% if todays_bookings %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-calendar-day"></i> Today's Bookings ({{ today|date:"M d, Y" }})</h2>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                {% for booking in todays_bookings %}
+                <div class="card-apple" style="margin: 0; border: 2px solid var(--apple-orange);">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between">
+                            <div style="flex: 1;">
+                                <h3 class="text-xl font-semibold mb-2">
+                                    {{ booking.customer.name }}
+                                    <span class="tile-badge">{{ booking.booking_id }}</span>
+                                </h3>
+                                <div class="text-secondary mb-2">
+                                    <i class="fas fa-cat"></i> {{ booking.cat.name }} · 
+                                    <i class="fas fa-clock"></i> {{ booking.scheduled_time }} · 
+                                    <span class="tile-badge" style="background: var(--apple-orange);">{{ booking.total_points }} pts</span>
+                                </div>
+                                <div class="text-sm text-secondary">
+                                    Services: {{ booking.get_selected_tasks.count }} selected
+                                </div>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: var(--space-2); min-width: 200px;">
+                                <button onclick="showConfirmModal('{{ booking.booking_id }}', '{{ booking.customer.name }}', '{{ booking.total_points }}')" 
+                                        class="btn-apple btn-success btn-apple-lg">
+                                    <i class="fas fa-check"></i> Confirm Arrival
+                                </button>
+                                <a href="{% url 'registration_portal:cancel_pending_booking' booking.booking_id %}" 
+                                   onclick="return confirm('Cancel this booking?')"
+                                   class="btn-apple btn-apple-sm btn-danger">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- UPCOMING BOOKINGS -->
+    {% if upcoming_bookings %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-calendar-plus"></i> Upcoming Bookings</h2>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                {% for booking in upcoming_bookings %}
+                <div class="cart-item-apple">
+                    <div style="flex: 1;">
+                        <div class="font-semibold mb-1">
+                            {{ booking.customer.name }} - {{ booking.cat.name }}
+                        </div>
+                        <div class="text-sm text-secondary">
+                            {{ booking.booking_id }} · 
+                            <i class="fas fa-calendar"></i> {{ booking.scheduled_date|date:"M d, Y" }} · 
+                            <span class="tile-badge">{{ booking.total_points }} pts</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'registration_portal:cancel_pending_booking' booking.booking_id %}" 
+                       onclick="return confirm('Cancel this booking?')"
+                       class="btn-apple btn-apple-sm btn-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- OVERDUE BOOKINGS -->
+    {% if overdue_bookings %}
+    <div class="card-apple animate-fade-in-up" style="border: 2px solid var(--apple-red);">
+        <div class="card-header-apple" style="background: var(--apple-red); color: white;">
+            <h2><i class="fas fa-exclamation-triangle"></i> Overdue (Will Auto-Expire Tonight)</h2>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                {% for booking in overdue_bookings %}
+                <div class="cart-item-apple" style="background: #fff5f5;">
+                    <div style="flex: 1;">
+                        <div class="font-semibold mb-1 text-red">
+                            {{ booking.customer.name }} - {{ booking.cat.name }}
+                        </div>
+                        <div class="text-sm text-secondary">
+                            {{ booking.booking_id }} · 
+                            <i class="fas fa-calendar"></i> Scheduled: {{ booking.scheduled_date|date:"M d, Y" }} · 
+                            <span class="tile-badge" style="background: var(--apple-red);">{{ booking.total_points }} pts</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: var(--space-2);">
+                        <button onclick="showConfirmModal('{{ booking.booking_id }}', '{{ booking.customer.name }}', '{{ booking.total_points }}')" 
+                                class="btn-apple btn-success">
+                            <i class="fas fa-check"></i> Confirm
+                        </button>
+                        <a href="{% url 'registration_portal:cancel_pending_booking' booking.booking_id %}" 
+                           onclick="return confirm('Cancel?')"
+                           class="btn-apple btn-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EMPTY STATE -->
+    {% if not todays_bookings and not upcoming_bookings and not overdue_bookings %}
+    <div class="empty-state animate-fade-in-up">
+        <div class="empty-icon" style="color: var(--apple-green);">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">All Clear!</h3>
+        <p class="text-secondary">No pending bookings waiting for payment</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- CONFIRMATION MODAL -->
+<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div class="card-apple animate-fade-in-up" style="max-width: 500px; margin: var(--space-6);">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-camera"></i> Confirm Arrival & Payment</h2>
+        </div>
+        <div class="card-body-apple">
+            <form id="confirmForm" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-4" style="text-align: center; padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md);">
+                    <div class="font-semibold mb-2" id="modalCustomerName">Customer Name</div>
+                    <div class="text-secondary" id="modalBookingId">PB-XXXXXX-XXXX</div>
+                    <div class="text-xl font-bold text-blue" id="modalPoints">0 pts</div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">
+                        <i class="fas fa-receipt"></i> Upload Payment Proof *
+                    </label>
+                    <input type="file" 
+                           name="payment_proof" 
+                           accept="image/*" 
+                           class="input-apple"
+                           required
+                           style="padding: var(--space-3);">
+                    <p class="text-sm text-secondary" style="margin-top: var(--space-2);">
+                        Take a photo of payment receipt or screenshot
+                    </p>
+                </div>
+
+                <div class="flex gap-3" style="margin-top: var(--space-6);">
+                    <button type="button" 
+                            onclick="closeConfirmModal()" 
+                            class="btn-apple btn-secondary" 
+                            style="flex: 1;">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="btn-apple btn-success btn-apple-lg" 
+                            style="flex: 2;">
+                        <i class="fas fa-check"></i> Confirm & Award Points
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showConfirmModal(bookingId, customerName, points) {
+    document.getElementById('modalCustomerName').textContent = customerName;
+    document.getElementById('modalBookingId').textContent = bookingId;
+    document.getElementById('modalPoints').textContent = points + ' pts';
+    
+    const form = document.getElementById('confirmForm');
+    form.action = `/registration/pending-bookings/confirm/${bookingId}/`;
+    
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+    document.getElementById('confirmForm').reset();
+}
+
+// Close modal on background click
+document.getElementById('confirmModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeConfirmModal();
+    }
+});
+</script>
+{% endblock %}

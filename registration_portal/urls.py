@@ -1,13 +1,11 @@
 # registration_portal/urls.py
-# UPDATED with Next Booking System routes
-
 from django.urls import path
 from . import views
 
 app_name = 'registration_portal'
 
 urlpatterns = [
-    # Login/Logout
+    # Authentication
     path('', views.registration_login, name='login'),
     path('login/', views.registration_login, name='login'),
     path('logout/', views.registration_logout, name='logout'),
@@ -15,33 +13,33 @@ urlpatterns = [
     # Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
     
-    # Customer
+    # Customer Management
     path('customer/search/', views.customer_search, name='customer_search'),
     path('customer/register/', views.register_customer, name='register_customer'),
     path('customer/<str:customer_id>/', views.customer_detail, name='customer_detail'),
     
-    # Cat
-    path('customer/<str:customer_id>/cat/register/', views.register_cat, name='register_cat'),
+    # Cat Registration
+    path('cat/register/<str:customer_id>/', views.register_cat, name='register_cat'),
     
-    # Service Request
-    path('service/create/', views.create_service_request, name='create_service_request'),
-    path('customer/<str:customer_id>/service/create/', views.create_service_request, name='create_service_request'),
+    # Service Request / Booking
+    path('booking/create/', views.create_service_request, name='create_service_request'),
+    path('booking/create/<str:customer_id>/', views.create_service_request, name='create_service_request'),
     
-    # AJAX Endpoints
-    path('ajax/search-tasks/', views.ajax_search_tasks, name='ajax_search_tasks'),
-    path('ajax/task-details/<int:task_type_id>/', views.get_task_details, name='get_task_details'),
+    # Pending Bookings (NEW!)
+    path('pending-bookings/', views.pending_bookings, name='pending_bookings'),
+    path('pending-bookings/confirm/<str:booking_id>/', views.confirm_pending_booking, name='confirm_pending_booking'),
+    path('pending-bookings/cancel/<str:booking_id>/', views.cancel_pending_booking, name='cancel_pending_booking'),
     
-    # ========== NEXT BOOKING SYSTEM ROUTES ==========
+    # Booking History (NEW!)
+    path('my-bookings/', views.my_bookings, name='my_bookings'),
+    path('branch-bookings/', views.branch_bookings, name='branch_bookings'),
     
-    # Manager Arrivals Page
+    # OCR Screenshot Upload
+    path('upload-screenshot/', views.upload_screenshot, name='upload_screenshot'),
+    path('review-ocr/', views.review_ocr_data, name='review_ocr_data'),
+    
+    # Manager Arrivals
     path('manager/arrivals/', views.manager_arrivals, name='manager_arrivals'),
-    
-    # Confirm Arrival (Release Points)
     path('arrivals/confirm/<str:package_id>/', views.confirm_arrival, name='confirm_arrival'),
-    
-    # Mark No-Show (Don't Award Points)
     path('arrivals/no-show/<str:package_id>/', views.mark_no_show, name='mark_no_show'),
-    
-    # Auto-Crosscheck Customer
-    path('arrivals/auto-check/<str:customer_id>/', views.auto_crosscheck_customer, name='auto_crosscheck_customer'),
 ]

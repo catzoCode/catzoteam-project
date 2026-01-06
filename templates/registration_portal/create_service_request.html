@@ -1,270 +1,306 @@
 {% extends 'registration_portal/base.html' %}
 
-{% block title %}Select Services - Catzonia POS{% endblock %}
+{% block title %}Create Booking · Catzonia{% endblock %}
 
 {% block content %}
-<div class="pos-container">
-    <header class="pos-header">
-        <div class="pos-header-content">
-            <div class="pos-logo">
-                <i class="fas fa-cat"></i> CATZONIA POS
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
+        </a>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
             </div>
-            <div class="pos-user-info">
-                <div class="pos-branch-badge">
-                    <i class="fas fa-building"></i> {{ user.get_branch_display }}
-                </div>
-                <div class="pos-user-badge">
-                    <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
-                </div>
-                <a href="{% url 'registration_portal:logout' %}" class="pos-btn pos-btn-sm pos-btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
             </div>
+            <a href="{% url 'registration_portal:customer_search' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
-    </header>
+    </div>
+</nav>
 
-    <div class="pos-body">
-        <form method="post" id="serviceRequestForm">
-            {% csrf_token %}
-            <input type="hidden" name="customer_id" value="{{ customer.customer_id }}">
-            
-            <div class="pos-two-col">
-                <!-- LEFT: Services -->
-                <div>
-                    <!-- Cat Selection -->
-                    {% if cats %}
-                    <div class="pos-card mb-3">
-                        <div class="pos-card-header">
-                            <h3><i class="fas fa-cat"></i> Select Cat</h3>
-                        </div>
-                        <div class="pos-card-body">
-                            <div class="service-grid">
-                                {% for cat in cats %}
-                                <div class="service-tile" data-cat-id="{{ cat.cat_id }}" onclick="selectCat(this)">
-                                    <div class="service-tile-icon">🐱</div>
-                                    <div class="service-tile-name">{{ cat.name }}</div>
-                                    <div style="font-size: 14px; color: #7F8C8D;">
-                                        {{ cat.get_breed_display }}, {{ cat.age }} yrs
-                                    </div>
-                                    <input type="radio" name="cat_ids" value="{{ cat.cat_id }}" style="display: none;">
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+<!-- MAIN CONTENT -->
+<div class="container-apple">
+    {% if not customer %}
+    <!-- NO CUSTOMER SELECTED -->
+    <div class="empty-state animate-fade-in-up">
+        <div class="empty-icon" style="color: var(--apple-orange);">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">Please Select Customer First</h3>
+        <p class="text-secondary mb-4">You need to search and select a customer before creating a booking</p>
+        <a href="{% url 'registration_portal:customer_search' %}" class="btn-apple btn-primary btn-apple-lg">
+            <i class="fas fa-search"></i> Search Customer
+        </a>
+    </div>
+    {% else %}
+
+    <!-- BOOKING FORM -->
+    <form method="post" id="serviceRequestForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="customer_id" value="{{ customer.customer_id }}">
+        
+        <div class="grid-2col">
+            <!-- LEFT: SERVICES -->
+            <div>
+                <!-- CAT SELECTION -->
+                {% if cats %}
+                <div class="card-apple mb-4 animate-fade-in-up">
+                    <div class="card-header-apple">
+                        <h3>Select Cat</h3>
                     </div>
-                    {% endif %}
-
-                    <!-- Grooming -->
-                    {% if grooming_groups %}
-                    <div class="mb-4">
-                        <div class="service-category-header">
-                            <h3><i class="fas fa-cut"></i> GROOMING SERVICES</h3>
-                        </div>
-                        
-                        {% for group in grooming_groups %}
-                        <div class="service-grid">
-                            {% for task in group.task_types.all %}
-                            <div class="service-tile" 
-                                 data-task-id="{{ task.id }}"
-                                 data-task-name="{{ task.name }}"
-                                 data-task-price="{{ task.price|default:0 }}"
-                                 data-task-points="{{ task.points }}">
-                                <div class="service-tile-icon">
-                                    {% if 'Bath' in task.name %}🛁
-                                    {% elif 'Groom' in task.name %}✂️
-                                    {% elif 'Nail' in task.name %}💅
-                                    {% else %}✨{% endif %}
-                                </div>
-                                <div class="service-tile-name">{{ task.name }}</div>
-                                {% if task.price %}
-                                <div class="service-tile-price">RM {{ task.price }}</div>
-                                {% endif %}
-                                <div class="service-tile-points">{{ task.points }} pts</div>
+                    <div class="card-body-apple">
+                        <div class="tiles-grid">
+                            {% for cat in cats %}
+                            <div class="tile-apple" data-cat-id="{{ cat.cat_id }}" onclick="selectCat(this)">
+                                <div class="tile-icon">🐱</div>
+                                <div class="tile-name">{{ cat.name }}</div>
+                                <div class="tile-subtitle">{{ cat.get_breed_display }}, {{ cat.age }} yrs</div>
+                                <input type="radio" name="cat_ids" value="{{ cat.cat_id }}" style="display: none;">
                             </div>
                             {% endfor %}
                         </div>
-                        {% endfor %}
                     </div>
-                    {% endif %}
-
-                    <!-- Sales -->
-                    {% if sales_groups %}
-                    <div class="mb-4">
-                        <div class="service-category-header">
-                            <h3><i class="fas fa-shopping-cart"></i> SALES & PRODUCTS</h3>
-                        </div>
-                        
-                        {% for group in sales_groups %}
-                        <div class="service-grid">
-                            {% for task in group.task_types.all %}
-                            <div class="service-tile"
-                                 data-task-id="{{ task.id }}"
-                                 data-task-name="{{ task.name }}"
-                                 data-task-price="{{ task.price|default:0 }}"
-                                 data-task-points="{{ task.points }}">
-                                <div class="service-tile-icon">🛒</div>
-                                <div class="service-tile-name">{{ task.name }}</div>
-                                {% if task.price %}
-                                <div class="service-tile-price">RM {{ task.price }}</div>
-                                {% endif %}
-                                <div class="service-tile-points">{{ task.points }} pts</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Hotel -->
-                    {% if product_groups %}
-                    <div class="mb-4">
-                        <div class="service-category-header">
-                            <h3><i class="fas fa-hotel"></i> HOTEL & BOARDING</h3>
-                        </div>
-                        
-                        {% for group in product_groups %}
-                        <div class="service-grid">
-                            {% for task in group.task_types.all %}
-                            <div class="service-tile"
-                                 data-task-id="{{ task.id }}"
-                                 data-task-name="{{ task.name }}"
-                                 data-task-price="{{ task.price|default:0 }}"
-                                 data-task-points="{{ task.points }}">
-                                <div class="service-tile-icon">🏨</div>
-                                <div class="service-tile-name">{{ task.name }}</div>
-                                {% if task.price %}
-                                <div class="service-tile-price">RM {{ task.price }}</div>
-                                {% endif %}
-                                <div class="service-tile-points">{{ task.points }} pts</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Other -->
-                    {% if other_groups %}
-                    <div class="mb-4">
-                        <div class="service-category-header">
-                            <h3><i class="fas fa-star"></i> OTHER SERVICES</h3>
-                        </div>
-                        
-                        {% for group in other_groups %}
-                        <div class="service-grid">
-                            {% for task in group.task_types.all %}
-                            <div class="service-tile"
-                                 data-task-id="{{ task.id }}"
-                                 data-task-name="{{ task.name }}"
-                                 data-task-price="{{ task.price|default:0 }}"
-                                 data-task-points="{{ task.points }}">
-                                <div class="service-tile-icon">⭐</div>
-                                <div class="service-tile-name">{{ task.name }}</div>
-                                {% if task.price %}
-                                <div class="service-tile-price">RM {{ task.price }}</div>
-                                {% endif %}
-                                <div class="service-tile-points">{{ task.points }} pts</div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
                 </div>
-
-                <!-- RIGHT: Cart -->
-                <div>
-                    <div class="cart-panel">
-                        <div class="cart-header">
-                            <h3><i class="fas fa-shopping-cart"></i> CART</h3>
-                            <div class="cart-count" id="cartCount">0</div>
+                {% else %}
+                <div class="card-apple mb-4 animate-fade-in-up" style="border: 2px solid var(--apple-orange);">
+                    <div class="card-body-apple" style="text-align: center;">
+                        <div style="font-size: 48px; color: var(--apple-orange); margin-bottom: var(--space-3);">
+                            <i class="fas fa-exclamation-circle"></i>
                         </div>
+                        <h3 class="text-lg font-semibold mb-2">No cats registered!</h3>
+                        <p class="text-secondary mb-4">Please register a cat for this customer first</p>
+                        <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
+                           class="btn-apple btn-warning">
+                            <i class="fas fa-plus"></i> Register Cat
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
 
-                        <div class="cart-customer-info" id="cartCustomerInfo">
-                            {% if customer %}
-                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px;">
-                                <i class="fas fa-user"></i> {{ customer.name }}
-                            </div>
-                            <div style="font-size: 14px; color: #7F8C8D;">
-                                <i class="fas fa-phone"></i> {{ customer.phone }}
-                            </div>
-                            {% endif %}
+                <!-- GROOMING SERVICES -->
+                {% if grooming_groups %}
+                <div class="section-header">
+                    <h3><i class="fas fa-cut"></i> Grooming Services</h3>
+                </div>
+                {% for group in grooming_groups %}
+                <div class="tiles-grid mb-6 animate-fade-in-up">
+                    {% for task in group.task_types.all %}
+                    <div class="tile-apple"
+                         data-task-id="{{ task.id }}"
+                         data-task-name="{{ task.name }}"
+                         data-task-price="0"
+                         data-task-points="{{ task.points }}">
+                        <div class="tile-icon">
+                            {% if 'Bath' in task.name %}🛁
+                            {% elif 'Groom' in task.name %}✂️
+                            {% elif 'Nail' in task.name %}💅
+                            {% else %}✨{% endif %}
                         </div>
+                        <div class="tile-name">{{ task.name }}</div>
+                        <span class="tile-badge">{{ task.points }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
 
-                        <div class="cart-items" id="cartItems">
-                            <div style="text-align: center; padding: 32px; color: #7F8C8D;">
-                                <i class="fas fa-shopping-cart" style="font-size: 48px; opacity: 0.3;"></i>
+                <!-- SALES & PRODUCTS -->
+                {% if sales_groups %}
+                <div class="section-header">
+                    <h3><i class="fas fa-shopping-cart"></i> Sales & Products</h3>
+                </div>
+                {% for group in sales_groups %}
+                <div class="tiles-grid mb-6 animate-fade-in-up">
+                    {% for task in group.task_types.all %}
+                    <div class="tile-apple"
+                         data-task-id="{{ task.id }}"
+                         data-task-name="{{ task.name }}"
+                         data-task-price="0"
+                         data-task-points="{{ task.points }}">
+                        <div class="tile-icon">🛒</div>
+                        <div class="tile-name">{{ task.name }}</div>
+                        <span class="tile-badge">{{ task.points }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
+
+                <!-- HOTEL & BOARDING -->
+                {% if product_groups %}
+                <div class="section-header">
+                    <h3><i class="fas fa-hotel"></i> Hotel & Boarding</h3>
+                </div>
+                {% for group in product_groups %}
+                <div class="tiles-grid mb-6 animate-fade-in-up">
+                    {% for task in group.task_types.all %}
+                    <div class="tile-apple"
+                         data-task-id="{{ task.id }}"
+                         data-task-name="{{ task.name }}"
+                         data-task-price="0"
+                         data-task-points="{{ task.points }}">
+                        <div class="tile-icon">🏨</div>
+                        <div class="tile-name">{{ task.name }}</div>
+                        <span class="tile-badge">{{ task.points }} pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- RIGHT: CART -->
+            <div>
+                <div class="cart-panel-apple animate-fade-in-up">
+                    <!-- CART HEADER -->
+                    <div class="cart-header-apple">
+                        <h3><i class="fas fa-shopping-cart"></i> Cart</h3>
+                        <div class="cart-badge" id="cartCount">0</div>
+                    </div>
+
+                    <!-- CUSTOMER INFO -->
+                    <div style="padding: var(--space-4); border-bottom: 0.5px solid var(--border-color); background: var(--apple-gray-50);">
+                        <div class="font-semibold mb-1">
+                            <i class="fas fa-user"></i> {{ customer.name }}
+                        </div>
+                        <div class="text-sm text-secondary">
+                            <i class="fas fa-phone"></i> {{ customer.phone }}
+                        </div>
+                    </div>
+
+                    <!-- SCROLLABLE CONTENT -->
+                    <div class="cart-scrollable">
+                        <!-- CART ITEMS -->
+                        <div id="cartItems" style="margin-bottom: var(--space-4);">
+                            <div class="empty-state" style="padding: var(--space-6);">
+                                <div class="empty-icon" style="font-size: 40px;"><i class="fas fa-shopping-cart"></i></div>
                                 <p>No services selected</p>
                             </div>
                         </div>
 
-                        <div class="cart-summary" id="cartSummary">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                <span>Items:</span>
-                                <span>0</span>
+                        <!-- SCHEDULE -->
+                        <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-4);">
+                            <h4 class="text-sm font-semibold mb-3">
+                                <i class="fas fa-calendar"></i> Schedule
+                            </h4>
+                            <div class="input-group">
+                                <label class="input-label">Date</label>
+                                <input type="date" 
+                                       name="preferred_date" 
+                                       class="input-apple"
+                                       value="{{ today|date:'Y-m-d' }}"
+                                       min="{{ today|date:'Y-m-d' }}"
+                                       required>
                             </div>
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-                                <span>Points:</span>
-                                <span>0 pts</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 2px solid #BDC3C7; font-size: 24px; font-weight: bold;">
-                                <span>TOTAL:</span>
-                                <span style="color: #27AE60;">RM 0.00</span>
-                            </div>
-                        </div>
-
-                        <div style="padding: 16px; border-top: 2px solid #BDC3C7;">
-                            <div class="mb-2">
-                                <label style="font-weight: 600;">📅 Date</label>
-                                <input type="date" name="preferred_date" class="pos-form-input" 
-                                       value="{{ today|date:'Y-m-d' }}" min="{{ today|date:'Y-m-d' }}">
-                            </div>
-                            <div class="mb-2">
-                                <label style="font-weight: 600;">⏰ Time</label>
-                                <input type="time" name="preferred_time" class="pos-form-input" value="09:00">
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <label class="input-label">Time</label>
+                                <input type="time" 
+                                       name="preferred_time" 
+                                       class="input-apple"
+                                       value="09:00">
                             </div>
                         </div>
 
-                        <div style="padding: 16px; display: flex; gap: 8px;">
-                            <button type="button" class="pos-btn pos-btn-secondary" id="clearCartBtn" style="flex: 1;">
-                                <i class="fas fa-trash"></i> Clear
-                            </button>
-                            <button type="submit" class="pos-btn pos-btn-success" style="flex: 2;">
-                                <i class="fas fa-check"></i> CHECKOUT
-                            </button>
+                        <!-- PAYMENT PROOF -->
+                        <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md);">
+                            <h4 class="text-sm font-semibold mb-3">
+                                <i class="fas fa-receipt"></i> Payment Proof (Optional)
+                            </h4>
+                            <input type="file" 
+                                   name="payment_proof" 
+                                   accept="image/*" 
+                                   class="input-apple"
+                                   style="padding: var(--space-2);">
+                            <p class="text-sm text-secondary" style="margin-top: var(--space-2);">
+                                Upload payment screenshot for immediate points
+                            </p>
                         </div>
+                    </div>
+
+                    <!-- CART SUMMARY -->
+                    <div class="cart-summary-apple" id="cartSummary">
+                        <div class="flex justify-between mb-3">
+                            <span class="font-medium">Items</span>
+                            <span class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between" style="padding-top: var(--space-3); border-top: 0.5px solid var(--border-color);">
+                            <span class="font-semibold text-lg">Total Points</span>
+                            <span class="font-bold text-xl text-blue">0 pts</span>
+                        </div>
+                    </div>
+
+                    <!-- CART ACTIONS -->
+                    <div class="cart-actions-apple">
+                        <button type="button" 
+                                class="btn-apple btn-secondary" 
+                                id="clearCartBtn"
+                                style="flex: 1;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button type="submit" 
+                                class="btn-apple btn-success btn-apple-lg" 
+                                style="flex: 2;">
+                            <i class="fas fa-check"></i> Checkout
+                        </button>
                     </div>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+    {% endif %}
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        {% if customer %}
-        cart.setCustomer({
-            id: '{{ customer.customer_id }}',
-            name: '{{ customer.name }}',
-            phone: '{{ customer.phone }}'
-        });
-        {% endif %}
+// Cat selection
+function selectCat(tile) {
+    document.querySelectorAll('.tile-apple[data-cat-id]').forEach(t => {
+        t.classList.remove('selected');
     });
-
-    function selectCat(tile) {
-        document.querySelectorAll('.service-tile[data-cat-id]').forEach(t => {
-            t.classList.remove('selected');
-        });
-        
-        tile.classList.add('selected');
-        const radio = tile.querySelector('input[type="radio"]');
-        if (radio) radio.checked = true;
-        
-        const catName = tile.querySelector('.service-tile-name').textContent;
+    
+    tile.classList.add('selected');
+    const radio = tile.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
+    
+    const catName = tile.querySelector('.tile-name').textContent;
+    if (window.cart) {
         cart.setCat({
             id: tile.dataset.catId,
             name: catName
         });
     }
+}
+
+// Initialize cart with customer
+document.addEventListener('DOMContentLoaded', () => {
+    {% if customer %}
+    if (window.cart) {
+        cart.setCustomer({
+            id: '{{ customer.customer_id }}',
+            name: '{{ customer.name }}',
+            phone: '{{ customer.phone }}'
+        });
+    }
+    {% endif %}
+});
+
+// Form validation
+document.getElementById('serviceRequestForm')?.addEventListener('submit', function(e) {
+    if (!window.cart) return;
+    
+    const total = cart.getTotal();
+    if (total.count === 0) {
+        e.preventDefault();
+        alert('⚠️ Please select at least one service!');
+        return false;
+    }
+    
+    return true;
+});
 </script>
 {% endblock %}

@@ -1,5 +1,5 @@
 # registration_portal/views.py
-# Complete registration portal views - CORRECTED VERSION
+# COMPLETE VERSION with PendingBooking System + OCR + Combo Packages
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -8,16 +8,19 @@ from django.utils import timezone
 from django.http import JsonResponse
 from datetime import date, datetime
 from django.db import transaction
+from decimal import Decimal
+import json
+import re
 
 from task_management.models import (
-    Customer, Cat, ServiceRequest, TaskGroup, TaskType, 
-    TaskPackage, Task
+    Customer, Cat, TaskGroup, TaskType, 
+    TaskPackage, Task, ComboPackageOwnership, PendingBooking
 )
 from accounts.models import User
 from .models import RegistrationSession
 
 # ============================================
-# LOGIN/LOGOUT (Employee ID Only)
+# LOGIN/LOGOUT
 # ============================================
 
 def registration_login(request):
@@ -32,13 +35,11 @@ def registration_login(request):
         try:
             user = User.objects.get(employee_id=employee_id, is_active=True)
             
-            # Create session
             session = RegistrationSession.objects.create(
                 user=user,
                 is_active=True
             )
             
-            # Store in Django session
             request.session['registration_user_id'] = user.id
             request.session['registration_session_id'] = session.id
             
@@ -49,7 +50,6 @@ def registration_login(request):
             messages.error(request, f'Invalid Employee ID: {employee_id}')
             return redirect('registration_portal:login')
     
-    # Check if already logged in
     if request.session.get('registration_user_id'):
         return redirect('registration_portal:dashboard')
     
@@ -67,7 +67,8 @@ def registration_logout(request):
         except RegistrationSession.DoesNotExist:
             pass
     
-    # Clear session
+    # Clear cart session to prevent errors
+    request.session.pop('apple_cart', None)
     request.session.pop('registration_user_id', None)
     request.session.pop('registration_session_id', None)
     
@@ -90,7 +91,6 @@ def registration_login_required(view_func):
         
         try:
             request.registration_user = User.objects.get(id=user_id, is_active=True)
-            # Also set request.user for compatibility
             request.user = request.registration_user
             return view_func(request, *args, **kwargs)
         except User.DoesNotExist:
@@ -111,12 +111,16 @@ def dashboard(request):
     
     today = timezone.now().date()
     
-    # TODAY'S STATISTICS
-    today_customers = Customer.objects.count()
-    today_cats = Cat.objects.count()
-    today_packages = TaskPackage.objects.filter(status='pending').count()
+    today_customers = Customer.objects.filter(created_at__date=today).count()
+    today_cats = Cat.objects.filter(registration_date=today).count()
+    today_packages = TaskPackage.objects.filter(created_at__date=today, status='pending').count()
     
-    # SESSION STATISTICS
+    # Pending bookings count
+    pending_bookings_count = PendingBooking.objects.filter(
+        status='pending_payment',
+        created_by=request.registration_user
+    ).count()
+    
     session_id = request.session.get('registration_session_id')
     session_stats = {
         'customers_registered': 0,
@@ -135,10 +139,8 @@ def dashboard(request):
         except RegistrationSession.DoesNotExist:
             pass
     
-    # RECENT CUSTOMERS (Last 5)
-    recent_customers = Customer.objects.all().order_by('-id')[:5]
+    recent_customers = Customer.objects.all().order_by('-created_at')[:5]
     
-    # RECENT TASK PACKAGES (Pending, Last 5)
     recent_packages = TaskPackage.objects.filter(
         status='pending'
     ).select_related(
@@ -147,7 +149,7 @@ def dashboard(request):
         'created_by'
     ).prefetch_related(
         'tasks'
-    ).order_by('-id')[:5]
+    ).order_by('-created_at')[:5]
     
     context = {
         'user': request.registration_user,
@@ -155,6 +157,7 @@ def dashboard(request):
         'today_customers': today_customers,
         'today_cats': today_cats,
         'today_requests': today_packages,
+        'pending_bookings_count': pending_bookings_count,
         'session': session_stats,
         'recent_customers': recent_customers,
         'recent_requests': recent_packages,
@@ -176,27 +179,17 @@ def customer_search(request):
     if request.method == 'POST' or request.GET.get('search'):
         search_performed = True
         
-        # Get search parameters
         search_query = request.POST.get('search_query', '') or request.GET.get('search_query', '')
-        search_ic = request.POST.get('search_ic', '') or request.GET.get('search_ic', '')
         search_phone = request.POST.get('search_phone', '') or request.GET.get('search_phone', '')
-        search_email = request.POST.get('search_email', '') or request.GET.get('search_email', '')
         
-        # Build query
         query = Q()
         
         if search_query:
             query |= Q(name__icontains=search_query)
             query |= Q(customer_id__icontains=search_query)
         
-        if search_ic:
-            query &= Q(ic_number__icontains=search_ic)
-        
         if search_phone:
             query &= Q(phone__icontains=search_phone)
-        
-        if search_email:
-            query &= Q(email__icontains=search_email)
         
         if query:
             customers = Customer.objects.filter(query).order_by('-created_at')
@@ -218,7 +211,6 @@ def customer_search(request):
 def register_customer(request):
     """Register new customer"""
     if request.method == 'POST':
-        # Get form data
         name = request.POST.get('name', '').strip()
         phone = request.POST.get('phone', '').strip()
         email = request.POST.get('email', '').strip()
@@ -226,12 +218,10 @@ def register_customer(request):
         address = request.POST.get('address', '').strip()
         emergency_contact = request.POST.get('emergency_contact', '').strip()
         
-        # Validate
         if not name or not phone:
             messages.error(request, 'Name and Phone are required')
             return redirect('registration_portal:register_customer')
         
-        # Check duplicates
         if Customer.objects.filter(phone=phone).exists():
             messages.error(request, f'Customer with phone {phone} already exists')
             return redirect('registration_portal:customer_search')
@@ -240,7 +230,6 @@ def register_customer(request):
             messages.error(request, f'Customer with IC {ic_number} already exists')
             return redirect('registration_portal:customer_search')
         
-        # Create customer
         try:
             customer = Customer.objects.create(
                 name=name,
@@ -252,7 +241,6 @@ def register_customer(request):
                 registered_by=request.registration_user
             )
             
-            # Update session stats
             session_id = request.session.get('registration_session_id')
             if session_id:
                 try:
@@ -262,7 +250,7 @@ def register_customer(request):
                 except RegistrationSession.DoesNotExist:
                     pass
             
-            messages.success(request, f'✓ Customer {customer.customer_id} registered successfully!')
+            messages.success(request, f'✅ Customer {customer.customer_id} registered successfully!')
             return redirect('registration_portal:register_cat', customer_id=customer.customer_id)
         
         except Exception as e:
@@ -286,7 +274,6 @@ def register_cat(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id)
     
     if request.method == 'POST':
-        # Get form data
         name = request.POST.get('name', '').strip()
         breed = request.POST.get('breed', 'mixed')
         age = request.POST.get('age', 0)
@@ -296,14 +283,12 @@ def register_cat(request, customer_id):
         vaccination_status = request.POST.get('vaccination_status', 'unknown')
         medical_notes = request.POST.get('medical_notes', '').strip()
         special_requirements = request.POST.get('special_requirements', '').strip()
-        photo = request.FILES.get('photo')  # Handle photo upload
+        photo = request.FILES.get('photo')
         
-        # Validate
         if not name:
             messages.error(request, 'Cat name is required')
             return redirect('registration_portal:register_cat', customer_id=customer_id)
         
-        # Create cat
         try:
             cat = Cat.objects.create(
                 name=name,
@@ -316,11 +301,10 @@ def register_cat(request, customer_id):
                 vaccination_status=vaccination_status,
                 medical_notes=medical_notes,
                 special_requirements=special_requirements,
-                photo=photo,  # Save photo
+                photo=photo,
                 registered_by=request.registration_user
             )
             
-            # Update session stats
             session_id = request.session.get('registration_session_id')
             if session_id:
                 try:
@@ -330,9 +314,8 @@ def register_cat(request, customer_id):
                 except RegistrationSession.DoesNotExist:
                     pass
             
-            messages.success(request, f'✓ Cat {cat.cat_id} - {cat.name} registered successfully!')
+            messages.success(request, f'✅ Cat {cat.cat_id} - {cat.name} registered successfully!')
             
-            # Ask if want to add another cat or create service request
             action = request.POST.get('action', 'another')
             
             if action == 'service':
@@ -344,7 +327,6 @@ def register_cat(request, customer_id):
             messages.error(request, f'Error: {str(e)}')
             return redirect('registration_portal:register_cat', customer_id=customer_id)
     
-    # Get customer's cats
     cats = customer.cats.filter(is_active=True).order_by('-registration_date')
     
     context = {
@@ -357,15 +339,16 @@ def register_cat(request, customer_id):
 
 
 # ============================================
-# CREATE SERVICE REQUEST (ONLY ONE VERSION)
+# CREATE SERVICE REQUEST - WITH PENDING BOOKING
 # ============================================
-
-# UPDATED create_service_request VIEW
-# Replace in registration_portal/views.py
 
 @registration_login_required
 def create_service_request(request, customer_id=None):
-    """Create service request with NEXT BOOKING SYSTEM support"""
+    """
+    Create service request - FIXED LOGIC:
+    - NO payment proof → Create PendingBooking (appears in pending page)
+    - WITH payment proof → Create TaskPackage + Award points immediately
+    """
     
     if request.method == 'POST':
         post_customer_id = request.POST.get('customer_id')
@@ -374,13 +357,8 @@ def create_service_request(request, customer_id=None):
         notes = request.POST.get('notes', '')
         preferred_date = request.POST.get('preferred_date')
         preferred_time = request.POST.get('preferred_time')
-        
-        # ============ NEXT BOOKING FIELDS ============
-        booking_type = request.POST.get('booking_type', 'type_c')  # Default: Hold points
-        payment_proof = request.FILES.get('payment_proof')  # Type A: Screenshot
-        is_combo = request.POST.get('is_combo') == 'on'  # Type B: Combo checkbox
-        combo_session = request.POST.get('combo_session')  # e.g., "2"
-        combo_total = request.POST.get('combo_total')  # e.g., "4"
+        payment_proof = request.FILES.get('payment_proof')  # KEY: Check if uploaded
+        use_combo_id = request.POST.get('use_combo_package')
         
         try:
             with transaction.atomic():
@@ -391,120 +369,158 @@ def create_service_request(request, customer_id=None):
                     messages.error(request, 'Please select at least one cat.')
                     return redirect('registration_portal:create_service_request', customer_id=post_customer_id)
                 
-                if not selected_tasks:
+                if not selected_tasks and not use_combo_id:
                     messages.error(request, 'Please select at least one service.')
                     return redirect('registration_portal:create_service_request', customer_id=post_customer_id)
                 
-                # Validation: Type A requires payment proof
-                if booking_type == 'type_a' and not payment_proof:
-                    messages.error(request, '⚠️ Type A requires payment proof screenshot!')
-                    return redirect('registration_portal:create_service_request', customer_id=post_customer_id)
-                
-                # Validation: Type B requires combo info
-                if booking_type == 'type_b' or is_combo:
-                    booking_type = 'type_b'  # Force Type B if combo checked
-                    if not combo_session or not combo_total:
-                        messages.error(request, '⚠️ Combo package requires session numbers (e.g., 2 of 4)')
-                        return redirect('registration_portal:create_service_request', customer_id=post_customer_id)
-                
-                created_packages = []
-                total_all_points = 0
-                
-                # Create ONE task package per cat
-                for cat in cats:
-                    # Create task package with Next Booking fields
-                    task_package = TaskPackage.objects.create(
-                        cat=cat,
-                        created_by=request.registration_user,
-                        status='pending',
-                        notes=notes or f'Service request for {cat.name}',
-                        branch=request.registration_user.branch,  # Auto-detect branch
-                        
-                        # NEXT BOOKING FIELDS
-                        booking_type=booking_type,
-                        payment_proof=payment_proof if booking_type == 'type_a' else None,
-                        is_combo_package=(booking_type == 'type_b'),
-                        combo_session_number=int(combo_session) if combo_session else None,
-                        combo_total_sessions=int(combo_total) if combo_total else None,
-                        scheduled_date=preferred_date if preferred_date else None,
-                        arrival_status='pending',
-                        points_awarded=False,  # Start with no points
+                # ============ USING EXISTING COMBO ============
+                if use_combo_id:
+                    combo_ownership = ComboPackageOwnership.objects.get(
+                        ownership_id=use_combo_id,
+                        is_active=True
                     )
                     
-                    # Create individual tasks for this package
-                    package_points = 0
+                    if combo_ownership.sessions_remaining <= 0:
+                        messages.error(request, f'❌ Combo package has no sessions remaining!')
+                        return redirect('registration_portal:create_service_request', customer_id=post_customer_id)
                     
-                    for task_type_id in selected_tasks:
-                        task_type = TaskType.objects.get(id=task_type_id)
+                    # Create TaskPackage for combo usage (no points)
+                    task_package = TaskPackage.objects.create(
+                        cat=combo_ownership.cat,
+                        created_by=request.registration_user,
+                        status='pending',
+                        notes=f'Combo session {combo_ownership.sessions_used + 1}/{combo_ownership.total_sessions}',
+                        branch=request.registration_user.branch,
+                        booking_type='type_b',
+                        is_combo_package=True,
+                        combo_session_number=combo_ownership.sessions_used + 1,
+                        combo_total_sessions=combo_ownership.total_sessions,
+                        scheduled_date=preferred_date if preferred_date else timezone.now().date(),
+                        arrival_status='pending',
+                        points_awarded=False,
+                        total_points=0,
+                    )
+                    
+                    combo_ownership.use_session()
+                    
+                    messages.success(
+                        request,
+                        f'✅ Combo session used! {combo_ownership.sessions_remaining} sessions remaining'
+                    )
+                
+                # ============ NEW BOOKING - KEY DECISION POINT ============
+                else:
+                    for cat in cats:
+                        task_types = TaskType.objects.filter(id__in=selected_tasks)
+                        package_points = sum(tt.points for tt in task_types)
                         
-                        Task.objects.create(
-                            package=task_package,
-                            task_type=task_type,
-                            points=task_type.points,
-                            scheduled_date=preferred_date if preferred_date else timezone.now().date(),
-                            scheduled_time=preferred_time if preferred_time else '09:00',
-                            status='pending',
-                            notes=f'{task_type.name} for {cat.name}'
-                        )
+                        is_combo_front = any('Combo Front' in tt.name for tt in task_types)
                         
-                        package_points += task_type.points
-                    
-                    # Update task package total points
-                    task_package.total_points = package_points
-                    task_package.save()
-                    
-                    # ============ AWARD POINTS BASED ON TYPE ============
-                    
-                    if booking_type == 'type_a':
-                        # TYPE A: Award points IMMEDIATELY!
-                        success = task_package.award_points_immediately()
-                        if success:
-                            messages.success(
-                                request,
-                                f'✅ {task_package.package_id}: Payment proof uploaded! '
-                                f'You got {package_points} points NOW!'
+                        # ========================================
+                        # FIXED LOGIC: Check payment_proof first
+                        # ========================================
+                        
+                        if payment_proof:
+                            # ✅ HAS PAYMENT PROOF → Create TaskPackage + Award Points NOW
+                            
+                            task_package = TaskPackage.objects.create(
+                                cat=cat,
+                                created_by=request.registration_user,
+                                status='pending',
+                                notes=notes or f'Service request for {cat.name}',
+                                branch=request.registration_user.branch,
+                                booking_type='type_a',  # Type A: Got proof
+                                payment_proof=payment_proof,
+                                scheduled_date=preferred_date if preferred_date else timezone.now().date(),
+                                arrival_status='arrived',  # Already confirmed
+                                points_awarded=False,  # Will be set to True below
+                                total_points=package_points,
                             )
+                            
+                            # Create tasks
+                            for task_type in task_types:
+                                Task.objects.create(
+                                    package=task_package,
+                                    task_type=task_type,
+                                    points=task_type.points,
+                                    scheduled_date=preferred_date if preferred_date else timezone.now().date(),
+                                    scheduled_time=preferred_time if preferred_time else '09:00',
+                                    status='pending',
+                                )
+                            
+                            # ✅ AWARD POINTS IMMEDIATELY
+                            success = task_package.award_points_immediately()
+                            
+                            if success:
+                                # Handle combo ownership
+                                if is_combo_front:
+                                    combo_front_task = next((tt for tt in task_types if 'Combo Front' in tt.name), None)
+                                    match = re.search(r'(\d+)', combo_front_task.name)
+                                    total_sessions = int(match.group(1)) if match else 4
+                                    
+                                    ComboPackageOwnership.objects.create(
+                                        customer=customer,
+                                        cat=cat,
+                                        combo_task_type=combo_front_task,
+                                        total_sessions=total_sessions,
+                                        sessions_used=0,
+                                        sessions_remaining=total_sessions,
+                                        points_awarded=package_points,
+                                        awarded_to=request.registration_user,
+                                        awarded_at=timezone.now(),
+                                        purchase_package=task_package,
+                                        is_active=True,
+                                    )
+                                    
+                                    messages.success(
+                                        request,
+                                        f'🎉 {task_package.package_id}: Combo sold! You got {package_points} points NOW!'
+                                    )
+                                else:
+                                    messages.success(
+                                        request,
+                                        f'✅ {task_package.package_id}: Payment confirmed! You got {package_points} points NOW!'
+                                    )
+                            else:
+                                messages.warning(
+                                    request,
+                                    f'⚠️ {task_package.package_id} created but points not awarded'
+                                )
+                        
                         else:
+                            # ❌ NO PAYMENT PROOF → Create PendingBooking
+                            # This will appear on the pending bookings page
+                            
+                            pending_booking = PendingBooking.objects.create(
+                                customer=customer,
+                                cat=cat,
+                                scheduled_date=preferred_date if preferred_date else timezone.now().date(),
+                                scheduled_time=preferred_time if preferred_time else '09:00',
+                                notes=notes or f'Pending booking for {cat.name}',
+                                created_by=request.registration_user,
+                                branch=request.registration_user.branch,
+                                status='pending_payment',
+                            )
+                            
+                            # Store tasks as JSON
+                            pending_booking.set_selected_tasks(task_types)
+                            pending_booking.save()
+                            
                             messages.warning(
                                 request,
-                                f'⚠️ {task_package.package_id}: Created but points not awarded. Check logs.'
+                                f'⏸️ {pending_booking.booking_id}: Pending booking created! '
+                                f'Customer must pay when they arrive. {package_points} points will be awarded ONLY after payment confirmed.'
                             )
-                    
-                    elif booking_type == 'type_b':
-                        # TYPE B: Combo package - NO points!
-                        messages.info(
-                            request,
-                            f'❌ {task_package.package_id}: Combo session {combo_session}/{combo_total} - '
-                            f'No points (already got when package sold)'
-                        )
-                    
-                    else:  # type_c
-                        # TYPE C: Points on HOLD!
-                        messages.warning(
-                            request,
-                            f'⏸️ {task_package.package_id}: {package_points} points ON HOLD - '
-                            f'Will be released when customer arrives on {preferred_date}'
-                        )
-                    
-                    created_packages.append(task_package)
-                    total_all_points += package_points
                 
                 # Update session stats
                 session_id = request.session.get('registration_session_id')
                 if session_id:
                     try:
                         session = RegistrationSession.objects.get(id=session_id)
-                        session.service_requests_created += len(created_packages)
+                        session.service_requests_created += 1
                         session.save()
                     except RegistrationSession.DoesNotExist:
                         pass
-                
-                # Overall success message
-                package_ids = ', '.join([p.package_id for p in created_packages])
-                messages.success(
-                    request, 
-                    f'🎉 Created {len(created_packages)} booking(s): {package_ids}'
-                )
                 
                 return redirect('registration_portal:dashboard')
                 
@@ -517,32 +533,40 @@ def create_service_request(request, customer_id=None):
             print(traceback.format_exc())
             return redirect('registration_portal:customer_search')
     
-    # GET request - show form
+    # GET request - same as before
     if not customer_id:
         customer_id = request.GET.get('customer_id')
     
     customer = None
     cats = []
+    owned_combos = []
     
     if customer_id:
         try:
             customer = Customer.objects.get(customer_id=customer_id)
-            cats = customer.cats.all()
+            cats = customer.cats.filter(is_active=True)
+            
+            owned_combos = ComboPackageOwnership.objects.filter(
+                customer=customer,
+                is_active=True,
+                sessions_remaining__gt=0
+            ).select_related('combo_task_type', 'cat')
+            
         except Customer.DoesNotExist:
             messages.error(request, 'Customer not found')
             return redirect('registration_portal:customer_search')
     
-    # Get all task types organized by group
+    # Get task groups
     task_groups = TaskGroup.objects.filter(is_active=True).prefetch_related('task_types')
+    task_groups = task_groups.exclude(name__icontains='Other')
     
-    # Organize tasks by category
     grooming_groups = task_groups.filter(name__icontains='Grooming')
-    sales_groups = task_groups.filter(name__icontains='Sales')
+    sales_groups = task_groups.filter(Q(name__icontains='Sales') | Q(name__icontains='Combo'))
     product_groups = task_groups.filter(name__icontains='Product')
     other_groups = task_groups.exclude(
         name__icontains='Grooming'
     ).exclude(
-        name__icontains='Sales'
+        Q(name__icontains='Sales') | Q(name__icontains='Combo')
     ).exclude(
         name__icontains='Product'
     )
@@ -551,6 +575,7 @@ def create_service_request(request, customer_id=None):
         'user': request.registration_user,
         'customer': customer,
         'cats': cats,
+        'owned_combos': owned_combos,
         'grooming_groups': grooming_groups,
         'sales_groups': sales_groups,
         'product_groups': product_groups,
@@ -571,123 +596,199 @@ def customer_detail(request, customer_id):
     customer = get_object_or_404(Customer, customer_id=customer_id)
     cats = customer.cats.filter(is_active=True)
     
-    # Get recent task packages for this customer's cats
     recent_packages = TaskPackage.objects.filter(
         cat__owner=customer
     ).select_related('cat', 'created_by').prefetch_related('tasks').order_by('-created_at')[:10]
+    
+    owned_combos = ComboPackageOwnership.objects.filter(
+        customer=customer
+    ).select_related('combo_task_type', 'cat', 'awarded_to').order_by('-purchased_at')
     
     context = {
         'user': request.registration_user,
         'customer': customer,
         'cats': cats,
         'recent_packages': recent_packages,
+        'owned_combos': owned_combos,
     }
     
     return render(request, 'registration_portal/customer_detail.html', context)
 
 
 # ============================================
-# AJAX ENDPOINTS
+# PENDING BOOKINGS
 # ============================================
 
 @registration_login_required
-def ajax_search_tasks(request):
-    """AJAX endpoint for live task search"""
-    query = request.GET.get('q', '').strip()
+def pending_bookings(request):
+    """View all pending bookings"""
     
-    if len(query) < 2:
-        return JsonResponse({'tasks': []})
+    user = request.registration_user
+    today = timezone.now().date()
     
-    tasks = TaskType.objects.filter(
-        Q(name__icontains=query) | Q(description__icontains=query),
-        is_active=True
-    ).select_related('group').values(
-        'id', 'name', 'points', 'price', 'description', 'group__name'
-    )[:20]
+    if user.role in ['manager', 'admin']:
+        bookings = PendingBooking.objects.filter(
+            branch=user.branch,
+            status='pending_payment'
+        )
+    else:
+        bookings = PendingBooking.objects.filter(
+            created_by=user,
+            status='pending_payment'
+        )
     
-    return JsonResponse({'tasks': list(tasks)})
+    todays_bookings = bookings.filter(scheduled_date=today)
+    upcoming_bookings = bookings.filter(scheduled_date__gt=today)
+    overdue_bookings = bookings.filter(scheduled_date__lt=today)
+    
+    context = {
+        'user': user,
+        'today': today,
+        'todays_bookings': todays_bookings,
+        'upcoming_bookings': upcoming_bookings,
+        'overdue_bookings': overdue_bookings,
+        'total_pending': bookings.count(),
+    }
+    
+    return render(request, 'registration_portal/pending_bookings.html', context)
 
 
 @registration_login_required
-def get_task_details(request, task_type_id):
-    """AJAX endpoint to get task type details"""
-    try:
-        task_type = TaskType.objects.get(id=task_type_id)
-        return JsonResponse({
-            'success': True,
-            'id': task_type.id,
-            'name': task_type.name,
-            'points': task_type.points,
-            'price': float(task_type.price) if task_type.price else 0,
-            'description': task_type.description,
-            'category': task_type.category,
-        })
-    except TaskType.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Task type not found'})
+def confirm_pending_booking(request, booking_id):
+    """Confirm pending booking"""
     
+    if request.method != 'POST':
+        return redirect('registration_portal:pending_bookings')
+    
+    try:
+        booking = PendingBooking.objects.get(booking_id=booking_id)
+        
+        # Check permissions
+        if request.registration_user.role not in ['manager', 'admin']:
+            if booking.created_by != request.registration_user:
+                messages.error(request, '❌ You can only confirm your own bookings')
+                return redirect('registration_portal:pending_bookings')
+        
+        payment_proof = request.FILES.get('payment_proof')
+        if not payment_proof:
+            messages.error(request, '⚠️ Payment proof is required!')
+            return redirect('registration_portal:pending_bookings')
+        
+        success, task_package, error = booking.confirm_and_convert(
+            confirmed_by_user=request.registration_user,
+            payment_proof_file=payment_proof
+        )
+        
+        if success:
+            messages.success(
+                request,
+                f'✅ {booking.booking_id} confirmed! {task_package.package_id} created. {booking.total_points} points awarded!'
+            )
+        else:
+            messages.error(request, f'❌ Error: {error}')
+        
+    except PendingBooking.DoesNotExist:
+        messages.error(request, '❌ Booking not found')
+    except Exception as e:
+        messages.error(request, f'❌ Error: {str(e)}')
+    
+    return redirect('registration_portal:pending_bookings')
+
+
+@registration_login_required
+def cancel_pending_booking(request, booking_id):
+    """Cancel pending booking"""
+    
+    try:
+        booking = PendingBooking.objects.get(booking_id=booking_id)
+        
+        if request.registration_user.role not in ['manager', 'admin']:
+            if booking.created_by != request.registration_user:
+                messages.error(request, '❌ You can only cancel your own bookings')
+                return redirect('registration_portal:pending_bookings')
+        
+        if booking.cancel(request.registration_user):
+            messages.success(request, f'✅ {booking.booking_id} cancelled')
+        else:
+            messages.error(request, f'❌ Cannot cancel {booking.booking_id}')
+        
+    except PendingBooking.DoesNotExist:
+        messages.error(request, '❌ Booking not found')
+    
+    return redirect('registration_portal:pending_bookings')
+
+
+@registration_login_required
+def my_bookings(request):
+    """View booking history"""
+    
+    user = request.registration_user
+    
+    pending_bookings = PendingBooking.objects.filter(created_by=user).order_by('-created_at')[:20]
+    task_packages = TaskPackage.objects.filter(created_by=user).order_by('-created_at')[:20]
+    
+    context = {
+        'user': user,
+        'pending_bookings': pending_bookings,
+        'task_packages': task_packages,
+    }
+    
+    return render(request, 'registration_portal/my_bookings.html', context)
+
+
+@registration_login_required
+def branch_bookings(request):
+    """Manager view of all branch bookings"""
+    
+    user = request.registration_user
+    
+    if user.role not in ['manager', 'admin']:
+        messages.error(request, '❌ Only managers can access this page')
+        return redirect('registration_portal:dashboard')
+    
+    pending_bookings = PendingBooking.objects.filter(branch=user.branch).order_by('-created_at')[:50]
+    task_packages = TaskPackage.objects.filter(branch=user.branch).order_by('-created_at')[:50]
+    
+    staff_list = User.objects.filter(branch=user.branch, is_active=True).order_by('first_name')
+    
+    context = {
+        'user': user,
+        'pending_bookings': pending_bookings,
+        'task_packages': task_packages,
+        'staff_list': staff_list,
+    }
+    
+    return render(request, 'registration_portal/branch_bookings.html', context)
+
+
+# ============================================
+# MANAGER ARRIVALS
+# ============================================
 
 @registration_login_required
 def manager_arrivals(request):
-    """Manager page to confirm customer arrivals and release held points"""
+    """Manager confirms arrivals for Type C bookings"""
     
-    # Only managers and admins can access
     if request.registration_user.role not in ['manager', 'admin']:
         messages.error(request, '❌ Only managers can access this page')
         return redirect('registration_portal:dashboard')
     
     today = timezone.now().date()
     
-    # Get today's scheduled bookings
     todays_bookings = TaskPackage.objects.filter(
         scheduled_date=today
-    ).select_related(
-        'cat',
-        'cat__owner',
-        'created_by',
-        'confirmed_by'
-    ).order_by('arrival_status', 'created_at')
+    ).select_related('cat', 'cat__owner', 'created_by').order_by('arrival_status', 'created_at')
     
-    # Organize by type
     pending_arrivals = todays_bookings.filter(
         booking_type='type_c',
         arrival_status='pending',
         points_awarded=False
     )
     
-    got_proof_bookings = todays_bookings.filter(
-        booking_type='type_a'
-    )
-    
-    combo_bookings = todays_bookings.filter(
-        booking_type='type_b'
-    )
-    
-    arrived_bookings = todays_bookings.filter(
-        arrival_status='arrived'
-    )
-    
-    no_show_bookings = todays_bookings.filter(
-        arrival_status='no_show'
-    )
-    
-    # Statistics
-    stats = {
-        'total_scheduled': todays_bookings.count(),
-        'pending': pending_arrivals.count(),
-        'arrived': arrived_bookings.count(),
-        'no_show': no_show_bookings.count(),
-        'points_on_hold': sum(pkg.total_points for pkg in pending_arrivals),
-    }
-    
     context = {
         'user': request.registration_user,
         'today': today,
         'pending_arrivals': pending_arrivals,
-        'got_proof_bookings': got_proof_bookings,
-        'combo_bookings': combo_bookings,
-        'arrived_bookings': arrived_bookings,
-        'no_show_bookings': no_show_bookings,
-        'stats': stats,
     }
     
     return render(request, 'registration_portal/manager_arrivals.html', context)
@@ -695,9 +796,8 @@ def manager_arrivals(request):
 
 @registration_login_required
 def confirm_arrival(request, package_id):
-    """Confirm customer arrived (releases held points)"""
+    """Confirm arrival for Type C"""
     
-    # Only managers and admins
     if request.registration_user.role not in ['manager', 'admin']:
         messages.error(request, '❌ Only managers can confirm arrivals')
         return redirect('registration_portal:dashboard')
@@ -706,24 +806,17 @@ def confirm_arrival(request, package_id):
         package = TaskPackage.objects.get(package_id=package_id)
         
         if package.arrival_status == 'arrived':
-            messages.warning(request, f'⚠️ {package_id} already confirmed as arrived')
+            messages.warning(request, f'⚠️ {package_id} already confirmed')
         else:
             success = package.confirm_arrival(request.registration_user)
             
-            if success:
-                if package.booking_type == 'type_c' and package.points_awarded:
-                    messages.success(
-                        request,
-                        f'✅ {package_id} - Customer ARRIVED! '
-                        f'{package.total_points} points released to {package.created_by.first_name}'
-                    )
-                else:
-                    messages.success(request, f'✅ {package_id} - Arrival confirmed')
+            if success and package.points_awarded:
+                messages.success(request, f'✅ {package_id} confirmed! {package.total_points} points released!')
             else:
-                messages.error(request, f'❌ Error confirming arrival for {package_id}')
+                messages.success(request, f'✅ {package_id} confirmed')
         
     except TaskPackage.DoesNotExist:
-        messages.error(request, f'❌ Package {package_id} not found')
+        messages.error(request, f'❌ Package not found')
     except Exception as e:
         messages.error(request, f'❌ Error: {str(e)}')
     
@@ -732,9 +825,8 @@ def confirm_arrival(request, package_id):
 
 @registration_login_required
 def mark_no_show(request, package_id):
-    """Mark customer as no-show (points NOT awarded)"""
+    """Mark as no-show"""
     
-    # Only managers and admins
     if request.registration_user.role not in ['manager', 'admin']:
         messages.error(request, '❌ Only managers can mark no-shows')
         return redirect('registration_portal:dashboard')
@@ -748,62 +840,206 @@ def mark_no_show(request, package_id):
             success = package.mark_no_show(request.registration_user)
             
             if success:
-                messages.warning(
-                    request,
-                    f'⚠️ {package_id} - Marked as NO-SHOW. '
-                    f'{package.total_points} points NOT awarded.'
-                )
-            else:
-                messages.error(request, f'❌ Error marking no-show for {package_id}')
+                messages.warning(request, f'⚠️ {package_id} - NO-SHOW. Points NOT awarded.')
         
     except TaskPackage.DoesNotExist:
-        messages.error(request, f'❌ Package {package_id} not found')
+        messages.error(request, f'❌ Package not found')
     except Exception as e:
         messages.error(request, f'❌ Error: {str(e)}')
     
     return redirect('registration_portal:manager_arrivals')
+@registration_login_required
+def confirm_pending_booking(request, booking_id):
+    """
+    Confirm pending booking when customer arrives and pays
+    - Upload payment proof
+    - Create TaskPackage
+    - Award points to staff who created the booking
+    """
+    
+    if request.method != 'POST':
+        return redirect('registration_portal:pending_bookings')
+    
+    try:
+        booking = PendingBooking.objects.get(booking_id=booking_id)
+        
+        # Check permissions
+        if request.registration_user.role not in ['manager', 'admin']:
+            if booking.created_by != request.registration_user:
+                messages.error(request, '❌ You can only confirm your own bookings')
+                return redirect('registration_portal:pending_bookings')
+        
+        # REQUIRE payment proof
+        payment_proof = request.FILES.get('payment_proof')
+        if not payment_proof:
+            messages.error(request, '⚠️ Payment proof is required!')
+            return redirect('registration_portal:pending_bookings')
+        
+        # Convert to TaskPackage and award points
+        success, task_package, error = booking.confirm_and_convert(
+            confirmed_by_user=request.registration_user,
+            payment_proof_file=payment_proof
+        )
+        
+        if success:
+            messages.success(
+                request,
+                f'✅ {booking.booking_id} confirmed! '
+                f'{task_package.package_id} created. '
+                f'{booking.total_points} points awarded to {booking.created_by.first_name}!'
+            )
+        else:
+            messages.error(request, f'❌ Error: {error}')
+        
+    except PendingBooking.DoesNotExist:
+        messages.error(request, '❌ Booking not found')
+    except Exception as e:
+        messages.error(request, f'❌ Error: {str(e)}')
+        import traceback
+        print(traceback.format_exc())
+    
+    return redirect('registration_portal:pending_bookings')
+
+# ============================================
+# OCR SCREENSHOT UPLOAD
+# ============================================
+
+try:
+    from .ocr_utils import extract_text_from_image, parse_portal_collar_data, validate_extracted_data
+    OCR_AVAILABLE = True
+except ImportError:
+    OCR_AVAILABLE = False
 
 
 @registration_login_required
-def auto_crosscheck_customer(request, customer_id):
-    """
-    Auto-crosscheck when customer arrives
-    Automatically confirm all pending bookings for this customer
-    """
+def upload_screenshot(request):
+    """Upload screenshot for OCR"""
     
-    try:
-        customer = Customer.objects.get(customer_id=customer_id)
-        
-        # Find all pending arrivals for this customer
-        pending_packages = TaskPackage.objects.filter(
-            cat__owner=customer,
-            booking_type='type_c',
-            arrival_status='pending',
-            points_awarded=False,
-            scheduled_date__lte=timezone.now().date()
-        )
-        
-        confirmed_count = 0
-        total_points_released = 0
-        
-        for package in pending_packages:
-            success = package.confirm_arrival(request.registration_user)
-            if success:
-                confirmed_count += 1
-                total_points_released += package.total_points
-        
-        if confirmed_count > 0:
-            messages.success(
-                request,
-                f'🎉 AUTO-CROSSCHECK: Confirmed {confirmed_count} booking(s) for {customer.name}! '
-                f'{total_points_released} points released!'
-            )
-        else:
-            messages.info(request, f'ℹ️ No pending bookings found for {customer.name}')
-        
-    except Customer.DoesNotExist:
-        messages.error(request, f'❌ Customer not found')
-    except Exception as e:
-        messages.error(request, f'❌ Error: {str(e)}')
+    if not OCR_AVAILABLE:
+        messages.error(request, '❌ OCR feature not available. Install pytesseract.')
+        return redirect('registration_portal:dashboard')
     
-    return redirect('registration_portal:manager_arrivals')
+    if request.method == 'POST':
+        screenshot = request.FILES.get('screenshot')
+        
+        if not screenshot:
+            messages.error(request, '⚠️ Please upload a screenshot')
+            return redirect('registration_portal:upload_screenshot')
+        
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        if screenshot.content_type not in allowed_types:
+            messages.error(request, '⚠️ Only JPG, PNG, WEBP images supported')
+            return redirect('registration_portal:upload_screenshot')
+        
+        if screenshot.size > 5 * 1024 * 1024:
+            messages.error(request, '⚠️ Image too large. Max 5MB.')
+            return redirect('registration_portal:upload_screenshot')
+        
+        try:
+            extracted_text = extract_text_from_image(screenshot)
+            
+            if not extracted_text:
+                messages.error(request, '❌ Could not extract text. Try a clearer screenshot.')
+                return redirect('registration_portal:upload_screenshot')
+            
+            parsed_data = parse_portal_collar_data(extracted_text)
+            is_valid, confidence, errors = validate_extracted_data(parsed_data)
+            
+            request.session['ocr_data'] = {
+                'name': parsed_data['name'],
+                'phone': parsed_data['phone'],
+                'ic_number': parsed_data['ic_number'],
+                'service': parsed_data['service'],
+                'date': parsed_data['date'],
+                'notes': parsed_data['notes'],
+                'raw_text': parsed_data['raw_text'],
+                'confidence': confidence,
+                'errors': errors,
+                'is_valid': is_valid,
+            }
+            
+            return redirect('registration_portal:review_ocr_data')
+        
+        except Exception as e:
+            messages.error(request, f'❌ OCR Error: {str(e)}')
+            return redirect('registration_portal:upload_screenshot')
+    
+    context = {
+        'user': request.registration_user,
+    }
+    
+    return render(request, 'registration_portal/upload_screenshot.html', context)
+
+
+@registration_login_required
+def review_ocr_data(request):
+    """Review OCR data"""
+    
+    ocr_data = request.session.get('ocr_data')
+    
+    if not ocr_data:
+        messages.warning(request, '⚠️ No OCR data found')
+        return redirect('registration_portal:upload_screenshot')
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'create':
+            name = request.POST.get('name', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            ic_number = request.POST.get('ic_number', '').strip()
+            email = request.POST.get('email', '').strip()
+            address = request.POST.get('address', '').strip()
+            
+            if not name or not phone:
+                messages.error(request, '⚠️ Name and Phone required')
+                return redirect('registration_portal:review_ocr_data')
+            
+            existing = Customer.objects.filter(phone=phone).first()
+            if existing:
+                messages.warning(request, f'⚠️ Customer exists: {existing.customer_id}')
+                return redirect('registration_portal:customer_detail', customer_id=existing.customer_id)
+            
+            try:
+                customer = Customer.objects.create(
+                    name=name.upper(),
+                    phone=phone,
+                    ic_number=ic_number,
+                    email=email,
+                    address=address,
+                    registered_by=request.registration_user
+                )
+                
+                session_id = request.session.get('registration_session_id')
+                if session_id:
+                    try:
+                        session = RegistrationSession.objects.get(id=session_id)
+                        session.customers_registered += 1
+                        session.save()
+                    except RegistrationSession.DoesNotExist:
+                        pass
+                
+                request.session.pop('ocr_data', None)
+                
+                messages.success(
+                    request,
+                    f'✅ Customer {customer.customer_id} created from screenshot!'
+                )
+                
+                return redirect('registration_portal:register_cat', customer_id=customer.customer_id)
+            
+            except Exception as e:
+                messages.error(request, f'❌ Error: {str(e)}')
+                return redirect('registration_portal:review_ocr_data')
+        
+        elif action == 'cancel':
+            request.session.pop('ocr_data', None)
+            messages.info(request, 'OCR data discarded')
+            return redirect('registration_portal:upload_screenshot')
+    
+    context = {
+        'user': request.registration_user,
+        'ocr_data': ocr_data,
+    }
+    
+    return render(request, 'registration_portal/review_ocr_data.html', context)

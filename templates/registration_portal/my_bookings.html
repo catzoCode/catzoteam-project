@@ -1,0 +1,180 @@
+{% extends 'registration_portal/base.html' %}
+
+{% block title %}My Bookings · Catzonia{% endblock %}
+
+{% block content %}
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
+        </a>
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
+            </div>
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
+            </div>
+            <a href="{% url 'registration_portal:dashboard' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container-apple">
+    <!-- PAGE HEADER -->
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-body-apple" style="text-align: center;">
+            <h1 class="text-3xl font-semibold mb-2">
+                <i class="fas fa-history"></i> My Bookings History
+            </h1>
+            <p class="text-secondary">All bookings you've created</p>
+        </div>
+    </div>
+
+    <!-- PENDING BOOKINGS SECTION -->
+    {% if pending_bookings %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-clock"></i> Pending Bookings (Not Yet Paid)</h2>
+            <div class="navbar-badge">{{ pending_bookings|length }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                {% for booking in pending_bookings %}
+                <div class="card-apple" style="margin: 0; border: 2px solid {% if booking.status == 'pending_payment' %}var(--apple-orange){% elif booking.status == 'confirmed' %}var(--apple-green){% elif booking.status == 'expired' %}var(--apple-red){% else %}var(--border-color){% endif %};">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between">
+                            <div style="flex: 1;">
+                                <h3 class="text-xl font-semibold mb-2">
+                                    {{ booking.customer.name }}
+                                    <span class="tile-badge">{{ booking.booking_id }}</span>
+                                </h3>
+                                <div class="text-secondary mb-2">
+                                    <i class="fas fa-cat"></i> {{ booking.cat.name }} · 
+                                    <i class="fas fa-calendar"></i> {{ booking.scheduled_date|date:"M d, Y" }} {{ booking.scheduled_time }} · 
+                                    <span class="tile-badge" style="background: var(--apple-blue);">{{ booking.total_points }} pts</span>
+                                </div>
+                                <div class="text-sm text-secondary">
+                                    Services: 
+                                    {% for task in booking.get_selected_tasks %}
+                                        {{ task.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="text-sm text-secondary" style="margin-top: var(--space-2);">
+                                    Created {{ booking.created_at|timesince }} ago
+                                </div>
+                            </div>
+                            <div style="min-width: 150px; text-align: right;">
+                                {% if booking.status == 'pending_payment' %}
+                                    <span class="tile-badge" style="background: var(--apple-orange); font-size: 14px; padding: 8px 16px;">
+                                        ⏸️ Pending Payment
+                                    </span>
+                                {% elif booking.status == 'confirmed' %}
+                                    <span class="tile-badge" style="background: var(--apple-green); font-size: 14px; padding: 8px 16px;">
+                                        ✅ Confirmed
+                                    </span>
+                                {% elif booking.status == 'expired' %}
+                                    <span class="tile-badge" style="background: var(--apple-red); font-size: 14px; padding: 8px 16px;">
+                                        ❌ Expired
+                                    </span>
+                                {% elif booking.status == 'cancelled' %}
+                                    <span class="tile-badge" style="background: var(--text-secondary); font-size: 14px; padding: 8px 16px;">
+                                        🚫 Cancelled
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CONFIRMED BOOKINGS (TASK PACKAGES) -->
+    {% if task_packages %}
+    <div class="card-apple animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-check-circle"></i> Confirmed Bookings</h2>
+            <div class="navbar-badge">{{ task_packages|length }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+                {% for package in task_packages %}
+                <div class="card-apple" style="margin: 0; border: 2px solid var(--apple-green);">
+                    <div class="card-body-apple">
+                        <div class="flex items-center justify-between">
+                            <div style="flex: 1;">
+                                <h3 class="text-xl font-semibold mb-2">
+                                    {{ package.cat.owner.name }}
+                                    <span class="tile-badge">{{ package.package_id }}</span>
+                                </h3>
+                                <div class="text-secondary mb-2">
+                                    <i class="fas fa-cat"></i> {{ package.cat.name }} · 
+                                    <i class="fas fa-calendar"></i> {{ package.scheduled_date|date:"M d, Y" }} · 
+                                    
+                                    {% if package.is_combo_package %}
+                                        <span class="tile-badge" style="background: var(--apple-purple);">
+                                            Combo {{ package.combo_session_number }}/{{ package.combo_total_sessions }}
+                                        </span>
+                                    {% else %}
+                                        <span class="tile-badge" style="background: var(--apple-blue);">
+                                            {{ package.total_points }} pts
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-sm text-secondary">
+                                    Tasks: {{ package.tasks.count }} service(s)
+                                </div>
+                                <div class="text-sm text-secondary" style="margin-top: var(--space-2);">
+                                    Created {{ package.created_at|timesince }} ago
+                                </div>
+                            </div>
+                            <div style="min-width: 150px; text-align: right;">
+                                {% if package.status == 'pending' %}
+                                    <span class="tile-badge" style="background: var(--apple-orange); font-size: 14px; padding: 8px 16px;">
+                                        📋 Pending
+                                    </span>
+                                {% elif package.status == 'assigned' %}
+                                    <span class="tile-badge" style="background: var(--apple-blue); font-size: 14px; padding: 8px 16px;">
+                                        👤 Assigned
+                                    </span>
+                                {% elif package.status == 'in_progress' %}
+                                    <span class="tile-badge" style="background: var(--apple-purple); font-size: 14px; padding: 8px 16px;">
+                                        ⚙️ In Progress
+                                    </span>
+                                {% elif package.status == 'completed' %}
+                                    <span class="tile-badge" style="background: var(--apple-green); font-size: 14px; padding: 8px 16px;">
+                                        ✅ Completed
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- EMPTY STATE -->
+    {% if not pending_bookings and not task_packages %}
+    <div class="empty-state animate-fade-in-up">
+        <div class="empty-icon" style="color: var(--apple-blue);">
+            <i class="fas fa-clipboard"></i>
+        </div>
+        <h3 class="text-2xl font-semibold mb-2">No bookings yet</h3>
+        <p class="text-secondary mb-4">You haven't created any bookings</p>
+        <a href="{% url 'registration_portal:customer_search' %}" class="btn-apple btn-primary btn-apple-lg">
+            <i class="fas fa-plus"></i> Create First Booking
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

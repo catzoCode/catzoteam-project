@@ -1,240 +1,279 @@
 {% extends 'registration_portal/base.html' %}
 
-{% block title %}Customer Details - Registration Portal{% endblock %}
+{% block title %}Customer Details · Catzonia{% endblock %}
 
 {% block content %}
-<div class="row mb-4">
-    <div class="col-md-8">
-        <h2 class="text-white mb-3">
-            <i class="bi bi-person-circle"></i> Customer Details
-        </h2>
-    </div>
-    <div class="col-md-4 text-end">
-        <a href="{% url 'registration_portal:customer_search' %}" class="btn btn-light">
-            <i class="bi bi-arrow-left"></i> Back to Search
+<!-- NAVBAR -->
+<nav class="navbar-apple">
+    <div class="navbar-content">
+        <a href="{% url 'registration_portal:dashboard' %}" class="navbar-brand">
+            <i class="fas fa-cat"></i>
+            <span>Catzonia</span>
         </a>
-    </div>
-</div>
-
-<!-- Customer Information -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-person-badge"></i> Customer Information</span>
-        <span class="badge bg-primary">{{ customer.customer_id }}</span>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h5 class="mb-3">{{ customer.name }}</h5>
-                
-                <p class="mb-2">
-                    <i class="bi bi-telephone text-primary"></i>
-                    <strong>Phone:</strong> {{ customer.phone }}
-                </p>
-                
-                {% if customer.email %}
-                <p class="mb-2">
-                    <i class="bi bi-envelope text-primary"></i>
-                    <strong>Email:</strong> {{ customer.email }}
-                </p>
-                {% endif %}
-                
-                {% if customer.ic_number %}
-                <p class="mb-2">
-                    <i class="bi bi-card-text text-primary"></i>
-                    <strong>IC Number:</strong> {{ customer.ic_number }}
-                </p>
-                {% endif %}
+        <div class="navbar-actions">
+            <div class="navbar-badge">
+                <i class="fas fa-building"></i> {{ user.get_branch_display }}
             </div>
-            
-            <div class="col-md-6">
-                {% if customer.address %}
-                <p class="mb-2">
-                    <i class="bi bi-geo-alt text-primary"></i>
-                    <strong>Address:</strong><br>
-                    {{ customer.address }}
-                </p>
-                {% endif %}
-                
-                {% if customer.emergency_contact %}
-                <p class="mb-2">
-                    <i class="bi bi-shield-exclamation text-danger"></i>
-                    <strong>Emergency Contact:</strong> {{ customer.emergency_contact }}
-                </p>
-                {% endif %}
-                
-                <p class="mb-0 text-muted small">
-                    <i class="bi bi-clock"></i> Registered {{ customer.created_at|timesince }} ago
-                </p>
+            <div class="navbar-badge">
+                <i class="fas fa-user-circle"></i> {{ user.first_name|default:user.username }}
             </div>
+            <a href="{% url 'registration_portal:dashboard' %}" class="btn-apple btn-apple-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
         </div>
     </div>
-</div>
+</nav>
 
-<!-- Quick Actions -->
-<div class="row mb-4">
-    <div class="col-md-4">
-        <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
-           class="btn btn-success w-100 py-3">
-            <i class="bi bi-plus-circle" style="font-size: 2rem;"></i>
-            <h6 class="mt-2 mb-0">Register Cat</h6>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
-           class="btn btn-primary w-100 py-3">
-            <i class="bi bi-clipboard-check" style="font-size: 2rem;"></i>
-            <h6 class="mt-2 mb-0">Create Service Request</h6>
-        </a>
-    </div>
-    <div class="col-md-4">
-        <a href="{% url 'registration_portal:dashboard' %}" 
-           class="btn btn-outline-light w-100 py-3">
-            <i class="bi bi-house" style="font-size: 2rem;"></i>
-            <h6 class="mt-2 mb-0">Dashboard</h6>
-        </a>
-    </div>
-</div>
-
-<!-- Registered Cats -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-heart-fill text-danger"></i> Registered Cats</span>
-        <span class="badge bg-danger">{{ cats.count }} cat(s)</span>
-    </div>
-    <div class="card-body">
-        {% if cats %}
-        <div class="row g-3">
-            {% for cat in cats %}
-            <div class="col-md-6">
-                <div class="card h-100 border-{{ cat.vaccination_status|default:'secondary' }}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="mb-0">
-                                <i class="bi bi-heart-fill text-danger"></i> {{ cat.name }}
-                            </h5>
-                            {% if cat.vaccination_status == 'up_to_date' %}
-                            <span class="badge bg-success">✓ Vaccinated</span>
-                            {% elif cat.vaccination_status == 'overdue' %}
-                            <span class="badge bg-warning">⚠ Overdue</span>
-                            {% elif cat.vaccination_status == 'not_vaccinated' %}
-                            <span class="badge bg-danger">✗ Not Vaccinated</span>
-                            {% else %}
-                            <span class="badge bg-secondary">? Unknown</span>
-                            {% endif %}
+<!-- MAIN CONTENT -->
+<div class="container-apple">
+    <!-- Customer Information -->
+    <div class="card-apple mb-4 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-user-circle"></i> Customer Information</h2>
+            <div class="navbar-badge">{{ customer.customer_id }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4">{{ customer.name }}</h3>
+                    
+                    <div class="mb-3">
+                        <div class="text-sm text-secondary mb-1">
+                            <i class="fas fa-phone"></i> Phone
                         </div>
-                        
-                        <p class="mb-2 small text-muted">
-                            <i class="bi bi-tag"></i> {{ cat.cat_id }}
-                        </p>
-                        
-                        <p class="mb-2">
-                            <strong>Breed:</strong> {{ cat.breed }}<br>
-                            <strong>Age:</strong> {{ cat.age }} years<br>
-                            <strong>Gender:</strong> {{ cat.get_gender_display }}<br>
-                            {% if cat.color %}
-                            <strong>Color:</strong> {{ cat.color }}<br>
-                            {% endif %}
-                            {% if cat.weight %}
-                            <strong>Weight:</strong> {{ cat.weight }} kg<br>
-                            {% endif %}
-                        </p>
-                        
-                        {% if cat.medical_notes %}
-                        <div class="alert alert-warning py-2 px-2 mb-2">
-                            <small><strong>Medical:</strong> {{ cat.medical_notes }}</small>
+                        <div class="font-medium">{{ customer.phone }}</div>
+                    </div>
+                    
+                    {% if customer.email %}
+                    <div class="mb-3">
+                        <div class="text-sm text-secondary mb-1">
+                            <i class="fas fa-envelope"></i> Email
                         </div>
-                        {% endif %}
-                        
-                        {% if cat.special_requirements %}
-                        <div class="alert alert-info py-2 px-2 mb-2">
-                            <small><strong>Special:</strong> {{ cat.special_requirements }}</small>
+                        <div class="font-medium">{{ customer.email }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if customer.ic_number %}
+                    <div class="mb-3">
+                        <div class="text-sm text-secondary mb-1">
+                            <i class="fas fa-id-card"></i> IC Number
                         </div>
-                        {% endif %}
-                        
-                        <small class="text-muted">
-                            <i class="bi bi-clock"></i> Registered {{ cat.registration_date|timesince }} ago
-                        </small>
+                        <div class="font-medium">{{ customer.ic_number }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {% if customer.address %}
+                    <div class="mb-3">
+                        <div class="text-sm text-secondary mb-1">
+                            <i class="fas fa-map-marker-alt"></i> Address
+                        </div>
+                        <div class="font-medium">{{ customer.address }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if customer.emergency_contact %}
+                    <div class="mb-3">
+                        <div class="text-sm text-secondary mb-1">
+                            <i class="fas fa-phone-square"></i> Emergency Contact
+                        </div>
+                        <div class="font-medium">{{ customer.emergency_contact }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="text-sm text-secondary">
+                        <i class="fas fa-clock"></i> Registered {{ customer.created_at|timesince }} ago
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="text-center py-4">
-            <i class="bi bi-heart text-muted" style="font-size: 3rem;"></i>
-            <p class="text-muted mb-3">No cats registered yet</p>
-            <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
-               class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Register First Cat
-            </a>
-        </div>
-        {% endif %}
     </div>
-</div>
 
-<!-- Service Requests -->
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-clipboard-check"></i> Service Requests</span>
-        <span class="badge bg-primary">{{ service_requests.count }}</span>
-    </div>
-    <div class="card-body">
-        {% if service_requests %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Cat</th>
-                        <th>Services</th>
-                        <th>Preferred Date</th>
-                        <th>Status</th>
-                        <th>Created</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for request in service_requests %}
-                    <tr>
-                        <td><strong>{{ request.request_id }}</strong></td>
-                        <td>{{ request.cat.name }}</td>
-                        <td>{{ request.services_wanted|truncatewords:5 }}</td>
-                        <td>
-                            {% if request.preferred_date %}
-                            {{ request.preferred_date|date:"M d, Y" }}
-                            {% else %}
-                            <span class="text-muted">Any time</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if request.status == 'pending' %}
-                            <span class="badge bg-warning">Pending</span>
-                            {% elif request.status == 'converted' %}
-                            <span class="badge bg-success">Assigned</span>
-                            {% else %}
-                            <span class="badge bg-secondary">{{ request.status }}</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ request.created_at|timesince }} ago</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <!-- Quick Actions -->
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2>Quick Actions</h2>
         </div>
-        {% else %}
-        <div class="text-center py-4">
-            <i class="bi bi-clipboard text-muted" style="font-size: 3rem;"></i>
-            <p class="text-muted mb-3">No service requests yet</p>
+        <div class="card-body-apple">
+            <div class="tiles-grid">
+                <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none; border: 2px solid var(--apple-green);">
+                    <div class="tile-icon">🐱</div>
+                    <div class="tile-name" style="color: var(--apple-green);">Register Cat</div>
+                    <div class="tile-subtitle">Add new cat</div>
+                </a>
+
+                <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none; border: 2px solid var(--apple-blue);">
+                    <div class="tile-icon">📋</div>
+                    <div class="tile-name" style="color: var(--apple-blue);">Create Booking</div>
+                    <div class="tile-subtitle">New service</div>
+                </a>
+
+                <a href="{% url 'registration_portal:dashboard' %}" 
+                   class="tile-apple" 
+                   style="text-decoration: none;">
+                    <div class="tile-icon">🏠</div>
+                    <div class="tile-name">Dashboard</div>
+                    <div class="tile-subtitle">Go home</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registered Cats -->
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-cat"></i> Registered Cats</h2>
+            <div class="navbar-badge">{{ cats.count }} cat(s)</div>
+        </div>
+        <div class="card-body-apple">
             {% if cats %}
-            <a href="{% url 'registration_portal:create_service_request' customer.customer_id %}" 
-               class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Create Service Request
-            </a>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: var(--space-4);">
+                    {% for cat in cats %}
+                    <div class="card-apple" style="margin: 0; {% if cat.vaccination_status == 'up_to_date' %}border: 2px solid var(--apple-green);{% elif cat.vaccination_status == 'overdue' %}border: 2px solid var(--apple-orange);{% elif cat.vaccination_status == 'not_vaccinated' %}border: 2px solid var(--apple-red);{% endif %}">
+                        <div class="card-body-apple">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-xl font-semibold">🐱 {{ cat.name }}</h3>
+                                {% if cat.vaccination_status == 'up_to_date' %}
+                                <span class="tile-badge" style="background: var(--apple-green);">✓ Vaccinated</span>
+                                {% elif cat.vaccination_status == 'overdue' %}
+                                <span class="tile-badge" style="background: var(--apple-orange);">⚠ Overdue</span>
+                                {% elif cat.vaccination_status == 'not_vaccinated' %}
+                                <span class="tile-badge" style="background: var(--apple-red);">✗ Not Vaccinated</span>
+                                {% else %}
+                                <span class="tile-badge">? Unknown</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="text-sm text-secondary mb-3">
+                                <i class="fas fa-tag"></i> {{ cat.cat_id }}
+                            </div>
+                            
+                            <div class="text-sm mb-3">
+                                <strong>Breed:</strong> {{ cat.breed }}<br>
+                                <strong>Age:</strong> {{ cat.age }} years<br>
+                                <strong>Gender:</strong> {{ cat.get_gender_display }}
+                                {% if cat.color %}<br><strong>Color:</strong> {{ cat.color }}{% endif %}
+                                {% if cat.weight %}<br><strong>Weight:</strong> {{ cat.weight }} kg{% endif %}
+                            </div>
+                            
+                            {% if cat.medical_notes %}
+                            <div style="padding: var(--space-3); background: #fff3cd; border-radius: var(--radius-md); margin-bottom: var(--space-2);">
+                                <div class="text-sm"><strong>Medical:</strong> {{ cat.medical_notes }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if cat.special_requirements %}
+                            <div style="padding: var(--space-3); background: #e3f2fd; border-radius: var(--radius-md); margin-bottom: var(--space-2);">
+                                <div class="text-sm"><strong>Special:</strong> {{ cat.special_requirements }}</div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="text-sm text-secondary">
+                                <i class="fas fa-clock"></i> Registered {{ cat.registration_date|timesince }} ago
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             {% else %}
-            <p class="text-muted small">Register a cat first before creating service requests</p>
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="fas fa-cat"></i></div>
+                    <h3 class="text-xl font-semibold mb-2">No cats registered yet</h3>
+                    <p class="text-secondary mb-4">Register the first cat for this customer</p>
+                    <a href="{% url 'registration_portal:register_cat' customer.customer_id %}" 
+                       class="btn-apple btn-success">
+                        <i class="fas fa-plus"></i> Register First Cat
+                    </a>
+                </div>
             {% endif %}
         </div>
-        {% endif %}
     </div>
+
+    <!-- Owned Combo Packages -->
+    {% if owned_combos %}
+    <div class="card-apple mb-6 animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-gift"></i> Combo Packages</h2>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                {% for combo in owned_combos %}
+                <div class="cart-item-apple" style="{% if combo.sessions_remaining == 0 %}opacity: 0.5;{% endif %}">
+                    <div style="flex: 1;">
+                        <div class="font-semibold mb-1">
+                            {{ combo.combo_task_type.name }} - {{ combo.cat.name }}
+                        </div>
+                        <div class="text-sm text-secondary">
+                            <span class="tile-badge" style="background: var(--apple-blue);">
+                                {{ combo.sessions_remaining }}/{{ combo.total_sessions }} sessions left
+                            </span>
+                            <span class="tile-badge">
+                                {{ combo.points_awarded }} pts awarded
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-secondary">
+                        Purchased {{ combo.purchased_at|date:"M d, Y" }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Packages -->
+    {% if recent_packages %}
+    <div class="card-apple animate-fade-in-up">
+        <div class="card-header-apple">
+            <h2><i class="fas fa-history"></i> Recent Bookings</h2>
+            <div class="navbar-badge">{{ recent_packages|length }}</div>
+        </div>
+        <div class="card-body-apple">
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                {% for package in recent_packages %}
+                <div class="cart-item-apple">
+                    <div style="flex: 1;">
+                        <div class="font-semibold mb-1">
+                            {{ package.package_id }} - {{ package.cat.name }}
+                        </div>
+                        <div class="text-sm text-secondary">
+                            {% if package.is_combo_package %}
+                                <span class="tile-badge" style="background: var(--apple-purple);">Combo Session {{ package.combo_session_number }}/{{ package.combo_total_sessions }}</span>
+                            {% else %}
+                                <span class="tile-badge">{{ package.total_points }} pts</span>
+                            {% endif %}
+                            
+                            {% if package.booking_type == 'type_a' %}
+                                <span class="tile-badge" style="background: var(--apple-green);">Paid</span>
+                            {% elif package.booking_type == 'type_b' %}
+                                <span class="tile-badge" style="background: var(--apple-purple);">Combo</span>
+                            {% elif package.booking_type == 'type_c' %}
+                                <span class="tile-badge" style="background: var(--apple-orange);">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-sm text-secondary">
+                        {{ package.created_at|date:"M d, Y g:i A" }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<style>
+@media (max-width: 768px) {
+    .card-body-apple > div[style*="grid-template-columns: 1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 {% endblock %}
