@@ -26,6 +26,12 @@ DEBUG = config("DEBUG", default=False, cast=bool)
 # Allow Render domain / your domain
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=Csv())
 
+# ✅ ADDED: CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://catzoteam.onrender.com',
+    'http://catzoteam.onrender.com',
+]
+
 # ============================================
 # APPLICATION DEFINITION
 # ============================================
@@ -240,7 +246,8 @@ GMAIL_APP_PASSWORD = config('GMAIL_APP_PASSWORD', default='')
 # SECURITY SETTINGS (Production)
 # ============================================
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # ✅ CHANGED: Make SSL redirect configurable
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
