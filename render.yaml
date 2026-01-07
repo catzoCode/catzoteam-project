@@ -3,13 +3,15 @@ services:
     name: catzoteam
     env: docker
     dockerfilePath: ./Dockerfile
+    region: singapore
     plan: free
 
-    # Add environment variables
+    # Environment variables
     envVars:
       - key: SECRET_KEY
         generateValue: true
 
+      # Database URL - add manually from existing database
       - key: DATABASE_URL
         sync: false
 
