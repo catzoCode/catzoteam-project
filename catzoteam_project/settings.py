@@ -235,21 +235,29 @@ LOGGING = {
 import os
 
 # OCR Configuration
-if os.environ.get('RENDER'):
-    # Production on Render
+import platform
+
+# Detect operating system and set Tesseract path
+if os.environ.get('RENDER') or platform.system() == 'Linux':
+    # Production on Render (Linux)
     TESSERACT_CMD = '/usr/bin/tesseract'
+elif platform.system() == 'Windows':
+    # Windows local development
+    TESSERACT_CMD = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+elif platform.system() == 'Darwin':
+    # Mac local development
+    TESSERACT_CMD = '/usr/local/bin/tesseract'
 else:
-    # Local development (adjust path for your OS)
-    Windows: r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    # Mac: '/usr/local/bin/tesseract'
-    # Linux: '/usr/bin/tesseract'
+    # Default fallback
     TESSERACT_CMD = '/usr/bin/tesseract'
 
 # Configure pytesseract
 try:
     import pytesseract
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+    print(f"✓ Tesseract configured: {TESSERACT_CMD}")
 except ImportError:
+    print("⚠ pytesseract not installed")
     pass
 
 # File upload settings
