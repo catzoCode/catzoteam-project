@@ -17,7 +17,9 @@ services:
 
       # Database URL - add manually from existing database
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: catzo-database # 🔴 NAMA DATABASE SERVICE (exact!)
+          property: connectionString
 
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
