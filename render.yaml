@@ -2,12 +2,7 @@ services:
   - type: web
     name: catzoteam
     env: python
-    buildCommand: |
-      apt-get update
-      apt-get install -y tesseract-ocr tesseract-ocr-eng
-      pip install -r requirements.txt
-      python manage.py collectstatic --no-input
-      python manage.py migrate
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input && python manage.py migrate
     startCommand: gunicorn catzoteam_project.wsgi:application
     envVars:
       - key: PYTHON_VERSION
