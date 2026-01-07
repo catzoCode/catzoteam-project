@@ -808,7 +808,7 @@ def mark_no_show(request, package_id):
     return redirect('registration_portal:manager_arrivals')
 @registration_login_required
 def confirm_pending_booking(request, booking_id):
-    """Confirm pending booking"""
+    """Confirm pending booking - Awards 1 point for confirmation"""
     
     if request.method != 'POST':
         return redirect('registration_portal:pending_bookings')
@@ -846,9 +846,12 @@ def confirm_pending_booking(request, booking_id):
         )
         
         if success:
+            # ✅ FIXED MESSAGE: 2 points awarded for booking confirmation!
             messages.success(
                 request,
-                f'✅ {booking.booking_id} confirmed! {task_package.package_id} created. {booking.total_points} points awarded!'
+                f'✅ {booking.booking_id} confirmed! {task_package.package_id} created. '
+                f'You got 2 POINTS for booking confirmation! '
+                f'(Task completion points will be awarded when tasks are done)'
             )
         else:
             messages.error(request, f'❌ Error: {error}')
