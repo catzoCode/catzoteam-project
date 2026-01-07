@@ -4,7 +4,6 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     region: singapore
-    plan: free
 
     # Environment variables
     envVars:
@@ -18,7 +17,7 @@ services:
       # Database URL - add manually from existing database
       - key: DATABASE_URL
         fromDatabase:
-          name: catzoteam_db_rcxt # 🔴 NAMA DATABASE SERVICE (exact!)
+          name: catzo-database
           property: connectionString
 
       - key: CLOUDINARY_CLOUD_NAME
