@@ -10,6 +10,7 @@ import random
 from django.db import models
 from django.conf import settings
 import json
+from django.db import transaction
 # ============================================
 # CUSTOMER & CAT MODELS
 # ============================================
