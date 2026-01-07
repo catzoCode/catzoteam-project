@@ -509,7 +509,9 @@ def create_service_request(request, customer_id=None):
                             messages.warning(
                                 request,
                                 f'⏸️ {pending_booking.booking_id}: Pending booking created! '
-                                f'Customer must pay when they arrive. {package_points} points will be awarded ONLY after payment confirmed.'
+                                f'Customer must pay when they arrive. '
+                                f'You will get 2 POINTS when customer arrives and payment is confirmed. '
+                                f'(Task completion points awarded separately when work is done)'
                             )
                 
                 # Update session stats
@@ -806,9 +808,10 @@ def mark_no_show(request, package_id):
         messages.error(request, f'❌ Error: {str(e)}')
     
     return redirect('registration_portal:manager_arrivals')
+
 @registration_login_required
 def confirm_pending_booking(request, booking_id):
-    """Confirm pending booking - Awards 1 point for confirmation"""
+    
     
     if request.method != 'POST':
         return redirect('registration_portal:pending_bookings')
