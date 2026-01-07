@@ -11,9 +11,7 @@ services:
         generateValue: true
 
       - key: DATABASE_URL
-        fromDatabase:
-          name: catzo-database
-          property: connectionString
+        sync: false
 
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
@@ -29,10 +27,3 @@ services:
 
       - key: DEBUG
         value: "False"
-
-# Define database
-databases:
-  - name: catzoteam-db
-    databaseName: catzoteam
-    user: catzoteam
-    plan: free
