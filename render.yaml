@@ -39,9 +39,6 @@ services:
       - key: EMAIL_HOST_USER
         sync: false
 
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
-
       - key: GMAIL_USER
         sync: false
 
