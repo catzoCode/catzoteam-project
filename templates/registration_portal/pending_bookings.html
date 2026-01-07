@@ -208,13 +208,14 @@
                         <i class="fas fa-receipt"></i> Upload Payment Proof *
                     </label>
                     <input type="file" 
-                           name="payment_proof" 
-                           accept="image/*" 
-                           class="input-apple"
-                           required
-                           style="padding: var(--space-3);">
+                        name="payment_proof" 
+                        accept="image/*" 
+                        class="input-apple"
+                        required  <!-- ← ADD THIS! -->
+                        id="paymentProofInput"
+                        style="padding: var(--space-3);">
                     <p class="text-sm text-secondary" style="margin-top: var(--space-2);">
-                        Take a photo of payment receipt or screenshot
+                        📸 Take a photo of payment receipt (Max 5MB, JPG/PNG/WEBP only)
                     </p>
                 </div>
 
@@ -227,7 +228,8 @@
                     </button>
                     <button type="submit" 
                             class="btn-apple btn-success btn-apple-lg" 
-                            style="flex: 2;">
+                            style="flex: 2;"
+                            id="confirmButton">
                         <i class="fas fa-check"></i> Confirm & Award Points
                     </button>
                 </div>
@@ -259,5 +261,46 @@ document.getElementById('confirmModal').addEventListener('click', function(e) {
         closeConfirmModal();
     }
 });
+document.getElementById('confirmForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('paymentProofInput');
+    
+    if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('⚠️ Please select payment proof image!');
+        return false;
+    }
+    
+    const file = fileInput.files[0];
+    
+    // Check file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+        e.preventDefault();
+        alert('⚠️ File too large! Maximum 5MB.');
+        return false;
+    }
+    
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+        e.preventDefault();
+        alert('⚠️ Only JPG, PNG, WEBP images allowed!');
+        return false;
+    }
+    
+    // Show loading
+    document.getElementById('confirmButton').disabled = true;
+    document.getElementById('confirmButton').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+    
+    return true;
+});
+
+// Show file name when selected
+document.getElementById('paymentProofInput').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name;
+    if (fileName) {
+        console.log('File selected:', fileName);
+    }
+});
+
 </script>
 {% endblock %}

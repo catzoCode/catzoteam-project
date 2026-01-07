@@ -654,48 +654,6 @@ def pending_bookings(request):
 
 
 @registration_login_required
-def confirm_pending_booking(request, booking_id):
-    """Confirm pending booking"""
-    
-    if request.method != 'POST':
-        return redirect('registration_portal:pending_bookings')
-    
-    try:
-        booking = PendingBooking.objects.get(booking_id=booking_id)
-        
-        # Check permissions
-        if request.registration_user.role not in ['manager', 'admin']:
-            if booking.created_by != request.registration_user:
-                messages.error(request, '❌ You can only confirm your own bookings')
-                return redirect('registration_portal:pending_bookings')
-        
-        payment_proof = request.FILES.get('payment_proof')
-        if not payment_proof:
-            messages.error(request, '⚠️ Payment proof is required!')
-            return redirect('registration_portal:pending_bookings')
-        
-        success, task_package, error = booking.confirm_and_convert(
-            confirmed_by_user=request.registration_user,
-            payment_proof_file=payment_proof
-        )
-        
-        if success:
-            messages.success(
-                request,
-                f'✅ {booking.booking_id} confirmed! {task_package.package_id} created. {booking.total_points} points awarded!'
-            )
-        else:
-            messages.error(request, f'❌ Error: {error}')
-        
-    except PendingBooking.DoesNotExist:
-        messages.error(request, '❌ Booking not found')
-    except Exception as e:
-        messages.error(request, f'❌ Error: {str(e)}')
-    
-    return redirect('registration_portal:pending_bookings')
-
-
-@registration_login_required
 def cancel_pending_booking(request, booking_id):
     """Cancel pending booking"""
     
@@ -850,12 +808,7 @@ def mark_no_show(request, package_id):
     return redirect('registration_portal:manager_arrivals')
 @registration_login_required
 def confirm_pending_booking(request, booking_id):
-    """
-    Confirm pending booking when customer arrives and pays
-    - Upload payment proof
-    - Create TaskPackage
-    - Award points to staff who created the booking
-    """
+    """Confirm pending booking"""
     
     if request.method != 'POST':
         return redirect('registration_portal:pending_bookings')
@@ -869,13 +822,24 @@ def confirm_pending_booking(request, booking_id):
                 messages.error(request, '❌ You can only confirm your own bookings')
                 return redirect('registration_portal:pending_bookings')
         
-        # REQUIRE payment proof
+        # ✅ CHECK IF FILE WAS UPLOADED!
         payment_proof = request.FILES.get('payment_proof')
         if not payment_proof:
-            messages.error(request, '⚠️ Payment proof is required!')
+            messages.error(request, '⚠️ Payment proof is required! Please select a file.')
             return redirect('registration_portal:pending_bookings')
         
-        # Convert to TaskPackage and award points
+        # ✅ CHECK FILE SIZE (max 5MB)
+        if payment_proof.size > 5 * 1024 * 1024:
+            messages.error(request, '⚠️ File too large! Maximum 5MB.')
+            return redirect('registration_portal:pending_bookings')
+        
+        # ✅ CHECK FILE TYPE
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        if payment_proof.content_type not in allowed_types:
+            messages.error(request, '⚠️ Only JPG, PNG, WEBP images allowed!')
+            return redirect('registration_portal:pending_bookings')
+        
+        # Now confirm
         success, task_package, error = booking.confirm_and_convert(
             confirmed_by_user=request.registration_user,
             payment_proof_file=payment_proof
@@ -884,9 +848,7 @@ def confirm_pending_booking(request, booking_id):
         if success:
             messages.success(
                 request,
-                f'✅ {booking.booking_id} confirmed! '
-                f'{task_package.package_id} created. '
-                f'{booking.total_points} points awarded to {booking.created_by.first_name}!'
+                f'✅ {booking.booking_id} confirmed! {task_package.package_id} created. {booking.total_points} points awarded!'
             )
         else:
             messages.error(request, f'❌ Error: {error}')
