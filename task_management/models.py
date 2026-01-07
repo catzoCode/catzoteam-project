@@ -1562,74 +1562,74 @@ class PendingBooking(models.Model):
         return self.status == 'pending_payment' and not self.is_expired()
     
     # FIX FOR task_management/models.py
-# Replace the confirm_and_convert method in PendingBooking model
+    # Replace the confirm_and_convert method in PendingBooking model
 
-def confirm_and_convert(self, confirmed_by_user, payment_proof_file):
-    """
-    Convert PendingBooking to TaskPackage and award points
-    
-    FIXED: Don't assign payment_proof to PendingBooking!
-    Assign it directly to TaskPackage instead!
-    """
-    try:
-        with transaction.atomic():
-            # Get selected tasks
-            task_types = self.get_selected_tasks()
-            
-            if not task_types:
-                return False, None, "No tasks selected"
-            
-            # Calculate points
-            total_points = sum(tt.points for tt in task_types)
-            
-            # ✅ CREATE TASKPACKAGE (assign payment_proof HERE, not to PendingBooking!)
-            task_package = TaskPackage.objects.create(
-                cat=self.cat,
-                created_by=self.created_by,
-                status='pending',
-                notes=self.notes or f'Confirmed from {self.booking_id}',
-                branch=self.branch,
-                booking_type='type_a',  # Now has payment proof
-                payment_proof=payment_proof_file,  # ← Assign to TaskPackage, NOT PendingBooking!
-                scheduled_date=self.scheduled_date,
-                arrival_status='arrived',  # Customer already arrived
-                points_awarded=False,  # Will be True after award_points_immediately()
-                total_points=total_points,
-            )
-            
-            # Create individual tasks
-            for task_type in task_types:
-                Task.objects.create(
-                    package=task_package,
-                    task_type=task_type,
-                    points=task_type.points,
-                    scheduled_date=self.scheduled_date,
-                    scheduled_time=self.scheduled_time,
+    def confirm_and_convert(self, confirmed_by_user, payment_proof_file):
+        """
+        Convert PendingBooking to TaskPackage and award points
+        
+        FIXED: Don't assign payment_proof to PendingBooking!
+        Assign it directly to TaskPackage instead!
+        """
+        try:
+            with transaction.atomic():
+                # Get selected tasks
+                task_types = self.get_selected_tasks()
+                
+                if not task_types:
+                    return False, None, "No tasks selected"
+                
+                # Calculate points
+                total_points = sum(tt.points for tt in task_types)
+                
+                # ✅ CREATE TASKPACKAGE (assign payment_proof HERE, not to PendingBooking!)
+                task_package = TaskPackage.objects.create(
+                    cat=self.cat,
+                    created_by=self.created_by,
                     status='pending',
+                    notes=self.notes or f'Confirmed from {self.booking_id}',
+                    branch=self.branch,
+                    booking_type='type_a',  # Now has payment proof
+                    payment_proof=payment_proof_file,  # ← Assign to TaskPackage, NOT PendingBooking!
+                    scheduled_date=self.scheduled_date,
+                    arrival_status='arrived',  # Customer already arrived
+                    points_awarded=False,  # Will be True after award_points_immediately()
+                    total_points=total_points,
                 )
-            
-            # Award points immediately
-            success = task_package.award_points_immediately()
-            
-            if not success:
-                raise Exception("Failed to award points")
-            
-            # ✅ UPDATE PENDINGBOOKING STATUS (DON'T assign payment_proof!)
-            self.status = 'confirmed'
-            self.confirmed_by = confirmed_by_user
-            self.confirmed_at = timezone.now()
-            self.converted_to_package = task_package
-            # DO NOT SET: self.payment_proof = payment_proof_file  ← This causes the error!
-            
-            # Save without the file field
-            self.save(update_fields=['status', 'confirmed_by', 'confirmed_at', 'converted_to_package'])
-            
-            return True, task_package, None
-            
-    except Exception as e:
-        print(f"Error in confirm_and_convert: {traceback.format_exc()}")
-        return False, None, str(e)
-    
+                
+                # Create individual tasks
+                for task_type in task_types:
+                    Task.objects.create(
+                        package=task_package,
+                        task_type=task_type,
+                        points=task_type.points,
+                        scheduled_date=self.scheduled_date,
+                        scheduled_time=self.scheduled_time,
+                        status='pending',
+                    )
+                
+                # Award points immediately
+                success = task_package.award_points_immediately()
+                
+                if not success:
+                    raise Exception("Failed to award points")
+                
+                # ✅ UPDATE PENDINGBOOKING STATUS (DON'T assign payment_proof!)
+                self.status = 'confirmed'
+                self.confirmed_by = confirmed_by_user
+                self.confirmed_at = timezone.now()
+                self.converted_to_package = task_package
+                # DO NOT SET: self.payment_proof = payment_proof_file  ← This causes the error!
+                
+                # Save without the file field
+                self.save(update_fields=['status', 'confirmed_by', 'confirmed_at', 'converted_to_package'])
+                
+                return True, task_package, None
+                
+        except Exception as e:
+            print(f"Error in confirm_and_convert: {traceback.format_exc()}")
+            return False, None, str(e)
+        
     def mark_as_expired(self):
         """Mark booking as expired"""
         if self.status == 'pending_payment':
