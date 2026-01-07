@@ -227,3 +227,31 @@ LOGGING = {
     "handlers": {"console": {"class": "logging.StreamHandler"}},
     "root": {"handlers": ["console"], "level": "INFO"},
 }
+
+
+
+# Add to your settings.py
+
+import os
+
+# OCR Configuration
+if os.environ.get('RENDER'):
+    # Production on Render
+    TESSERACT_CMD = '/usr/bin/tesseract'
+else:
+    # Local development (adjust path for your OS)
+    Windows: r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    # Mac: '/usr/local/bin/tesseract'
+    # Linux: '/usr/bin/tesseract'
+    TESSERACT_CMD = '/usr/bin/tesseract'
+
+# Configure pytesseract
+try:
+    import pytesseract
+    pytesseract.pytesseract.tesseract_cmd = TESSERACT_CMD
+except ImportError:
+    pass
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
