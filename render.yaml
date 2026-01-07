@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: catzonia
+    name: catzoteam
     env: python
     buildCommand: |
       apt-get update
