@@ -8,7 +8,7 @@ services:
       pip install -r requirements.txt
       python manage.py collectstatic --no-input
       python manage.py migrate
-    startCommand: gunicorn catzonia.wsgi:application
+    startCommand: gunicorn catzoteam_project.wsgi:application
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
