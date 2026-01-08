@@ -1,25 +1,21 @@
-# registration_portal/views.py
-# COMPLETE VERSION with PendingBooking System + OCR + Combo Packages
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.db.models import Q
-from django.utils import timezone
-from django.http import JsonResponse
-from datetime import date, datetime
-from django.db import transaction
-from decimal import Decimal
-import json
+from datetime import datetime
 import re
 
-from django.db import transaction, IntegrityError
-from .models import Customer, Cat, RegistrationSession
+from django.contrib import messages
+from django.db import IntegrityError, transaction
+from django.db.models import Q
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+
+from accounts.models import User
+
 from task_management.models import (
-    Customer, Cat, TaskGroup, TaskType, 
+    Customer, Cat, TaskGroup, TaskType,
     TaskPackage, Task, ComboPackageOwnership, PendingBooking
 )
-from accounts.models import User
+
 from .models import RegistrationSession
+
 
 # ============================================
 # LOGIN/LOGOUT
