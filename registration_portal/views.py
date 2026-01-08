@@ -13,7 +13,6 @@ import json
 import re
 
 from django.db import transaction, IntegrityError
-from .decorators import registration_login_required
 from .models import Customer, Cat, RegistrationSession
 from task_management.models import (
     Customer, Cat, TaskGroup, TaskType, 
