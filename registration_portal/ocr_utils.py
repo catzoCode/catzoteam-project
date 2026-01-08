@@ -74,13 +74,25 @@ def parse_portal_collar_data(raw_text):
                     print(f"✓ Customer Name: {data['name']}")
                     break
     
-    # Phone Number - Malaysian format
+    # Phone Number - Malaysian format (more flexible)
     for line in lines:
         if 'phone' in line.lower():
+            # Try multiple patterns
+            # Pattern 1: 012-3456789 or 012 3456789
             match = re.search(r'(\d{3}[-\s]?\d{7,8})', line)
+            if not match:
+                # Pattern 2: 0123456789 (no separator)
+                match = re.search(r'(0\d{9,10})', line)
+            if not match:
+                # Pattern 3: Just any phone-like number after "Phone:"
+                match = re.search(r'phone[:\s]+(\d[\d\s-]{8,})', line, re.IGNORECASE)
+            
             if match:
                 phone = match.group(1).replace(' ', '').replace('-', '')
-                if len(phone) >= 10:
+                # Remove leading zeros and non-digits
+                phone = re.sub(r'[^\d]', '', phone)
+                # Ensure starts with 0 and has 10-11 digits
+                if phone.startswith('0') and 10 <= len(phone) <= 11:
                     data['phone'] = f"{phone[:3]}-{phone[3:]}"
                     print(f"✓ Phone: {data['phone']}")
                     break
