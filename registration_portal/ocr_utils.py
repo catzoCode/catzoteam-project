@@ -234,8 +234,9 @@ def parse_portal_collar_data(raw_text):
                 if med_line and len(med_line) > 5:
                     # Clean up
                     for keyword in medical_keywords:
-                        med_line = re.sub(rf'\b{keyword}\b[:\s]*', '', med_line, flags=re.IGNORECASE)
-                    medical_lines.append(med_line.strip())
+                        med_line = re.sub(rf'\b{keyword}\w*\b[:\s]*', '', med_line, flags=re.IGNORECASE)
+                    if med_line.strip():
+                        medical_lines.append(med_line.strip())
             break
     
     if medical_lines:

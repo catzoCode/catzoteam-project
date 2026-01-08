@@ -12,6 +12,9 @@ from decimal import Decimal
 import json
 import re
 
+from django.db import transaction, IntegrityError
+from .decorators import registration_login_required
+from .models import Customer, Cat, RegistrationSession
 from task_management.models import (
     Customer, Cat, TaskGroup, TaskType, 
     TaskPackage, Task, ComboPackageOwnership, PendingBooking
@@ -961,7 +964,7 @@ def review_ocr_data(request):
         action = request.POST.get('action')
         
         print(f"DEBUG: POST received, action={action}")
-        print(f"DEBUG: POST data: {request.POST}")
+        print(f"DEBUG: All POST keys: {list(request.POST.keys())}")
         
         if action == 'cancel':
             request.session.pop('ocr_data', None)
@@ -987,11 +990,19 @@ def review_ocr_data(request):
             medical_notes = request.POST.get('medical_notes', '').strip()
             special_requirements = request.POST.get('special_requirements', '').strip()
             
-            print(f"DEBUG: Customer name={name}, phone={phone}")
-            print(f"DEBUG: Cat name={cat_name}, breed={breed}")
+            print(f"DEBUG: Customer name='{name}', phone='{phone}'")
+            print(f"DEBUG: Cat name='{cat_name}', breed='{breed}'")
             
             # Validation
             errors = []
+            
+            # Check if form was actually submitted with data
+            if not name and not phone and not cat_name:
+                messages.error(request, '❌ No data received from form. Please try again.')
+                print(f"DEBUG: Form submitted but no data extracted")
+                print(f"DEBUG: POST data: {dict(request.POST)}")
+                print(f"DEBUG: OCR data in session: {ocr_data}")
+                return redirect('registration_portal:review_ocr_data')
             
             if not name:
                 errors.append('Customer name is required')
@@ -1020,45 +1031,61 @@ def review_ocr_data(request):
             try:
                 with transaction.atomic():
                     # Create customer
+                    print(f"DEBUG: About to create customer with name={name}")
+                    
                     customer = Customer.objects.create(
                         name=name.upper(),
                         phone=phone,
-                        ic_number=ic_number,
-                        email=email,
-                        address=address,
+                        ic_number=ic_number if ic_number else '',
+                        email=email if email else '',
+                        address=address if address else '',
                         registered_by=request.registration_user
                     )
                     
-                    print(f"DEBUG: Customer created: {customer.customer_id}")
+                    print(f"✓ Customer created: {customer.customer_id} - {customer.name}")
                     
                     # Convert age to integer
                     try:
                         cat_age = int(age) if age and age.isdigit() else 0
                     except ValueError:
                         cat_age = 0
+                        print(f"⚠️ Invalid age value: {age}, defaulting to 0")
                     
                     # Convert weight to decimal
                     try:
                         cat_weight = float(weight) if weight else None
                     except ValueError:
                         cat_weight = None
+                        print(f"⚠️ Invalid weight value: {weight}, defaulting to None")
+                    
+                    # Validate gender
+                    if gender not in ['male', 'female']:
+                        gender = 'male'
+                        print(f"⚠️ Invalid gender, defaulting to male")
+                    
+                    # Validate vaccination status
+                    valid_vaccination = ['up_to_date', 'partial', 'none', 'unknown']
+                    if vaccination_status not in valid_vaccination:
+                        vaccination_status = 'unknown'
+                    
+                    print(f"DEBUG: About to create cat with name={cat_name}, breed={breed}, age={cat_age}")
                     
                     # Create cat
                     cat = Cat.objects.create(
                         name=cat_name.upper(),
                         owner=customer,
-                        breed=breed,
+                        breed=breed if breed else 'mixed',
                         age=cat_age,
                         gender=gender.lower(),
-                        color=color,
+                        color=color if color else '',
                         weight=cat_weight,
                         vaccination_status=vaccination_status,
-                        medical_notes=medical_notes,
-                        special_requirements=special_requirements,
+                        medical_notes=medical_notes if medical_notes else '',
+                        special_requirements=special_requirements if special_requirements else '',
                         registered_by=request.registration_user
                     )
                     
-                    print(f"DEBUG: Cat created: {cat.cat_id}")
+                    print(f"✓ Cat created: {cat.cat_id} - {cat.name}")
                     
                     # Update session stats
                     session_id = request.session.get('registration_session_id')
@@ -1068,10 +1095,9 @@ def review_ocr_data(request):
                             session.customers_registered += 1
                             session.cats_registered += 1
                             session.save()
-                            print(f"DEBUG: Session stats updated")
+                            print(f"✓ Session stats updated")
                         except RegistrationSession.DoesNotExist:
-                            print(f"DEBUG: Session not found")
-                            pass
+                            print(f"⚠️ Session {session_id} not found, skipping stats update")
                     
                     # Clear OCR data from session
                     request.session.pop('ocr_data', None)
@@ -1081,14 +1107,26 @@ def review_ocr_data(request):
                         f'✅ Success! Customer {customer.customer_id} and Cat {cat.cat_id} - {cat.name} created from screenshot!'
                     )
                     
-                    print(f"DEBUG: Redirecting to create_service_request")
+                    print(f"✓ All done! Redirecting to create_service_request")
                     
                     # Redirect to create service request
                     return redirect('registration_portal:create_service_request', customer_id=customer.customer_id)
             
+            except IntegrityError as e:
+                error_msg = str(e)
+                if 'UNIQUE constraint' in error_msg or 'duplicate' in error_msg.lower():
+                    messages.error(request, f'❌ Duplicate entry detected. A customer with this phone number may already exist.')
+                else:
+                    messages.error(request, f'❌ Database integrity error: {error_msg}')
+                print(f"✗ IntegrityError: {error_msg}")
+                import traceback
+                print(traceback.format_exc())
+                return redirect('registration_portal:review_ocr_data')
+            
             except Exception as e:
                 messages.error(request, f'❌ Error creating records: {str(e)}')
-                print(f"DEBUG: Exception: {str(e)}")
+                print(f"✗ Exception type: {type(e).__name__}")
+                print(f"✗ Exception: {str(e)}")
                 import traceback
                 print(traceback.format_exc())
                 return redirect('registration_portal:review_ocr_data')
