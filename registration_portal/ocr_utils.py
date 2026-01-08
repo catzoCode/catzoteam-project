@@ -1,253 +1,324 @@
 # registration_portal/ocr_utils.py
-"""
-OCR utilities for extracting customer data from Portal Collar screenshots
-"""
+# SIMPLIFIED - Only extract Customer & Cat data
 
-import pytesseract
-from PIL import Image
 import re
-from io import BytesIO
-import platform
-import os
-
-# Configure Tesseract path based on OS
-if os.environ.get('RENDER') or platform.system() == 'Linux':
-    # Production on Render (Linux)
-    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-    print("✓ OCR: Using Linux Tesseract path")
-elif platform.system() == 'Windows':
-    # Windows local development
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    print("✓ OCR: Using Windows Tesseract path")
-elif platform.system() == 'Darwin':
-    # Mac local development
-    pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
-    print("✓ OCR: Using Mac Tesseract path")
-else:
-    # Default fallback
-    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
-    print("✓ OCR: Using default Tesseract path")
-
+from PIL import Image
+import pytesseract
+from django.conf import settings
 
 def extract_text_from_image(image_file):
-    """
-    Extract text from uploaded image using Tesseract OCR
-    
-    Args:
-        image_file: Django UploadedFile object
-    
-    Returns:
-        str: Extracted text or None if failed
-    """
+    """Extract text from uploaded image using Tesseract OCR"""
     try:
-        # Read image from upload
-        image = Image.open(image_file)
+        img = Image.open(image_file)
         
-        # Convert to RGB if needed
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
         
-        # Extract text using pytesseract
-        text = pytesseract.image_to_string(image)
+        pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
         
-        return text.strip()
+        text = pytesseract.image_to_string(img, config='--psm 6')
+        
+        print(f"✓ OCR: Extracted {len(text)} characters")
+        
+        return text
     
     except Exception as e:
-        print(f"OCR Error: {str(e)}")
-        return None
+        print(f"✗ OCR Error: {str(e)}")
+        raise
 
 
-def parse_portal_collar_data(text):
+def parse_portal_collar_data(raw_text):
     """
-    Parse extracted text to find customer information
-    Looks for Malaysian phone numbers, IC numbers, names, etc.
-    
-    Args:
-        text: Raw OCR text
-    
-    Returns:
-        dict: Parsed customer data
+    Parse ONLY Customer and Cat data from extracted text
+    Based on Customer and Cat models only
     """
     
     data = {
-        'name': '',
-        'phone': '',
-        'ic_number': '',
-        'service': '',
-        'date': '',
-        'notes': '',
-        'raw_text': text,
+        # ===== CUSTOMER MODEL FIELDS =====
+        'name': '',              # Customer.name (required)
+        'phone': '',             # Customer.phone (required)
+        'email': '',             # Customer.email
+        'ic_number': '',         # Customer.ic_number
+        'address': '',           # Customer.address
+        
+        # ===== CAT MODEL FIELDS =====
+        'cat_name': '',          # Cat.name (required)
+        'breed': '',             # Cat.breed
+        'age': '',               # Cat.age (in months)
+        'gender': '',            # Cat.gender
+        'color': '',             # Cat.color
+        'weight': '',            # Cat.weight (kg)
+        'vaccination_status': '', # Cat.vaccination_status
+        'medical_notes': '',     # Cat.medical_notes
+        'special_requirements': '', # Cat.special_requirements
+        
+        # ===== METADATA =====
+        'raw_text': raw_text,
     }
     
-    # Extract phone number (Malaysian format: 01X-XXXXXXX or 01XXXXXXXXX)
-    phone_pattern = r'(?:(?:\+?6?0?1[0-9])|(?:01[0-9]))[\s-]?\d{7,8}'
-    phone_matches = re.findall(phone_pattern, text)
-    if phone_matches:
-        # Clean phone number
-        phone = phone_matches[0].replace('-', '').replace(' ', '')
-        # Remove +6 or 6 prefix if exists
-        phone = re.sub(r'^\+?6?', '', phone)
-        # Ensure starts with 0
-        if not phone.startswith('0'):
-            phone = '0' + phone
-        data['phone'] = phone
+    lines = raw_text.split('\n')
     
-    # Extract IC number (XXXXXX-XX-XXXX)
-    ic_pattern = r'\d{6}[-]?\d{2}[-]?\d{4}'
-    ic_matches = re.findall(ic_pattern, text)
-    if ic_matches:
-        ic = ic_matches[0]
-        # Format with dashes
-        if '-' not in ic:
-            ic = f"{ic[:6]}-{ic[6:8]}-{ic[8:]}"
-        data['ic_number'] = ic
+    # ============================================
+    # EXTRACT CUSTOMER INFORMATION
+    # ============================================
     
-    # Extract name (looking for lines with capitalized words)
-    lines = text.split('\n')
+    # Customer Name
     for line in lines:
-        line = line.strip()
-        # Look for name patterns (2-4 words, mostly capitals)
-        if len(line) > 5 and len(line) < 50:
-            words = line.split()
-            if 2 <= len(words) <= 4:
-                # Check if mostly uppercase or title case
-                if line.isupper() or line.istitle():
-                    # Skip if it's a phone or IC
-                    if not re.search(r'\d{6,}', line):
-                        if not data['name']:  # Take first match
-                            data['name'] = line.upper()
+        if 'customer name' in line.lower() or ('name:' in line.lower() and 'cat' not in line.lower()):
+            match = re.search(r'name[:\s]+([A-Z\s]+)', line, re.IGNORECASE)
+            if match:
+                name = match.group(1).strip()
+                name = re.sub(r'\b(CUSTOMER|INFORMATION|NAME)\b', '', name, flags=re.IGNORECASE).strip()
+                if len(name) > 2:
+                    data['name'] = name.upper()
+                    print(f"✓ Customer Name: {data['name']}")
+                    break
     
-    # Extract date (common formats: DD/MM/YYYY, DD-MM-YYYY)
-    date_pattern = r'\d{1,2}[/-]\d{1,2}[/-]\d{2,4}'
-    date_matches = re.findall(date_pattern, text)
-    if date_matches:
-        data['date'] = date_matches[0]
-    
-    # Look for service keywords
-    service_keywords = ['grooming', 'bath', 'shower', 'nail', 'trim', 'combo', 'treatment']
+    # Phone Number - Malaysian format
     for line in lines:
-        line_lower = line.lower()
-        for keyword in service_keywords:
-            if keyword in line_lower:
-                data['service'] = line.strip()
+        if 'phone' in line.lower():
+            match = re.search(r'(\d{3}[-\s]?\d{7,8})', line)
+            if match:
+                phone = match.group(1).replace(' ', '').replace('-', '')
+                if len(phone) >= 10:
+                    data['phone'] = f"{phone[:3]}-{phone[3:]}"
+                    print(f"✓ Phone: {data['phone']}")
+                    break
+    
+    # Email
+    for line in lines:
+        if 'email' in line.lower():
+            match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', line)
+            if match:
+                data['email'] = match.group(0).lower()
+                print(f"✓ Email: {data['email']}")
                 break
-        if data['service']:
+    
+    # IC Number - Malaysian format: 123456-12-1234
+    for line in lines:
+        if 'ic' in line.lower() or 'nric' in line.lower():
+            match = re.search(r'(\d{6}[-\s]?\d{2}[-\s]?\d{4})', line)
+            if match:
+                ic = match.group(1).replace(' ', '')
+                if len(ic) == 12:
+                    data['ic_number'] = f"{ic[:6]}-{ic[6:8]}-{ic[8:]}"
+                else:
+                    data['ic_number'] = ic
+                print(f"✓ IC: {data['ic_number']}")
+                break
+    
+    # Address - usually multi-line, look for keywords
+    address_lines = []
+    for i, line in enumerate(lines):
+        if 'address' in line.lower():
+            # Get lines after "address" keyword
+            for j in range(i+1, min(i+4, len(lines))):
+                addr_line = lines[j].strip()
+                if addr_line and len(addr_line) > 5:
+                    # Stop if we hit another section
+                    if any(keyword in addr_line.lower() for keyword in ['cat', 'phone', 'email', 'ic', 'service']):
+                        break
+                    address_lines.append(addr_line)
             break
     
-    # Store remaining text as notes (excluding what we've extracted)
-    notes_lines = []
-    for line in lines:
-        line = line.strip()
-        if line and line != data['name'] and line != data['phone'] and line != data['ic_number']:
-            if len(line) > 10:  # Only meaningful lines
-                notes_lines.append(line)
+    if address_lines:
+        data['address'] = ', '.join(address_lines)
+        print(f"✓ Address: {data['address'][:50]}...")
     
-    data['notes'] = '\n'.join(notes_lines[:5])  # Max 5 lines of notes
+    # ============================================
+    # EXTRACT CAT INFORMATION
+    # ============================================
+    
+    # Cat Name
+    for line in lines:
+        if 'cat name' in line.lower():
+            match = re.search(r'name[:\s]+([A-Z\s]+)', line, re.IGNORECASE)
+            if match:
+                cat_name = match.group(1).strip()
+                cat_name = re.sub(r'\b(CAT|INFORMATION|NAME)\b', '', cat_name, flags=re.IGNORECASE).strip()
+                if len(cat_name) > 1:
+                    data['cat_name'] = cat_name.upper()
+                    print(f"✓ Cat Name: {data['cat_name']}")
+                    break
+    
+    # Breed
+    for line in lines:
+        if 'breed' in line.lower():
+            match = re.search(r'breed[:\s]+([A-Za-z\s]+)', line, re.IGNORECASE)
+            if match:
+                breed = match.group(1).strip()
+                breed = re.sub(r'\b(BREED|CAT|INFORMATION)\b', '', breed, flags=re.IGNORECASE).strip()
+                if len(breed) > 2:
+                    data['breed'] = breed.title()
+                    print(f"✓ Breed: {data['breed']}")
+                    break
+    
+    # Age (in months)
+    for line in lines:
+        if 'age' in line.lower():
+            match = re.search(r'age[:\s]+(\d+)', line, re.IGNORECASE)
+            if match:
+                data['age'] = match.group(1)
+                print(f"✓ Age: {data['age']} months")
+                break
+    
+    # Gender
+    for line in lines:
+        if 'gender' in line.lower():
+            if 'female' in line.lower():
+                data['gender'] = 'female'
+            elif 'male' in line.lower():
+                data['gender'] = 'male'
+            if data['gender']:
+                print(f"✓ Gender: {data['gender']}")
+                break
+    
+    # Color
+    for line in lines:
+        if 'color' in line.lower() or 'colour' in line.lower():
+            match = re.search(r'colou?r[:\s]+([A-Za-z\s]+)', line, re.IGNORECASE)
+            if match:
+                color = match.group(1).strip()
+                color = re.sub(r'\b(COLOR|COLOUR|CAT)\b', '', color, flags=re.IGNORECASE).strip()
+                if len(color) > 2:
+                    data['color'] = color.title()
+                    print(f"✓ Color: {data['color']}")
+                    break
+    
+    # Weight (in kg)
+    for line in lines:
+        if 'weight' in line.lower():
+            match = re.search(r'weight[:\s]+([\d.]+)', line, re.IGNORECASE)
+            if match:
+                data['weight'] = match.group(1)
+                print(f"✓ Weight: {data['weight']} kg")
+                break
+    
+    # Vaccination Status
+    for line in lines:
+        if 'vaccination' in line.lower() or 'vaccine' in line.lower():
+            if 'up to date' in line.lower() or 'updated' in line.lower() or 'complete' in line.lower():
+                data['vaccination_status'] = 'up_to_date'
+            elif 'partial' in line.lower():
+                data['vaccination_status'] = 'partial'
+            elif 'none' in line.lower() or 'not vaccinated' in line.lower():
+                data['vaccination_status'] = 'none'
+            else:
+                data['vaccination_status'] = 'unknown'
+            
+            if data['vaccination_status']:
+                print(f"✓ Vaccination: {data['vaccination_status']}")
+                break
+    
+    # Medical Notes - look for health, medical, allergies
+    medical_keywords = ['medical', 'health', 'allerg', 'condition', 'illness', 'disease']
+    medical_lines = []
+    
+    for i, line in enumerate(lines):
+        if any(keyword in line.lower() for keyword in medical_keywords):
+            # Get this line and next few
+            for j in range(i, min(i+3, len(lines))):
+                med_line = lines[j].strip()
+                if med_line and len(med_line) > 5:
+                    # Clean up
+                    for keyword in medical_keywords:
+                        med_line = re.sub(rf'\b{keyword}\b[:\s]*', '', med_line, flags=re.IGNORECASE)
+                    medical_lines.append(med_line.strip())
+            break
+    
+    if medical_lines:
+        data['medical_notes'] = ' '.join(medical_lines)
+        print(f"✓ Medical Notes: {data['medical_notes'][:50]}...")
+    
+    # Special Requirements/Notes
+    special_keywords = ['special', 'note', 'requirement', 'behavior', 'temperament']
+    special_lines = []
+    
+    for i, line in enumerate(lines):
+        if any(keyword in line.lower() for keyword in special_keywords):
+            # Get lines after keyword
+            for j in range(i, min(i+3, len(lines))):
+                spec_line = lines[j].strip()
+                if spec_line and len(spec_line) > 5:
+                    # Skip if it's another section header
+                    if any(skip in spec_line.lower() for skip in ['customer', 'service', 'appointment']):
+                        break
+                    # Clean up
+                    for keyword in special_keywords:
+                        spec_line = re.sub(rf'\b{keyword}s?\b[:\s]*', '', spec_line, flags=re.IGNORECASE)
+                    if spec_line.strip():
+                        special_lines.append(spec_line.strip())
+            break
+    
+    if special_lines:
+        data['special_requirements'] = ' '.join(special_lines)
+        print(f"✓ Special Requirements: {data['special_requirements'][:50]}...")
     
     return data
 
 
 def validate_extracted_data(data):
     """
-    Validate extracted data and calculate confidence score
-    
-    Args:
-        data: Parsed data dict
-    
-    Returns:
-        tuple: (is_valid, confidence, errors)
+    Validate extracted data
+    REQUIRED: name (customer), phone, cat_name
+    OPTIONAL: Everything else
     """
+    
+    required_fields = {
+        'name': 'Customer Name',
+        'phone': 'Phone Number', 
+        'cat_name': 'Cat Name'
+    }
     
     errors = []
-    confidence = 0.0
+    warnings = []
     
-    # Check phone (most important)
-    if data['phone']:
-        if len(data['phone']) >= 10:
-            confidence += 0.4
-        else:
-            errors.append('Phone number seems incomplete')
+    # Check required fields
+    for field, label in required_fields.items():
+        if not data.get(field):
+            errors.append(f"❌ Missing REQUIRED: {label}")
+    
+    # Check optional fields
+    optional_fields = {
+        'email': 'Email',
+        'ic_number': 'IC Number',
+        'address': 'Address',
+        'breed': 'Cat Breed',
+        'age': 'Cat Age',
+        'gender': 'Cat Gender',
+        'color': 'Cat Color',
+        'weight': 'Cat Weight',
+        'vaccination_status': 'Vaccination Status',
+        'medical_notes': 'Medical Notes',
+        'special_requirements': 'Special Requirements'
+    }
+    
+    for field, label in optional_fields.items():
+        if not data.get(field):
+            warnings.append(f"⚠️ Missing optional: {label}")
+    
+    # Calculate confidence
+    total_fields = len(required_fields) + len(optional_fields)
+    filled_fields = sum(1 for f in list(required_fields.keys()) + list(optional_fields.keys()) if data.get(f))
+    
+    confidence = filled_fields / total_fields
+    
+    # Boost confidence if all required fields present
+    if all(data.get(f) for f in required_fields.keys()):
+        confidence = max(confidence, 0.7)
     else:
-        errors.append('No phone number found')
+        confidence = min(confidence, 0.5)
     
-    # Check name
-    if data['name']:
-        if len(data['name']) >= 3:
-            confidence += 0.3
-        else:
-            errors.append('Name seems too short')
-    else:
-        errors.append('No name found')
+    is_valid = len(errors) == 0
     
-    # Check IC (optional but adds confidence)
-    if data['ic_number']:
-        if len(data['ic_number']) >= 12:
-            confidence += 0.2
-        else:
-            errors.append('IC number seems incomplete')
+    all_messages = errors + warnings
     
-    # Check if we have any data at all
-    if data['service'] or data['date']:
-        confidence += 0.1
+    print(f"\n{'='*50}")
+    print(f"VALIDATION RESULTS:")
+    print(f"Required Fields: {len([f for f in required_fields.keys() if data.get(f)])}/{len(required_fields)}")
+    print(f"Optional Fields: {len([f for f in optional_fields.keys() if data.get(f)])}/{len(optional_fields)}")
+    print(f"Confidence: {confidence:.1%}")
+    print(f"Valid: {is_valid}")
+    print(f"{'='*50}\n")
     
-    is_valid = confidence >= 0.5
-    
-    return is_valid, confidence, errors
-
-
-def clean_phone_number(phone):
-    """
-    Clean and format Malaysian phone number
-    
-    Args:
-        phone: Raw phone string
-    
-    Returns:
-        str: Cleaned phone number in format 01X-XXXXXXXX
-    """
-    
-    if not phone:
-        return ''
-    
-    # Remove all non-digits
-    digits = re.sub(r'\D', '', phone)
-    
-    # Remove country code if present
-    if digits.startswith('60'):
-        digits = digits[2:]
-    
-    # Ensure starts with 0
-    if not digits.startswith('0'):
-        digits = '0' + digits
-    
-    # Format: 01X-XXXXXXX or 01X-XXXXXXXX
-    if len(digits) == 10:
-        return f"{digits[:3]}-{digits[3:]}"
-    elif len(digits) == 11:
-        return f"{digits[:3]}-{digits[3:]}"
-    else:
-        return digits
-
-
-def clean_ic_number(ic):
-    """
-    Clean and format Malaysian IC number
-    
-    Args:
-        ic: Raw IC string
-    
-    Returns:
-        str: Cleaned IC in format XXXXXX-XX-XXXX
-    """
-    
-    if not ic:
-        return ''
-    
-    # Remove all non-digits
-    digits = re.sub(r'\D', '', ic)
-    
-    # Format: XXXXXX-XX-XXXX
-    if len(digits) == 12:
-        return f"{digits[:6]}-{digits[6:8]}-{digits[8:]}"
-    else:
-        return ic
+    return is_valid, confidence, all_messages

@@ -25,33 +25,35 @@
 
 <!-- MAIN CONTENT -->
 <div class="container-apple">
-    <div class="card-apple animate-fade-in-up" style="max-width: 800px; margin: 0 auto;">
+    <div class="card-apple animate-fade-in-up" style="max-width: 900px; margin: 0 auto;">
         <div class="card-header-apple">
             <h2><i class="fas fa-check-circle"></i> Review Extracted Data</h2>
             {% if ocr_data.confidence_percent %}
             <div class="navbar-badge" style="{% if ocr_data.confidence_percent >= 70 %}background: var(--apple-green);{% elif ocr_data.confidence_percent >= 50 %}background: var(--apple-orange);{% else %}background: var(--apple-red);{% endif %}">
-                {{ ocr_data.confidence_percent }}% Confidence
+                {{ ocr_data.confidence_percent }}% Complete
             </div>
             {% endif %}
         </div>
         <div class="card-body-apple">
-            <!-- Confidence Alert -->
-            {% if ocr_data.confidence_percent < 70 %}
-            <div style="padding: var(--space-4); background: #fff3cd; border-radius: var(--radius-md); margin-bottom: var(--space-6); border-left: 4px solid var(--apple-orange);">
-                <div class="font-semibold mb-2" style="color: var(--apple-orange);">
-                    <i class="fas fa-exclamation-triangle"></i> Low Confidence Detection
+            <!-- Validation Messages -->
+            {% if ocr_data.errors %}
+            <div style="padding: var(--space-4); background: #f8d7da; border-radius: var(--radius-md); margin-bottom: var(--space-4); border-left: 4px solid var(--apple-red);">
+                <div class="font-semibold mb-2" style="color: var(--apple-red);">
+                    <i class="fas fa-exclamation-circle"></i> Missing Required Fields
                 </div>
-                <div class="text-sm">
-                    Please carefully review the extracted data below and make corrections if needed.
-                </div>
+                <ul style="margin: 0; padding-left: var(--space-5);">
+                    {% for error in ocr_data.errors %}
+                    <li class="text-sm">{{ error }}</li>
+                    {% endfor %}
+                </ul>
             </div>
             {% else %}
-            <div style="padding: var(--space-4); background: #d4edda; border-radius: var(--radius-md); margin-bottom: var(--space-6); border-left: 4px solid var(--apple-green);">
+            <div style="padding: var(--space-4); background: #d4edda; border-radius: var(--radius-md); margin-bottom: var(--space-4); border-left: 4px solid var(--apple-green);">
                 <div class="font-semibold mb-2" style="color: var(--apple-green);">
-                    <i class="fas fa-check-circle"></i> High Confidence Detection
+                    <i class="fas fa-check-circle"></i> All Required Fields Extracted
                 </div>
                 <div class="text-sm">
-                    Data extraction looks good! Please verify before creating customer.
+                    Please verify the data and fill in any missing optional fields.
                 </div>
             </div>
             {% endif %}
@@ -60,20 +62,42 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create">
                 
-                <!-- Personal Information -->
+                <!-- Order ID (if available) -->
+                {% if ocr_data.order_id %}
+                <div style="padding: var(--space-3); background: var(--apple-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                    <div class="text-sm text-secondary">Order ID</div>
+                    <div class="font-medium">{{ ocr_data.order_id }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- CUSTOMER INFORMATION -->
                 <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
-                    <i class="fas fa-user"></i> Personal Information
+                    <i class="fas fa-user"></i> Customer Information
                 </h3>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
                     <div class="input-group">
-                        <label class="input-label">Full Name *</label>
+                        <label class="input-label">Full Name * 
+                            {% if not ocr_data.customer_name %}<span style="color: var(--apple-red);">(Missing!)</span>{% endif %}
+                        </label>
                         <input type="text" 
                                name="name" 
                                class="input-apple" 
-                               value="{{ ocr_data.name }}"
-                               placeholder="Enter full name"
-                               required>
+                               value="{{ ocr_data.customer_name }}"
+                               placeholder="Enter customer name"
+                               required
+                               style="{% if not ocr_data.customer_name %}border-color: var(--apple-red);{% endif %}">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Phone Number
+                            {% if not ocr_data.phone %}<span style="color: var(--apple-orange);">(Missing)</span>{% endif %}
+                        </label>
+                        <input type="tel" 
+                               name="phone" 
+                               class="input-apple" 
+                               value="{{ ocr_data.phone }}"
+                               placeholder="01X-XXXXXXX">
                     </div>
                     
                     <div class="input-group">
@@ -84,88 +108,132 @@
                                value="{{ ocr_data.ic_number }}"
                                placeholder="XXXXXX-XX-XXXX">
                     </div>
-                </div>
-                
-                <!-- Contact Information -->
-                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
-                    <i class="fas fa-phone"></i> Contact Information
-                </h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4);">
-                    <div class="input-group">
-                        <label class="input-label">Phone Number *</label>
-                        <input type="tel" 
-                               name="phone" 
-                               class="input-apple" 
-                               value="{{ ocr_data.phone }}"
-                               placeholder="01X-XXXXXXX"
-                               required>
-                    </div>
                     
                     <div class="input-group">
                         <label class="input-label">Email Address</label>
                         <input type="email" 
                                name="email" 
                                class="input-apple" 
+                               value="{{ ocr_data.email }}"
                                placeholder="example@email.com">
                     </div>
                 </div>
+                
+                <!-- CAT INFORMATION -->
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-cat"></i> Cat Information
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                    <div class="input-group">
+                        <label class="input-label">Cat Name *
+                            {% if not ocr_data.cat_name %}<span style="color: var(--apple-red);">(Missing!)</span>{% endif %}
+                        </label>
+                        <input type="text" 
+                               name="cat_name" 
+                               class="input-apple" 
+                               value="{{ ocr_data.cat_name }}"
+                               placeholder="Enter cat name"
+                               required
+                               style="{% if not ocr_data.cat_name %}border-color: var(--apple-red);{% endif %}">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Breed</label>
+                        <input type="text" 
+                               name="breed" 
+                               class="input-apple" 
+                               value="{{ ocr_data.breed }}"
+                               placeholder="e.g. Persian, Mixed">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Age (months)</label>
+                        <input type="number" 
+                               name="age" 
+                               class="input-apple" 
+                               value="{{ ocr_data.age }}"
+                               placeholder="Age in months">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="input-label">Gender</label>
+                        <select name="gender" class="input-apple">
+                            <option value="">Select gender</option>
+                            <option value="Male" {% if ocr_data.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if ocr_data.gender == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- SERVICES REQUESTED -->
+                {% if ocr_data.services %}
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-clipboard-list"></i> Services Requested
+                </h3>
+                
+                <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                    <ul style="margin: 0; padding-left: var(--space-5);">
+                        {% for service in ocr_data.services %}
+                        <li class="mb-2">{{ service }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <!-- APPOINTMENT DETAILS -->
+                {% if ocr_data.preferred_date or ocr_data.preferred_time or ocr_data.branch %}
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-calendar-alt"></i> Appointment Details
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
+                    {% if ocr_data.preferred_date %}
+                    <div>
+                        <div class="text-sm text-secondary mb-1">Preferred Date</div>
+                        <div class="font-medium">{{ ocr_data.preferred_date }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ocr_data.preferred_time %}
+                    <div>
+                        <div class="text-sm text-secondary mb-1">Preferred Time</div>
+                        <div class="font-medium">{{ ocr_data.preferred_time }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if ocr_data.branch %}
+                    <div>
+                        <div class="text-sm text-secondary mb-1">Branch</div>
+                        <div class="font-medium">{{ ocr_data.branch }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                <!-- SPECIAL NOTES -->
+                {% if ocr_data.special_notes %}
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-sticky-note"></i> Special Notes
+                </h3>
+                
+                <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
+                    <div class="text-sm">{{ ocr_data.special_notes }}</div>
+                </div>
+                {% endif %}
+                
+                <!-- Additional Fields -->
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
+                    <i class="fas fa-plus-circle"></i> Additional Information
+                </h3>
                 
                 <div class="input-group" style="margin-bottom: var(--space-6);">
                     <label class="input-label">Address</label>
                     <textarea name="address" 
                               class="input-apple" 
-                              rows="3" 
-                              placeholder="Enter full address"></textarea>
+                              rows="2" 
+                              placeholder="Customer address (optional)"></textarea>
                 </div>
-                
-                <!-- Extracted Notes -->
-                {% if ocr_data.notes %}
-                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
-                    <i class="fas fa-clipboard"></i> Extracted Notes
-                </h3>
-                
-                <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); margin-bottom: var(--space-6);">
-                    <div class="text-sm">{{ ocr_data.notes }}</div>
-                </div>
-                {% endif %}
-                
-                <!-- Service Info (if available) -->
-                {% if ocr_data.service or ocr_data.date %}
-                <h3 class="text-lg font-semibold mb-4" style="color: var(--apple-blue);">
-                    <i class="fas fa-info-circle"></i> Booking Information
-                </h3>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-6);">
-                    {% if ocr_data.service %}
-                    <div>
-                        <div class="text-sm text-secondary mb-1">Service</div>
-                        <div class="font-medium">{{ ocr_data.service }}</div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if ocr_data.date %}
-                    <div>
-                        <div class="text-sm text-secondary mb-1">Date</div>
-                        <div class="font-medium">{{ ocr_data.date }}</div>
-                    </div>
-                    {% endif %}
-                </div>
-                {% endif %}
-                
-                <!-- Errors (if any) -->
-                {% if ocr_data.errors %}
-                <div style="padding: var(--space-4); background: #f8d7da; border-radius: var(--radius-md); margin-bottom: var(--space-6); border-left: 4px solid var(--apple-red);">
-                    <div class="font-semibold mb-2" style="color: var(--apple-red);">
-                        <i class="fas fa-exclamation-circle"></i> Validation Warnings
-                    </div>
-                    <ul style="margin: 0; padding-left: var(--space-5);">
-                        {% for error in ocr_data.errors %}
-                        <li class="text-sm">{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
                 
                 <!-- Actions -->
                 <div class="flex gap-3">
@@ -181,16 +249,16 @@
                             value="create"
                             class="btn-apple btn-success btn-apple-lg" 
                             style="flex: 2;">
-                        <i class="fas fa-check"></i> Create Customer
+                        <i class="fas fa-check"></i> Create Customer & Cat
                     </button>
                 </div>
             </form>
         </div>
     </div>
     
-    <!-- Raw OCR Text (Expandable) -->
+    <!-- Raw OCR Text -->
     {% if ocr_data.raw_text %}
-    <div class="card-apple animate-fade-in-up" style="max-width: 800px; margin: var(--space-6) auto 0;">
+    <div class="card-apple animate-fade-in-up" style="max-width: 900px; margin: var(--space-6) auto 0;">
         <div class="card-header-apple">
             <h2><i class="fas fa-file-alt"></i> Raw Extracted Text</h2>
         </div>
@@ -199,7 +267,7 @@
                 <summary style="cursor: pointer; font-weight: 600; margin-bottom: var(--space-3);">
                     <i class="fas fa-chevron-right"></i> Show raw OCR text
                 </summary>
-                <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all;">{{ ocr_data.raw_text }}</div>
+                <div style="padding: var(--space-4); background: var(--apple-gray-50); border-radius: var(--radius-md); font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; max-height: 400px; overflow-y: auto;">{{ ocr_data.raw_text }}</div>
             </details>
         </div>
     </div>

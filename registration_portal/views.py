@@ -938,10 +938,9 @@ def upload_screenshot(request):
     
     return render(request, 'registration_portal/upload_screenshot.html', context)
 
-
 @registration_login_required
 def review_ocr_data(request):
-    """Review OCR data"""
+    """Review OCR data and create customer + cat"""
     
     ocr_data = request.session.get('ocr_data')
     
@@ -949,7 +948,7 @@ def review_ocr_data(request):
         messages.warning(request, '⚠️ No OCR data found')
         return redirect('registration_portal:upload_screenshot')
     
-    # ✅ FIX: Calculate confidence percentage here (not in template)
+    # ✅ Calculate confidence percentage
     if 'confidence' in ocr_data and ocr_data['confidence']:
         try:
             ocr_data['confidence_percent'] = int(float(ocr_data['confidence']) * 100)
@@ -962,51 +961,81 @@ def review_ocr_data(request):
         action = request.POST.get('action')
         
         if action == 'create':
+            # Customer data
             name = request.POST.get('name', '').strip()
             phone = request.POST.get('phone', '').strip()
             ic_number = request.POST.get('ic_number', '').strip()
             email = request.POST.get('email', '').strip()
             address = request.POST.get('address', '').strip()
             
-            if not name or not phone:
-                messages.error(request, '⚠️ Name and Phone required')
+            # Cat data
+            cat_name = request.POST.get('cat_name', '').strip()
+            breed = request.POST.get('breed', 'mixed').strip() or 'mixed'
+            age = request.POST.get('age', '').strip()
+            gender = request.POST.get('gender', 'male').strip() or 'male'
+            
+            # Validation
+            if not name:
+                messages.error(request, '❌ Customer name is required')
                 return redirect('registration_portal:review_ocr_data')
             
-            existing = Customer.objects.filter(phone=phone).first()
+            if not cat_name:
+                messages.error(request, '❌ Cat name is required')
+                return redirect('registration_portal:review_ocr_data')
+            
+            # Check existing customer
+            existing = Customer.objects.filter(phone=phone).first() if phone else None
             if existing:
                 messages.warning(request, f'⚠️ Customer exists: {existing.customer_id}')
                 return redirect('registration_portal:customer_detail', customer_id=existing.customer_id)
             
             try:
-                customer = Customer.objects.create(
-                    name=name.upper(),
-                    phone=phone,
-                    ic_number=ic_number,
-                    email=email,
-                    address=address,
-                    registered_by=request.registration_user
-                )
-                
-                session_id = request.session.get('registration_session_id')
-                if session_id:
-                    try:
-                        session = RegistrationSession.objects.get(id=session_id)
-                        session.customers_registered += 1
-                        session.save()
-                    except RegistrationSession.DoesNotExist:
-                        pass
-                
-                request.session.pop('ocr_data', None)
-                
-                messages.success(
-                    request,
-                    f'✅ Customer {customer.customer_id} created from screenshot!'
-                )
-                
-                return redirect('registration_portal:register_cat', customer_id=customer.customer_id)
+                with transaction.atomic():
+                    # Create customer
+                    customer = Customer.objects.create(
+                        name=name.upper(),
+                        phone=phone,
+                        ic_number=ic_number,
+                        email=email,
+                        address=address,
+                        registered_by=request.registration_user
+                    )
+                    
+                    # Create cat
+                    cat = Cat.objects.create(
+                        name=cat_name.upper(),
+                        owner=customer,
+                        breed=breed,
+                        age=int(age) if age and age.isdigit() else 0,
+                        gender=gender.lower(),
+                        registered_by=request.registration_user
+                    )
+                    
+                    # Update session stats
+                    session_id = request.session.get('registration_session_id')
+                    if session_id:
+                        try:
+                            session = RegistrationSession.objects.get(id=session_id)
+                            session.customers_registered += 1
+                            session.cats_registered += 1
+                            session.save()
+                        except RegistrationSession.DoesNotExist:
+                            pass
+                    
+                    # Clear OCR data
+                    request.session.pop('ocr_data', None)
+                    
+                    messages.success(
+                        request,
+                        f'✅ Customer {customer.customer_id} and Cat {cat.cat_id} - {cat.name} created from screenshot!'
+                    )
+                    
+                    return redirect('registration_portal:create_service_request', customer_id=customer.customer_id)
             
             except Exception as e:
                 messages.error(request, f'❌ Error: {str(e)}')
+                import traceback
+                print(traceback.format_exc())
                 return redirect('registration_portal:review_ocr_data')
         
         elif action == 'cancel':
