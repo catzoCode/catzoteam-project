@@ -879,63 +879,87 @@ except ImportError:
 
 @registration_login_required
 def upload_screenshot(request):
-    """Upload screenshot for OCR"""
-    
-    if not OCR_AVAILABLE:
-        messages.error(request, '❌ OCR feature not available. Install pytesseract.')
-        return redirect('registration_portal:dashboard')
+    """Upload and process screenshot with OCR"""
     
     if request.method == 'POST':
-        screenshot = request.FILES.get('screenshot')
-        
-        if not screenshot:
-            messages.error(request, '⚠️ Please upload a screenshot')
+        if 'screenshot' not in request.FILES:
+            messages.error(request, '❌ No file uploaded')
             return redirect('registration_portal:upload_screenshot')
         
-        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-        if screenshot.content_type not in allowed_types:
-            messages.error(request, '⚠️ Only JPG, PNG, WEBP images supported')
-            return redirect('registration_portal:upload_screenshot')
+        screenshot = request.FILES['screenshot']
         
-        if screenshot.size > 5 * 1024 * 1024:
-            messages.error(request, '⚠️ Image too large. Max 5MB.')
+        # Validate file type
+        if not screenshot.name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+            messages.error(request, '❌ Invalid file type. Please upload an image (PNG, JPG, etc.)')
             return redirect('registration_portal:upload_screenshot')
         
         try:
-            extracted_text = extract_text_from_image(screenshot)
+            # Extract text from image
+            print(f"DEBUG: Starting OCR processing for {screenshot.name}")
+            raw_text = extract_text_from_image(screenshot)
             
-            if not extracted_text:
-                messages.error(request, '❌ Could not extract text. Try a clearer screenshot.')
+            if not raw_text or len(raw_text) < 10:
+                messages.error(request, '❌ Could not extract text from image. Please ensure the image is clear and contains readable text.')
                 return redirect('registration_portal:upload_screenshot')
             
-            parsed_data = parse_portal_collar_data(extracted_text)
-            is_valid, confidence, errors = validate_extracted_data(parsed_data)
+            print(f"DEBUG: Raw text extracted, length: {len(raw_text)}")
             
-            request.session['ocr_data'] = {
-                'name': parsed_data['name'],
-                'phone': parsed_data['phone'],
-                'ic_number': parsed_data['ic_number'],
-                'service': parsed_data['service'],
-                'date': parsed_data['date'],
-                'notes': parsed_data['notes'],
-                'raw_text': parsed_data['raw_text'],
-                'confidence': confidence,
-                'errors': errors,
-                'is_valid': is_valid,
-            }
+            # Parse the extracted text
+            data = parse_portal_collar_data(raw_text)
             
+            print(f"DEBUG: Data parsed, keys: {list(data.keys())}")
+            
+            # Validate the data
+            is_valid, confidence, messages_list = validate_extracted_data(data)
+            
+            # Add validation results to data
+            data['is_valid'] = is_valid
+            data['confidence'] = confidence
+            data['errors'] = messages_list
+            
+            print(f"DEBUG: Validation complete - Valid: {is_valid}, Confidence: {confidence:.1%}")
+            
+            # Save to session - FORCE SAVE
+            request.session['ocr_data'] = data
+            request.session.modified = True
+            
+            print(f"✓ Session data saved with {len(data)} fields")
+            print(f"✓ Session key: {request.session.session_key}")
+            
+            # Verify session was saved
+            saved_data = request.session.get('ocr_data')
+            if not saved_data:
+                print("✗ ERROR: Session data not saved!")
+                messages.error(request, '❌ Failed to save OCR data to session')
+                return redirect('registration_portal:upload_screenshot')
+            
+            print(f"✓ Verified: Session contains {len(saved_data)} fields")
+            
+            messages.success(request, f'✅ OCR Complete! Extracted {confidence:.0%} of data. Please review below.')
             return redirect('registration_portal:review_ocr_data')
         
+        except KeyError as e:
+            # THIS IS THE ERROR YOU'RE GETTING
+            print(f"✗ KeyError: Missing key '{e}' in data dictionary")
+            print(f"✗ Available keys: {list(data.keys()) if 'data' in locals() else 'data not created'}")
+            import traceback
+            print(traceback.format_exc())
+            messages.error(request, f'❌ OCR Error: Missing expected field "{e}". Please try a different screenshot.')
+            return redirect('registration_portal:upload_screenshot')
+        
         except Exception as e:
+            print(f"✗ OCR Error: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
             messages.error(request, f'❌ OCR Error: {str(e)}')
             return redirect('registration_portal:upload_screenshot')
     
+    # GET request - show upload form
     context = {
         'user': request.registration_user,
     }
     
     return render(request, 'registration_portal/upload_screenshot.html', context)
-
 @registration_login_required
 def review_ocr_data(request):
     """Review OCR data and create customer + cat"""
