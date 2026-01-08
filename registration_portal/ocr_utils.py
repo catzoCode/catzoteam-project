@@ -269,7 +269,12 @@ def parse_portal_collar_data(raw_text):
     
     return data
 
-
+# Debug: Print all keys
+print("="*50)
+print("DATA DICTIONARY KEYS:")
+for key in data.keys():
+    print(f"  - {key}: {data[key][:50] if isinstance(data[key], str) else data[key]}")
+print("="*50)
 def validate_extracted_data(data):
     """
     Validate extracted data
