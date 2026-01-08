@@ -949,6 +949,15 @@ def review_ocr_data(request):
         messages.warning(request, '⚠️ No OCR data found')
         return redirect('registration_portal:upload_screenshot')
     
+    # ✅ FIX: Calculate confidence percentage here (not in template)
+    if 'confidence' in ocr_data and ocr_data['confidence']:
+        try:
+            ocr_data['confidence_percent'] = int(float(ocr_data['confidence']) * 100)
+        except (ValueError, TypeError):
+            ocr_data['confidence_percent'] = 0
+    else:
+        ocr_data['confidence_percent'] = 0
+    
     if request.method == 'POST':
         action = request.POST.get('action')
         
