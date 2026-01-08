@@ -945,10 +945,10 @@ def review_ocr_data(request):
     ocr_data = request.session.get('ocr_data')
     
     if not ocr_data:
-        messages.warning(request, '⚠️ No OCR data found')
+        messages.warning(request, '⚠️ No OCR data found. Please upload a screenshot first.')
         return redirect('registration_portal:upload_screenshot')
     
-    # ✅ Calculate confidence percentage
+    # Calculate confidence percentage
     if 'confidence' in ocr_data and ocr_data['confidence']:
         try:
             ocr_data['confidence_percent'] = int(float(ocr_data['confidence']) * 100)
@@ -960,34 +960,62 @@ def review_ocr_data(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         
-        if action == 'create':
-            # Customer data
+        print(f"DEBUG: POST received, action={action}")
+        print(f"DEBUG: POST data: {request.POST}")
+        
+        if action == 'cancel':
+            request.session.pop('ocr_data', None)
+            messages.info(request, 'OCR data discarded')
+            return redirect('registration_portal:upload_screenshot')
+        
+        elif action == 'create':
+            # Get customer data
             name = request.POST.get('name', '').strip()
             phone = request.POST.get('phone', '').strip()
             ic_number = request.POST.get('ic_number', '').strip()
             email = request.POST.get('email', '').strip()
             address = request.POST.get('address', '').strip()
             
-            # Cat data
+            # Get cat data
             cat_name = request.POST.get('cat_name', '').strip()
-            breed = request.POST.get('breed', 'mixed').strip() or 'mixed'
-            age = request.POST.get('age', '').strip()
-            gender = request.POST.get('gender', 'male').strip() or 'male'
+            breed = request.POST.get('breed', '').strip() or 'mixed'
+            age = request.POST.get('age', '').strip() or '0'
+            gender = request.POST.get('gender', '').strip() or 'male'
+            color = request.POST.get('color', '').strip()
+            weight = request.POST.get('weight', '').strip()
+            vaccination_status = request.POST.get('vaccination_status', '').strip() or 'unknown'
+            medical_notes = request.POST.get('medical_notes', '').strip()
+            special_requirements = request.POST.get('special_requirements', '').strip()
+            
+            print(f"DEBUG: Customer name={name}, phone={phone}")
+            print(f"DEBUG: Cat name={cat_name}, breed={breed}")
             
             # Validation
+            errors = []
+            
             if not name:
-                messages.error(request, '❌ Customer name is required')
-                return redirect('registration_portal:review_ocr_data')
+                errors.append('Customer name is required')
+            
+            if not phone:
+                errors.append('Phone number is required')
             
             if not cat_name:
-                messages.error(request, '❌ Cat name is required')
+                errors.append('Cat name is required')
+            
+            if errors:
+                for error in errors:
+                    messages.error(request, f'❌ {error}')
                 return redirect('registration_portal:review_ocr_data')
             
-            # Check existing customer
-            existing = Customer.objects.filter(phone=phone).first() if phone else None
-            if existing:
-                messages.warning(request, f'⚠️ Customer exists: {existing.customer_id}')
-                return redirect('registration_portal:customer_detail', customer_id=existing.customer_id)
+            # Check if customer already exists
+            if phone:
+                existing = Customer.objects.filter(phone=phone).first()
+                if existing:
+                    messages.warning(
+                        request,
+                        f'⚠️ Customer with phone {phone} already exists: {existing.customer_id}'
+                    )
+                    return redirect('registration_portal:customer_detail', customer_id=existing.customer_id)
             
             try:
                 with transaction.atomic():
@@ -1001,15 +1029,36 @@ def review_ocr_data(request):
                         registered_by=request.registration_user
                     )
                     
+                    print(f"DEBUG: Customer created: {customer.customer_id}")
+                    
+                    # Convert age to integer
+                    try:
+                        cat_age = int(age) if age and age.isdigit() else 0
+                    except ValueError:
+                        cat_age = 0
+                    
+                    # Convert weight to decimal
+                    try:
+                        cat_weight = float(weight) if weight else None
+                    except ValueError:
+                        cat_weight = None
+                    
                     # Create cat
                     cat = Cat.objects.create(
                         name=cat_name.upper(),
                         owner=customer,
                         breed=breed,
-                        age=int(age) if age and age.isdigit() else 0,
+                        age=cat_age,
                         gender=gender.lower(),
+                        color=color,
+                        weight=cat_weight,
+                        vaccination_status=vaccination_status,
+                        medical_notes=medical_notes,
+                        special_requirements=special_requirements,
                         registered_by=request.registration_user
                     )
+                    
+                    print(f"DEBUG: Cat created: {cat.cat_id}")
                     
                     # Update session stats
                     session_id = request.session.get('registration_session_id')
@@ -1019,30 +1068,32 @@ def review_ocr_data(request):
                             session.customers_registered += 1
                             session.cats_registered += 1
                             session.save()
+                            print(f"DEBUG: Session stats updated")
                         except RegistrationSession.DoesNotExist:
+                            print(f"DEBUG: Session not found")
                             pass
                     
-                    # Clear OCR data
+                    # Clear OCR data from session
                     request.session.pop('ocr_data', None)
                     
                     messages.success(
                         request,
-                        f'✅ Customer {customer.customer_id} and Cat {cat.cat_id} - {cat.name} created from screenshot!'
+                        f'✅ Success! Customer {customer.customer_id} and Cat {cat.cat_id} - {cat.name} created from screenshot!'
                     )
                     
+                    print(f"DEBUG: Redirecting to create_service_request")
+                    
+                    # Redirect to create service request
                     return redirect('registration_portal:create_service_request', customer_id=customer.customer_id)
             
             except Exception as e:
-                messages.error(request, f'❌ Error: {str(e)}')
+                messages.error(request, f'❌ Error creating records: {str(e)}')
+                print(f"DEBUG: Exception: {str(e)}")
                 import traceback
                 print(traceback.format_exc())
                 return redirect('registration_portal:review_ocr_data')
-        
-        elif action == 'cancel':
-            request.session.pop('ocr_data', None)
-            messages.info(request, 'OCR data discarded')
-            return redirect('registration_portal:upload_screenshot')
     
+    # GET request - show form
     context = {
         'user': request.registration_user,
         'ocr_data': ocr_data,
