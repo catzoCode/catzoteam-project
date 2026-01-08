@@ -4,7 +4,6 @@ services:
     env: docker
     dockerfilePath: ./Dockerfile
     region: singapore
-    plan: free
 
     # Environment variables
     envVars:
