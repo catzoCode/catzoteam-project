@@ -23,13 +23,15 @@ SECRET_KEY = config("SECRET_KEY", default="django-insecure-local-dev-key")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
 
-# Allow Render domain / your domain
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*", cast=Csv())
+# ✅ FIXED: Allow both localhost (for development) and Render domain (for production)
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="catzoteam.onrender.com,localhost,127.0.0.1", cast=Csv())
 
-# ✅ ADDED: CSRF Trusted Origins
+# ✅ CSRF Trusted Origins
 CSRF_TRUSTED_ORIGINS = [
     'https://catzoteam.onrender.com',
     'http://catzoteam.onrender.com',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
 ]
 
 # ============================================
@@ -246,7 +248,7 @@ GMAIL_APP_PASSWORD = config('GMAIL_APP_PASSWORD', default='')
 # SECURITY SETTINGS (Production)
 # ============================================
 if not DEBUG:
-    # ✅ CHANGED: Make SSL redirect configurable
+    # ✅ Make SSL redirect configurable
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
