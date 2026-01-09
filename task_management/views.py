@@ -24,6 +24,8 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.db.models import Max
 from .models import TaskType, TaskGroup
+from PIL import Image
+from io import BytesIO
 # Import models
 from .models import (
     TaskGroup, TaskType, TaskPackage, Task, 
@@ -1257,7 +1259,7 @@ def review_point_request(request, pk):  # Changed from request_id to pk
 
 @login_required
 def submit_closing_report(request):
-    """Manager submits daily closing report with ONE image"""
+    """Manager submits daily closing report with ONE image - FIXED IMAGE HANDLING"""
     if request.user.role not in ['manager', 'admin']:
         messages.error(request, 'Access denied. Manager role required.')
         return redirect('dashboard:staff_dashboard')
@@ -1285,14 +1287,50 @@ def submit_closing_report(request):
             messages.error(request, f'Closing report for {report_date_str} already submitted!')
             return redirect('task_management:my_closing_reports')
         
-        # ✅ CHANGE THIS LINE - use payment_proof_photo instead
-        payment_proof_photo = request.FILES.get('payment_proof_photo')
+        # Get uploaded payment proof
+        payment_proof_uploaded = request.FILES.get('payment_proof_photo')
         
-        if not payment_proof_photo:
+        if not payment_proof_uploaded:
             messages.error(request, 'Payment proof image is required!')
             return redirect('task_management:submit_closing_report')
         
-        # Create closing report
+        # ✅ FIX: Convert RGBA to RGB if needed
+        try:
+            # Open image with PIL
+            img = Image.open(payment_proof_uploaded)
+            
+            # Convert RGBA/P to RGB
+            if img.mode in ('RGBA', 'LA', 'P'):
+                # Create white background
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                # Paste image on white background using alpha channel as mask
+                if 'A' in img.getbands():
+                    background.paste(img, mask=img.split()[-1])  # Use alpha channel as mask
+                else:
+                    background.paste(img)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Save converted image to BytesIO
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=95)
+            output.seek(0)
+            
+            # Create ContentFile from BytesIO
+            from django.core.files.base import ContentFile
+            converted_image = ContentFile(
+                output.read(),
+                name=f"{payment_proof_uploaded.name.rsplit('.', 1)[0]}.jpg"
+            )
+            
+        except Exception as e:
+            messages.error(request, f'Error processing image: {str(e)}')
+            return redirect('task_management:submit_closing_report')
+        
+        # Create closing report with converted image
         report = ClosingReport.objects.create(
             date=report_date_obj,
             branch=request.user.branch,
@@ -1302,7 +1340,7 @@ def submit_closing_report(request):
             total_customers=int(total_customers),
             payment_record_amount=Decimal(payment_record),
             payment_receipt_amount=Decimal(payment_receipt),
-            payment_proof_photo=payment_proof_photo,  # ✅ CHANGED
+            payment_proof_photo=converted_image,  # ✅ Use converted image
             compliance_all_paid_through_system=compliance_system,
             compliance_free_services_today=compliance_free,
             notes=notes
