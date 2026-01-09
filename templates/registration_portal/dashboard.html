@@ -122,7 +122,8 @@
                     <div class="tile-subtitle">History</div>
                 </a>
 
-                <!-- {% if user.role == 'manager' or user.role == 'admin' %}
+                {% comment %}
+                {% if user.role == 'manager' or user.role == 'admin' %}
                 <a href="{% url 'registration_portal:manager_arrivals' %}" 
                    class="tile-apple" 
                    style="text-decoration: none; border: 2px solid var(--apple-blue);">
@@ -138,8 +139,8 @@
                     <div class="tile-name">Branch Bookings</div>
                     <div class="tile-subtitle">All bookings</div>
                 </a>
-                 -->
                 {% endif %}
+                {% endcomment %}
             </div>
         </div>
     </div>
