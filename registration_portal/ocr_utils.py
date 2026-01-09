@@ -1,5 +1,5 @@
 # registration_portal/ocr_utils.py
-# SIMPLIFIED - Only extract Customer & Cat data
+# FIXED - Debug print AFTER data dictionary created
 
 import re
 from PIL import Image
@@ -28,16 +28,12 @@ def extract_text_from_image(image_file):
 
 
 def parse_portal_collar_data(raw_text):
-    print("="*50)
-    print("DATA DICTIONARY KEYS:")
-    for key in data.keys():
-        print(f"  - {key}: {data[key][:50] if isinstance(data[key], str) else data[key]}")
-    print("="*50)
     """
     Parse ONLY Customer and Cat data from extracted text
     Based on Customer and Cat models only
     """
     
+    # ✅ FIXED: Create data dictionary FIRST before any debug prints
     data = {
         # ===== CUSTOMER MODEL FIELDS =====
         'name': '',              # Customer.name (required)
@@ -60,6 +56,11 @@ def parse_portal_collar_data(raw_text):
         # ===== METADATA =====
         'raw_text': raw_text,
     }
+    
+    # ✅ NOW we can debug print AFTER data is created
+    print("="*50)
+    print("DATA DICTIONARY INITIALIZED")
+    print("="*50)
     
     lines = raw_text.split('\n')
     
@@ -272,9 +273,17 @@ def parse_portal_collar_data(raw_text):
         data['special_requirements'] = ' '.join(special_lines)
         print(f"✓ Special Requirements: {data['special_requirements'][:50]}...")
     
+    # Debug: Print final extracted data
+    print("="*50)
+    print("EXTRACTION COMPLETE - FINAL DATA:")
+    for key, value in data.items():
+        if key != 'raw_text':
+            print(f"  {key}: {value}")
+    print("="*50)
+    
     return data
 
-# Debug: Print all keys
+
 def validate_extracted_data(data):
     """
     Validate extracted data
